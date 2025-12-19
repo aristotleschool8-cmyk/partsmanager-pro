@@ -1,0 +1,274 @@
+'use client';
+
+export const dynamic = 'force-dynamic';
+
+import Image from "next/image";
+import { MoreHorizontal, PlusCircle, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { use } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+
+import { getDictionary } from "@/lib/dictionaries";
+import { Locale } from "@/lib/config";
+import { cn } from "@/lib/utils";
+import { AddProductDialog } from "@/components/dashboard/add-product-dialog";
+import { useFirebase } from "@/firebase/provider";
+import { collection, getDocs, query } from "firebase/firestore";
+
+interface Product {
+  id: string;
+  name: string;
+  sku?: string;
+  reference?: string;
+  brand?: string;
+  stock?: number;
+  quantity?: number;
+  purchasePrice?: number;
+  price?: number;
+  imageUrl?: string;
+  imageHint?: string;
+}
+
+export default function StockPage({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = use(params);
+  const { firestore } = useFirebase();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [dictionary, setDictionary] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Load dictionary
+  useEffect(() => {
+    const loadDictionary = async () => {
+      const dict = await getDictionary(locale);
+      setDictionary(dict);
+    };
+    loadDictionary();
+  }, [locale]);
+
+  // Fetch products from Firestore
+  useEffect(() => {
+    if (!firestore) return;
+
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const productsRef = collection(firestore, 'products');
+        const q = query(productsRef);
+        const querySnapshot = await getDocs(q);
+        
+        const fetchedProducts: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedProducts.push({
+            id: doc.id,
+            name: doc.data().name || '',
+            sku: doc.data().reference || '',
+            reference: doc.data().reference || '',
+            brand: doc.data().brand || '',
+            stock: doc.data().stock || 0,
+            quantity: doc.data().stock || 0,
+            purchasePrice: doc.data().purchasePrice || 0,
+            price: doc.data().price || 0,
+            imageUrl: '/images/placeholder-product.svg',
+            imageHint: doc.data().name,
+          });
+        });
+
+        setProducts(fetchedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [firestore]);
+
+  if (!dictionary) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  const d = dictionary.stockPage;
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-headline font-bold">{d.title}</h1>
+        <p className="text-muted-foreground">{d.description}</p>
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>{d.product}</CardTitle>
+            <div className="flex items-center gap-4">
+              <Input 
+                placeholder={d.searchPlaceholder} 
+                className="w-full max-w-sm" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <AddProductDialog dictionary={dictionary} onProductAdded={() => {
+                // Refresh products
+                const refreshProducts = async () => {
+                  if (!firestore) return;
+                  try {
+                    const productsRef = collection(firestore, 'products');
+                    const q = query(productsRef);
+                    const querySnapshot = await getDocs(q);
+                    
+                    const fetchedProducts: Product[] = [];
+                    querySnapshot.forEach((doc) => {
+                      fetchedProducts.push({
+                        id: doc.id,
+                        name: doc.data().name || '',
+                        sku: doc.data().reference || '',
+                        reference: doc.data().reference || '',
+                        brand: doc.data().brand || '',
+                        stock: doc.data().stock || 0,
+                        quantity: doc.data().stock || 0,
+                        purchasePrice: doc.data().purchasePrice || 0,
+                        price: doc.data().price || 0,
+                        imageUrl: '/images/placeholder-product.svg',
+                        imageHint: doc.data().name,
+                      });
+                    });
+                    setProducts(fetchedProducts);
+                  } catch (error) {
+                    console.error('Error fetching products:', error);
+                  }
+                };
+                refreshProducts();
+              }} />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="hidden w-[100px] sm:table-cell">
+                    <span className="sr-only">Image</span>
+                  </TableHead>
+                  <TableHead>{d.designation}</TableHead>
+                  <TableHead>{d.reference}</TableHead>
+                  <TableHead>{d.brand}</TableHead>
+                  <TableHead className="hidden md:table-cell">{d.stock}</TableHead>
+                  <TableHead className="hidden md:table-cell">{d.purchasePrice}</TableHead>
+                  <TableHead className="hidden md:table-cell">{d.sellingPrice}</TableHead>
+                  <TableHead>
+                    <span className="sr-only">{d.actions}</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProducts.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                      {products.length === 0 ? 'No products found. Add one to get started!' : 'No products match your search.'}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredProducts.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell className="hidden sm:table-cell">
+                        <Image
+                          alt={product.name}
+                          className="aspect-square rounded-md object-cover"
+                          height="40"
+                          src={product.imageUrl || '/images/placeholder-product.svg'}
+                          width="40"
+                          data-ai-hint={product.imageHint}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{product.sku}</TableCell>
+                      <TableCell>{product.brand}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {product.quantity}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {product.purchasePrice?.toFixed(2)} DZD
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {product.price?.toFixed(2)} DZD
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">{d.actions}</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>{d.actions}</DropdownMenuLabel>
+                            <DropdownMenuItem>{d.edit}</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                              {d.delete}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+        <CardFooter>
+          <div className="text-xs text-muted-foreground">
+            Showing <strong>1-{filteredProducts.length}</strong> of <strong>{products.length}</strong> products
+          </div>
+        </CardFooter>
+      </Card>
+    </div>
+  );
+}

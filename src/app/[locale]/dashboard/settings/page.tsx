@@ -1,0 +1,21 @@
+import { getDictionary } from "@/lib/dictionaries";
+import { Locale } from "@/lib/config";
+import { SettingsProvider } from "@/contexts/settings-context";
+import { SettingsForm } from "@/components/dashboard/settings-form";
+
+export default async function SettingsPage({ params }: { params: Promise<{ locale: Locale }> }) {
+  const { locale } = await params;
+  const dictionary = await getDictionary(locale);
+
+  return (
+    <SettingsProvider>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-headline font-bold">{dictionary.dashboard.settings}</h1>
+          <p className="text-muted-foreground">Manage your application and user settings.</p>
+        </div>
+        <SettingsForm />
+      </div>
+    </SettingsProvider>
+  );
+}

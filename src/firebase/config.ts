@@ -1,8 +1,19 @@
+import { GoogleAuthProvider, EmailAuthProvider } from 'firebase/auth';
+
+// Firebase config loaded from environment variables
 export const firebaseConfig = {
-  "projectId": "studio-5425583843-1bc6f",
-  "appId": "1:912883284700:web:fc722c0f314529241cd219",
-  "apiKey": "AIzaSyAZyIx0_j1LzthbtalQraBQxk26ZgXOA3Q",
-  "authDomain": "studio-5425583843-1bc6f.firebaseapp.com",
-  "measurementId": "",
-  "messagingSenderId": "912883284700"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
+
+// Auth providers
+export const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope('profile');
+googleProvider.addScope('email');
+
+export const emailProvider = new EmailAuthProvider();
