@@ -5,8 +5,9 @@
 # Command to build the Next.js application
 command = "next build"
 
-# Next.js with Netlify Adapter - publish directory should be empty for server rendering
-publish = ""
+# Publish directory for Netlify Next.js plugin
+# The plugin outputs built files to .netlify/output/public
+publish = ".netlify/output/public"
 
 [dev]
 # Local development server settings
