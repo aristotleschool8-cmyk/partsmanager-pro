@@ -10,18 +10,19 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Domain verification - prevent running on cloned/scraped versions
     if (typeof window !== 'undefined') {
-      const allowedDomains = [
-        'partsmanager-pro.netlify.app',
-        'partsmanager-pro.vercel.app',
-        'localhost',
-        '127.0.0.1',
-      ];
-      
       const hostname = window.location.hostname;
-      const isAllowed = allowedDomains.some(domain => hostname.includes(domain));
       
-      if (!isAllowed && process.env.NODE_ENV === 'production') {
-        // Redirect to official site if running elsewhere
+      // Allow all netlify.app and vercel.app subdomains, localhost, and specific custom domains
+      const isAllowedDomain = 
+        hostname.includes('netlify.app') ||
+        hostname.includes('vercel.app') ||
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === 'partsmanager-pro.com'; // Add custom domain if you have one
+      
+      if (!isAllowedDomain && process.env.NODE_ENV === 'production') {
+        // Redirect to official site if running on unauthorized domain
+        console.warn(`Unauthorized domain detected: ${hostname}. Redirecting to official site.`);
         window.location.href = 'https://partsmanager-pro.netlify.app';
         return;
       }

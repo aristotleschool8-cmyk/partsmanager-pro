@@ -12,17 +12,14 @@ self.addEventListener('fetch', (event) => {
   // Only allow requests to same origin
   const url = new URL(event.request.url);
   
-  // Check if request is from allowed domains
-  const allowedDomains = [
-    'partsmanager-pro.netlify.app',
-    'partsmanager-pro.vercel.app',
-    'localhost',
-    '127.0.0.1',
-  ];
+  // Allow all netlify.app and vercel.app subdomains, localhost
+  const isAllowedDomain = 
+    self.location.hostname.includes('netlify.app') ||
+    self.location.hostname.includes('vercel.app') ||
+    self.location.hostname === 'localhost' ||
+    self.location.hostname === '127.0.0.1';
   
-  const isAllowed = allowedDomains.some(domain => self.location.hostname.includes(domain));
-  
-  if (!isAllowed) {
+  if (!isAllowedDomain) {
     event.respondWith(
       new Response('Access Denied', {
         status: 403,
