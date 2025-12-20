@@ -7,6 +7,16 @@ import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore'
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
+  // Only initialize on client side - prevent server-side initialization during build
+  if (typeof window === 'undefined') {
+    console.warn('[Firebase] Skipping initialization on server');
+    return {
+      firebaseApp: null,
+      auth: null,
+      firestore: null
+    };
+  }
+
   if (!getApps().length) {
     // Important! initializeApp() is called without any arguments because Firebase App Hosting
     // integrates with the initializeApp() function to provide the environment variables needed to
@@ -22,7 +32,17 @@ export function initializeFirebase() {
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
-      firebaseApp = initializeApp(firebaseConfig);
+      // Check if config is complete before initializing
+      if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+        firebaseApp = initializeApp(firebaseConfig);
+      } else {
+        console.warn('[Firebase] Missing required config - skipping initialization');
+        return {
+          firebaseApp: null,
+          auth: null,
+          firestore: null
+        };
+      }
     }
 
     return getSdks(firebaseApp);
