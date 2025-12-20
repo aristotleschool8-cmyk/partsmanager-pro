@@ -40,7 +40,14 @@ export function initializeFirebase() {
         projectId: firebaseConfig.projectId || 'MISSING'
       });
       if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-        firebaseApp = initializeApp(firebaseConfig);
+        try {
+          console.log('[Firebase] Initializing with config object...');
+          firebaseApp = initializeApp(firebaseConfig);
+          console.log('[Firebase] ✅ Successfully initialized with config');
+        } catch (configError) {
+          console.error('[Firebase] ❌ Failed to initialize with config:', configError);
+          throw configError;
+        }
       } else {
         console.warn('[Firebase] Missing required config - skipping initialization');
         return {
