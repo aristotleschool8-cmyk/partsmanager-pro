@@ -28,6 +28,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Comparison folder - for development only
+/Stock.Manager-master
 .pnpm-debug.log*
 
 # vercel
