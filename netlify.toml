@@ -3,23 +3,20 @@
 
 [build]
 # Command to build the Next.js application
-command = "npm run build"
+command = "next build"
 
-# Let @netlify/plugin-nextjs manage the publish directory
-# Do NOT set publish here - the plugin will create .netlify/output/public
+# The directory that contains the built site
+publish = ".next"
 
 [dev]
 # Local development server settings
 command = "next dev"
 port = 3000
+publish = ".next"
 targetPort = 3000
 autoLaunch = true
 
 # The functions directory for serverless functions, including Next.js API routes and server components.
 [functions]
-directory = ".netlify/functions"
-
-# Explicitly enable the Next.js plugin for proper output generation
-[[plugins]]
-package = "@netlify/plugin-nextjs"
+directory = ".netlify/functions-internal"
 
