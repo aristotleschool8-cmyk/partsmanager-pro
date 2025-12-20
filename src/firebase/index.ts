@@ -33,6 +33,12 @@ export function initializeFirebase() {
         console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
       }
       // Check if config is complete before initializing
+      console.log('[Firebase] Config check:', {
+        hasApiKey: !!firebaseConfig.apiKey,
+        hasProjectId: !!firebaseConfig.projectId,
+        apiKey: firebaseConfig.apiKey ? firebaseConfig.apiKey.substring(0, 10) + '...' : 'MISSING',
+        projectId: firebaseConfig.projectId || 'MISSING'
+      });
       if (firebaseConfig.apiKey && firebaseConfig.projectId) {
         firebaseApp = initializeApp(firebaseConfig);
       } else {
