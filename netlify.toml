@@ -5,18 +5,17 @@
 # Command to build the Next.js application
 command = "next build"
 
-# The directory that contains the built site
-publish = ".next"
+# Next.js with Netlify Adapter - publish directory should be empty for server rendering
+publish = ""
 
 [dev]
 # Local development server settings
 command = "next dev"
 port = 3000
-publish = ".next"
 targetPort = 3000
 autoLaunch = true
 
 # The functions directory for serverless functions, including Next.js API routes and server components.
 [functions]
-directory = ".netlify/functions-internal"
+directory = ".netlify/functions"
 
