@@ -5,9 +5,8 @@
 # Command to build the Next.js application
 command = "npm run build"
 
-# Publish directory for Netlify Next.js plugin
-# The plugin outputs built files to .netlify/output/public
-publish = ".netlify/output/public"
+# Let @netlify/plugin-nextjs manage the publish directory
+# Do NOT set publish here - the plugin will create .netlify/output/public
 
 [dev]
 # Local development server settings
