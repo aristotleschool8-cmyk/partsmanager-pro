@@ -21,6 +21,7 @@ import {
   orderBy,
   Timestamp 
 } from 'firebase/firestore';
+import type { AccessRightProfile } from './access-rights';
 
 export interface UserProfile {
   id: string;
@@ -34,6 +35,7 @@ export interface UserProfile {
   lastLoginAt?: Timestamp;
   trialStartDate?: Timestamp;
   premiumExpiryDate?: Timestamp;
+  accessRightId?: string; // Reference to access right profile (for admins only)
 }
 
 /**

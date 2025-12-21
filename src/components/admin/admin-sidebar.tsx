@@ -18,6 +18,7 @@ import {
   Settings,
   HardDrive,
   Lock,
+  Key,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -77,6 +78,12 @@ export function AdminSidebar({ locale }: AdminSidebarProps) {
       icon: Lock,
       label: "Security",
       href: `/${locale}/admin/security`,
+      badge: null,
+    },
+    {
+      icon: Key,
+      label: "Access Rights",
+      href: `/${locale}/admin/access-rights`,
       badge: null,
     },
   ];

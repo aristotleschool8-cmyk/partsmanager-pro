@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -34,6 +35,8 @@ import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/firebase/provider';
 import { updateUser, UserProfile } from '@/lib/user-management';
+import { collection, getDocs } from 'firebase/firestore';
+import type { AccessRightProfile } from '@/lib/access-rights';
 
 const editUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -47,6 +50,7 @@ const editUserSchema = z.object({
   status: z.enum(['active', 'suspended'], {
     errorMap: () => ({ message: 'Select a valid status' }),
   }),
+  accessRightId: z.string().optional(),
 });
 
 type EditUserFormData = z.infer<typeof editUserSchema>;
@@ -61,6 +65,8 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
+  const [accessRights, setAccessRights] = useState<AccessRightProfile[]>([]);
+  const [isLoadingAccessRights, setIsLoadingAccessRights] = useState(false);
 
   const form = useForm<EditUserFormData>({
     resolver: zodResolver(editUserSchema),
@@ -70,8 +76,46 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
       subscription: user.subscription || 'trial',
       role: user.role || 'user',
       status: user.status || 'active',
+      accessRightId: user.accessRightId || '',
     },
   });
+
+  const role = form.watch('role');
+
+  // Load access rights when dialog opens or role changes
+  useEffect(() => {
+    if (open && role === 'admin') {
+      loadAccessRights();
+    }
+  }, [open, role]);
+
+  const loadAccessRights = async () => {
+    if (!firestore) return;
+
+    try {
+      setIsLoadingAccessRights(true);
+      const accessRightsRef = collection(firestore, 'accessRights');
+      const snapshot = await getDocs(accessRightsRef);
+
+      const rights: AccessRightProfile[] = [];
+      snapshot.forEach((doc) => {
+        rights.push(doc.data() as AccessRightProfile);
+      });
+
+      // Sort by name
+      rights.sort((a, b) => a.name.localeCompare(b.name));
+      setAccessRights(rights);
+    } catch (error) {
+      console.error('Error loading access rights:', error);
+      toast({
+        title: 'Warning',
+        description: 'Could not load access rights templates',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingAccessRights(false);
+    }
+  };
 
   const onSubmit = async (data: EditUserFormData) => {
     if (!firestore) {
@@ -85,9 +129,16 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
 
     setIsLoading(true);
     try {
-      const success = await updateUser(firestore, user.id, {
+      const updateData: any = {
         ...data,
-      });
+      };
+
+      // If user is not admin, remove accessRightId
+      if (data.role !== 'admin') {
+        updateData.accessRightId = null;
+      }
+
+      const success = await updateUser(firestore, user.id, updateData);
 
       if (success) {
         toast({
@@ -127,7 +178,7 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
         <DialogHeader>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
-            Update user information, subscription, role, and status.
+            Update user information, subscription, role, status, and access rights.
           </DialogDescription>
         </DialogHeader>
 
@@ -204,6 +255,44 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
                 </FormItem>
               )}
             />
+
+            {role === 'admin' && (
+              <FormField
+                control={form.control}
+                name="accessRightId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Access Rights</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                      <FormControl>
+                        <SelectTrigger disabled={isLoadingAccessRights}>
+                          {isLoadingAccessRights ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <SelectValue placeholder="Select access rights..." />
+                          )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No specific access rights</SelectItem>
+                        {accessRights.map((right) => (
+                          <SelectItem key={right.id} value={right.id}>
+                            {right.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Control what this admin can do across the system
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

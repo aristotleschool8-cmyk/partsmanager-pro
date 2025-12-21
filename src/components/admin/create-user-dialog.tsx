@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +18,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -35,6 +36,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useFirebase } from '@/firebase/provider';
 import { createUser } from '@/lib/user-management';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
+import type { AccessRightProfile } from '@/lib/access-rights';
 
 const createUserSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -46,6 +49,7 @@ const createUserSchema = z.object({
   role: z.enum(['user', 'admin'], {
     errorMap: () => ({ message: 'Select a valid role' }),
   }),
+  accessRightId: z.string().optional(),
 });
 
 type CreateUserFormData = z.infer<typeof createUserSchema>;
@@ -59,6 +63,8 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const { toast } = useToast();
   const { firestore } = useFirebase();
   const [isLoading, setIsLoading] = useState(false);
+  const [accessRights, setAccessRights] = useState<AccessRightProfile[]>([]);
+  const [isLoadingAccessRights, setIsLoadingAccessRights] = useState(false);
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -68,8 +74,46 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       password: '',
       subscription: 'trial',
       role: 'user',
+      accessRightId: '',
     },
   });
+
+  const role = form.watch('role');
+
+  // Load access rights when dialog opens or role changes
+  useEffect(() => {
+    if (open && role === 'admin') {
+      loadAccessRights();
+    }
+  }, [open, role]);
+
+  const loadAccessRights = async () => {
+    if (!firestore) return;
+
+    try {
+      setIsLoadingAccessRights(true);
+      const accessRightsRef = collection(firestore, 'accessRights');
+      const snapshot = await getDocs(accessRightsRef);
+
+      const rights: AccessRightProfile[] = [];
+      snapshot.forEach((doc) => {
+        rights.push(doc.data() as AccessRightProfile);
+      });
+
+      // Sort by name
+      rights.sort((a, b) => a.name.localeCompare(b.name));
+      setAccessRights(rights);
+    } catch (error) {
+      console.error('Error loading access rights:', error);
+      toast({
+        title: 'Warning',
+        description: 'Could not load access rights templates',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingAccessRights(false);
+    }
+  };
 
   const onSubmit = async (data: CreateUserFormData) => {
     if (!firestore) {
@@ -88,13 +132,20 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       const userCred = await createUserWithEmailAndPassword(auth, data.email, data.password);
 
       // Create Firestore user document
-      const success = await createUser(firestore, userCred.user.uid, {
+      const userData: any = {
         email: data.email,
         name: data.name,
         subscription: data.subscription,
         role: data.role,
         emailVerified: true, // Admin-created users are automatically verified
-      });
+      };
+
+      // Add access right ID if user is admin and one is selected
+      if (data.role === 'admin' && data.accessRightId) {
+        userData.accessRightId = data.accessRightId;
+      }
+
+      const success = await createUser(firestore, userCred.user.uid, userData);
 
       if (success) {
         toast({
@@ -239,6 +290,44 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
               )}
             />
 
+            {role === 'admin' && (
+              <FormField
+                control={form.control}
+                name="accessRightId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Access Rights</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger disabled={isLoadingAccessRights}>
+                          {isLoadingAccessRights ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <SelectValue placeholder="Select access rights..." />
+                          )}
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="">No specific access rights</SelectItem>
+                        {accessRights.map((right) => (
+                          <SelectItem key={right.id} value={right.id}>
+                            {right.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Assign an access rights profile to control what this admin can do
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <DialogFooter className="mt-6">
               <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
                 Cancel
@@ -254,3 +343,4 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
     </Dialog>
   );
 }
+

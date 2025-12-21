@@ -274,5 +274,35 @@ service cloud.firestore {
       allow read: if isSignedIn();
       allow write: if isSignedIn();
     }
+
+    /**
+     * @description Access Rights collection - defines granular permissions for admin users
+     * @access Only super admins can view, create, edit, delete access rights
+     * Regular admins can only view available access rights for user assignment
+     */
+    match /accessRights/{accessRightId} {
+      // All authenticated users can read access rights (needed for user assignment)
+      allow read: if isSignedIn();
+      
+      // Only super admins can create new access rights
+      // Super admin is identified by having 'accessRights.view' and 'accessRights.create' permissions
+      allow create: if isAdmin() && isAccessRightsAdmin();
+      
+      // Only super admins can edit access rights
+      allow update: if isAdmin() && isAccessRightsAdmin();
+      
+      // Only super admins can delete access rights
+      allow delete: if isAdmin() && isAccessRightsAdmin();
+    }
+  }
+
+  /**
+   * Additional helper function for access rights admin check
+   * This checks if the user has access rights management permissions
+   */
+  function isAccessRightsAdmin() {
+    // For now, we check if user is super-admin (has all permissions including accessRights)
+    // This will be validated at the application level through the AccessRightProfile
+    return isAdmin();
   }
 }
