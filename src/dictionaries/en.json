@@ -92,6 +92,7 @@
     "customer": "Customer",
     "customerPlaceholder": "Search or create a customer...",
     "noCustomerFound": "No customer found.",
+    "newCustomer": "(New Customer)",
     "product": "Product",
     "productPlaceholder": "Search for a product to add...",
     "noProductFound": "No product found.",

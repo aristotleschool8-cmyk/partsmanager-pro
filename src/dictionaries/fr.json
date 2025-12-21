@@ -92,6 +92,7 @@
     "customer": "Client",
     "customerPlaceholder": "Rechercher ou créer un client...",
     "noCustomerFound": "Aucun client trouvé.",
+    "newCustomer": "(Nouveau Client)",
     "product": "Produit",
     "productPlaceholder": "Rechercher un produit à ajouter...",
     "noProductFound": "Aucun produit trouvé.",

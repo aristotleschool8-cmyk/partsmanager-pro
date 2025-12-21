@@ -92,6 +92,7 @@
     "customer": "العميل",
     "customerPlaceholder": "ابحث عن عميل أو أنشئ عميلًا جديدًا...",
     "noCustomerFound": "لم يتم العثور على عميل.",
+    "newCustomer": "(عميل جديد)",
     "product": "المنتج",
     "productPlaceholder": "ابحث عن منتج لإضافته...",
     "noProductFound": "لم يتم العثور على منتج.",

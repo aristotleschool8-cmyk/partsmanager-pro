@@ -28,7 +28,7 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useFirebase } from '@/firebase/provider';
-import { collection, getDocs, query } from 'firebase/firestore';
+import { collection, getDocs, query, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -36,14 +36,22 @@ interface SaleItem extends Product {
   saleQuantity: number;
 }
 
+interface Customer {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+}
+
 export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Dictionary; onSaleAdded?: () => void }) {
   const d = dictionary.logSaleDialog;
   const { firestore } = useFirebase();
   const [open, setOpen] = useState(false);
   const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
-  const [customer, setCustomer] = useState<AutocompleteOption | undefined>();
+  const [customerInput, setCustomerInput] = useState<string>('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | undefined>();
   const [products, setProducts] = useState<Product[]>([]);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch products and customers from Firestore when dialog opens
@@ -59,15 +67,19 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
         const productsSnapshot = await getDocs(query(productsRef));
         const fetchedProducts: Product[] = [];
         productsSnapshot.forEach(doc => {
+          const data = doc.data();
+          // Skip deleted products
+          if (data.isDeleted) return;
+          
           fetchedProducts.push({
             id: doc.id,
-            name: doc.data().name || '',
-            reference: doc.data().reference || '',
-            brand: doc.data().brand || '',
-            sku: doc.data().sku || '',
-            stock: doc.data().stock || 0,
-            purchasePrice: doc.data().purchasePrice || 0,
-            price: doc.data().price || 0,
+            name: data.name || '',
+            reference: data.reference || '',
+            brand: data.brand || '',
+            sku: data.sku || '',
+            stock: data.stock || 0,
+            purchasePrice: data.purchasePrice || 0,
+            price: data.price || 0,
           });
         });
         setProducts(fetchedProducts);
@@ -75,7 +87,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
         // Fetch customers
         const customersRef = collection(firestore, 'customers');
         const customersSnapshot = await getDocs(query(customersRef));
-        const fetchedCustomers: any[] = [];
+        const fetchedCustomers: Customer[] = [];
         customersSnapshot.forEach(doc => {
           fetchedCustomers.push({
             id: doc.id,
@@ -94,14 +106,29 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
 
     fetchData();
   }, [open, firestore]);
-  
+
+  // Filter customers based on input
+  const filteredCustomers = useMemo(() => {
+    if (!customerInput.trim()) return customers;
+    const lowerInput = customerInput.toLowerCase();
+    return customers.filter(c => c.name.toLowerCase().includes(lowerInput));
+  }, [customers, customerInput]);
+
   const productOptions = useMemo(() => products.map(p => ({ value: p.id, label: `${p.name} (${p.reference})` })), [products]);
-  const customerOptions = useMemo(() => customers.map(c => ({ value: c.id, label: c.name })), [customers]);
+  const customerOptions = useMemo(() => filteredCustomers.map(c => ({ value: c.id, label: c.name })), [filteredCustomers]);
 
   const handleAddProduct = (option: AutocompleteOption) => {
     const product = products.find(p => p.id === option.value);
     if (product && !saleItems.find(item => item.id === product.id)) {
       setSaleItems(prev => [...prev, { ...product, saleQuantity: 1 }]);
+    }
+  };
+
+  const handleCustomerSelect = (option: AutocompleteOption) => {
+    const customer = customers.find(c => c.id === option.value);
+    if (customer) {
+      setSelectedCustomer(customer);
+      setCustomerInput(customer.name);
     }
   };
 
@@ -118,16 +145,42 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
     return saleItems.reduce((total, item) => total + (item.price * item.saleQuantity), 0);
   }, [saleItems]);
 
-  const handleSubmit = () => {
-    // Logic to save the sale
-    console.log({
-        customer,
+  const handleSubmit = async () => {
+    if (!firestore || !customerInput.trim() || saleItems.length === 0) return;
+
+    try {
+      let customerId = selectedCustomer?.id;
+
+      // Create new customer if not selected from list
+      if (!selectedCustomer) {
+        const customerRef = collection(firestore, 'customers');
+        const newCustomerDoc = await addDoc(customerRef, {
+          name: customerInput.trim(),
+          email: '',
+          phone: '',
+          createdAt: serverTimestamp(),
+        });
+        customerId = newCustomerDoc.id;
+      }
+
+      // Here you would save the sale to Firestore
+      // This is where you'd add the sale document with customer and items
+      console.log({
+        customerId,
+        customerName: customerInput,
         items: saleItems,
         totalAmount
-    });
-    setOpen(false);
-    setSaleItems([]);
-    setCustomer(undefined);
+      });
+
+      // Reset form
+      setOpen(false);
+      setSaleItems([]);
+      setCustomerInput('');
+      setSelectedCustomer(undefined);
+      onSaleAdded?.();
+    } catch (error) {
+      console.error('Error saving sale:', error);
+    }
   }
 
   return (
@@ -146,13 +199,45 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
         <div className="space-y-4 py-4">
             <div className="grid gap-2">
                 <Label htmlFor="customer">{d.customer}</Label>
-                <Autocomplete
-                    options={customerOptions}
-                    placeholder={d.customerPlaceholder}
-                    emptyMessage={d.noCustomerFound}
-                    value={customer}
-                    onValueChange={setCustomer}
-                />
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Input
+                        type="text"
+                        placeholder={d.customerPlaceholder}
+                        value={customerInput}
+                        onChange={(e) => {
+                          setCustomerInput(e.target.value);
+                          // Clear selection if user is typing
+                          if (selectedCustomer && e.target.value !== selectedCustomer.name) {
+                            setSelectedCustomer(undefined);
+                          }
+                        }}
+                        className="w-full"
+                    />
+                    {/* Show dropdown suggestions */}
+                    {customerInput.trim() && customerOptions.length > 0 && (
+                      <div className="border border-t-0 rounded-b bg-white mt-0 max-h-48 overflow-y-auto z-50">
+                        {customerOptions.map((option) => (
+                          <div
+                            key={option.value}
+                            onClick={() => handleCustomerSelect(option)}
+                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          >
+                            {option.label}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {customerInput.trim() && customerOptions.length === 0 && (
+                      <div className="border border-t-0 rounded-b bg-white mt-0 px-3 py-2 text-sm text-gray-500">
+                        {d.noCustomerFound}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {customerInput.trim() && !selectedCustomer && (
+                  <p className="text-xs text-blue-600">{customerInput} - {d.newCustomer}</p>
+                )}
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="product">{d.product}</Label>
@@ -211,7 +296,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
 
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit} disabled={!customer || saleItems.length === 0}>
+          <Button onClick={handleSubmit} disabled={!customerInput.trim() || saleItems.length === 0}>
             {d.submit}
           </Button>
         </DialogFooter>
