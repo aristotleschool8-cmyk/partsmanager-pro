@@ -28,6 +28,7 @@ import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { useToast } from '@/hooks/use-toast';
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -272,11 +273,46 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
     setImportStatus('processing');
     setImportMessage('Processing file...');
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      dynamicTyping: false,
-      complete: async (results) => {
+    // Check if file is Excel or CSV
+    const isExcelFile = file.name.endsWith('.xlsx') || file.name.endsWith('.xls') || file.type.includes('spreadsheet');
+    
+    if (isExcelFile) {
+      // Handle Excel files
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = e.target?.result as ArrayBuffer;
+          const workbook = XLSX.read(data, { type: 'array' });
+          
+          // Get first sheet
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          
+          // Convert to JSON
+          const jsonData = XLSX.utils.sheet_to_json(worksheet) as ProductRow[];
+          
+          console.log('Excel Column Headers:', jsonData.length > 0 ? Object.keys(jsonData[0]) : []);
+          console.log('First row data:', jsonData[0]);
+          
+          await processProducts(jsonData);
+        } catch (error: any) {
+          setImportStatus('error');
+          setImportMessage(`Error reading Excel file: ${error.message}`);
+          toast({
+            title: 'Error',
+            description: 'Failed to read Excel file',
+            variant: 'destructive',
+          });
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      // Handle CSV files
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: false,
+        complete: async (results) => {
         try {
           let products = results.data as ProductRow[];
           
@@ -378,7 +414,8 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
           variant: 'destructive',
         });
       },
-    });
+      });
+    }
   };
 
   const downloadTemplate = () => {
