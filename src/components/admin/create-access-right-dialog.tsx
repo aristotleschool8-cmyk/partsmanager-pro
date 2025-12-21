@@ -160,6 +160,8 @@ export default function CreateAccessRightDialog({
 
   // Apply template values to form
   const applyTemplate = (templateId: string) => {
+    if (!templateId || templateId === 'none') return;
+    
     const template = ACCESS_RIGHT_TEMPLATES[templateId];
     if (!template) return;
 
@@ -376,7 +378,7 @@ export default function CreateAccessRightDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="">Start from scratch</SelectItem>
+                            <SelectItem value="none">Start from scratch</SelectItem>
                             {Object.entries(ACCESS_RIGHT_TEMPLATES).map(([id, template]) => (
                               <SelectItem key={id} value={id}>
                                 {template.name}

@@ -38,6 +38,7 @@ import { createUser } from '@/lib/user-management';
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, getDocs } from 'firebase/firestore';
 import type { AccessRightProfile } from '@/lib/access-rights';
+import { useAdminAccessRights } from '@/hooks/use-admin-access-rights';
 
 const createUserSchema = z.object({
   email: z.string().email('Valid email is required'),
@@ -65,6 +66,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [accessRights, setAccessRights] = useState<AccessRightProfile[]>([]);
   const [isLoadingAccessRights, setIsLoadingAccessRights] = useState(false);
+  const { canCreate } = useAdminAccessRights();
 
   const form = useForm<CreateUserFormData>({
     resolver: zodResolver(createUserSchema),
@@ -74,7 +76,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       password: '',
       subscription: 'trial',
       role: 'user',
-      accessRightId: '',
+      accessRightId: 'none',
     },
   });
 
@@ -141,7 +143,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
       };
 
       // Add access right ID if user is admin and one is selected
-      if (data.role === 'admin' && data.accessRightId) {
+      if (data.role === 'admin' && data.accessRightId && data.accessRightId !== 'none') {
         userData.accessRightId = data.accessRightId;
       }
 
@@ -189,7 +191,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button disabled={!canCreate('users')}>
           <PlusCircle className="h-4 w-4 mr-2" />
           Create User
         </Button>
@@ -311,7 +313,7 @@ export function CreateUserDialog({ onUserCreated }: CreateUserDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No specific access rights</SelectItem>
+                        <SelectItem value="none">No specific access rights</SelectItem>
                         {accessRights.map((right) => (
                           <SelectItem key={right.id} value={right.id}>
                             {right.name}

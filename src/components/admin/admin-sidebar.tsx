@@ -23,6 +23,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/config";
+import { useAdminAccessRights } from "@/hooks/use-admin-access-rights";
 
 interface AdminSidebarProps {
   locale: Locale;
@@ -30,6 +31,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ locale }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { canView } = useAdminAccessRights();
 
   const adminMenuItems = [
     {
@@ -37,54 +39,63 @@ export function AdminSidebar({ locale }: AdminSidebarProps) {
       label: "Dashboard",
       href: `/${locale}/admin`,
       badge: null,
+      requiresPermission: null, // Dashboard always visible
     },
     {
       icon: Users,
       label: "Users",
       href: `/${locale}/admin/users`,
       badge: "3",
+      requiresPermission: 'users' as const,
     },
     {
       icon: BarChart3,
       label: "Analytics",
       href: `/${locale}/admin/analytics`,
       badge: null,
+      requiresPermission: null, // Available to all admins
     },
     {
       icon: FileText,
       label: "Reports",
       href: `/${locale}/admin/reports`,
       badge: null,
+      requiresPermission: null, // Available to all admins
     },
     {
       icon: Activity,
       label: "Audit Logs",
       href: `/${locale}/admin/audit-logs`,
       badge: null,
+      requiresPermission: null, // Available to all admins
     },
     {
       icon: Settings,
       label: "System Settings",
       href: `/${locale}/admin/system-settings`,
       badge: null,
+      requiresPermission: 'settings' as const,
     },
     {
       icon: HardDrive,
       label: "Data Management",
       href: `/${locale}/admin/backup`,
       badge: null,
+      requiresPermission: null, // Available to all admins
     },
     {
       icon: Lock,
       label: "Security",
       href: `/${locale}/admin/security`,
       badge: null,
+      requiresPermission: null, // Available to all admins
     },
     {
       icon: Key,
       label: "Access Rights",
       href: `/${locale}/admin/access-rights`,
       badge: null,
+      requiresPermission: 'accessRights' as const,
     },
   ];
 
@@ -95,24 +106,26 @@ export function AdminSidebar({ locale }: AdminSidebarProps) {
       <SidebarHeader />
       <SidebarContent className="pt-16">
         <SidebarMenu>
-          {adminMenuItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton asChild isActive={isActive(item.href)}>
-                  <Link href={item.href}>
-                    <Icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                    {item.badge && (
-                      <span className="ml-auto inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold h-5 w-5">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+          {adminMenuItems
+            .filter(item => !item.requiresPermission || canView(item.requiresPermission))
+            .map((item) => {
+              const Icon = item.icon;
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                    <Link href={item.href}>
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                      {item.badge && (
+                        <span className="ml-auto inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold h-5 w-5">
+                          {item.badge}
+                        </span>
+                      )}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter />

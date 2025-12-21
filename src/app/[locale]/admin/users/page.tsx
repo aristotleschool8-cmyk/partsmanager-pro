@@ -12,6 +12,7 @@ import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { Input } from "@/components/ui/input";
 import { collection, getDocs } from "firebase/firestore";
 import type { AccessRightProfile } from "@/lib/access-rights";
+import { PageAccessGuard } from "@/components/admin/page-access-guard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,7 +33,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default function AdminUsersPage() {
+function AdminUsersPageContent() {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserProfile[]>([]);
@@ -239,5 +240,13 @@ export default function AdminUsersPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function AdminUsersPage() {
+  return (
+    <PageAccessGuard requiredPermission="users" requiredActions={['view']}>
+      <AdminUsersPageContent />
+    </PageAccessGuard>
   );
 }

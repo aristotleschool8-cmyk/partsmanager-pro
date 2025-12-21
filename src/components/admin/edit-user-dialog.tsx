@@ -76,7 +76,7 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
       subscription: user.subscription || 'trial',
       role: user.role || 'user',
       status: user.status || 'active',
-      accessRightId: user.accessRightId || '',
+      accessRightId: user.accessRightId || 'none',
     },
   });
 
@@ -133,8 +133,8 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
         ...data,
       };
 
-      // If user is not admin, remove accessRightId
-      if (data.role !== 'admin') {
+      // If user is not admin or no access right selected, remove accessRightId
+      if (data.role !== 'admin' || data.accessRightId === 'none') {
         updateData.accessRightId = null;
       }
 
@@ -263,7 +263,7 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Access Rights</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
                       <FormControl>
                         <SelectTrigger disabled={isLoadingAccessRights}>
                           {isLoadingAccessRights ? (
@@ -277,7 +277,7 @@ export function EditUserDialog({ user, onUserUpdated }: EditUserDialogProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">No specific access rights</SelectItem>
+                        <SelectItem value="none">No specific access rights</SelectItem>
                         {accessRights.map((right) => (
                           <SelectItem key={right.id} value={right.id}>
                             {right.name}

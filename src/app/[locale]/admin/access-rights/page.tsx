@@ -5,6 +5,7 @@ import { collection, getDocs, deleteDoc, doc, query, where } from 'firebase/fire
 import { useFirebase } from '@/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { AccessRightProfile } from '@/lib/access-rights';
+import { PageAccessGuard } from '@/components/admin/page-access-guard';
 import {
   Table,
   TableBody,
@@ -34,7 +35,7 @@ interface AccessRightData extends AccessRightProfile {
   docId?: string;
 }
 
-export default function AccessRightsPage() {
+function AccessRightsPageContent() {
   const { firestore } = useFirebase();
   const { toast } = useToast();
   const [accessRights, setAccessRights] = useState<AccessRightData[]>([]);
@@ -289,5 +290,13 @@ export default function AccessRightsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function AccessRightsPage() {
+  return (
+    <PageAccessGuard requiredPermission="accessRights" requiredActions={['view']}>
+      <AccessRightsPageContent />
+    </PageAccessGuard>
   );
 }
