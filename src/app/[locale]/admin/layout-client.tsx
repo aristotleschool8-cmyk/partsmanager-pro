@@ -33,12 +33,12 @@ export function AdminLayoutClient({
 }) {
   const router = useRouter();
   const routerRef = useRef(router);
+  const redirectRef = useRef<string | null>(null);
   const pathname = usePathname();
   const { user, firestore, isUserLoading } = useFirebase();
   const [userDoc, setUserDoc] = useState<AppUser | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
-  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   // Keep router ref updated
   useEffect(() => {
@@ -53,12 +53,14 @@ export function AdminLayoutClient({
     getDictionary(locale).then(setDictionary);
   }, [locale]);
 
-  // Handle redirects when redirectUrl is set
+  // Handle any pending redirects
   useEffect(() => {
-    if (redirectUrl) {
-      routerRef.current.push(redirectUrl);
+    if (redirectRef.current) {
+      const url = redirectRef.current;
+      redirectRef.current = null;
+      routerRef.current.push(url);
     }
-  }, [redirectUrl]);
+  }, [isChecking]);
 
   // Skip all auth checks for login page and just show children
   if (isLoginPage) {
@@ -74,9 +76,9 @@ export function AdminLayoutClient({
     }
 
     if (!user) {
-      // Not authenticated, set redirect
+      // Not authenticated, redirect to login
       console.log('❌ No user found, redirecting to login');
-      setRedirectUrl(`/${locale}/admin/login`);
+      redirectRef.current = `/${locale}/admin/login`;
       setIsChecking(false);
       return;
     }
@@ -105,8 +107,7 @@ export function AdminLayoutClient({
           if (userData.role !== 'admin') {
             // Not admin, redirect to dashboard
             console.log('❌ User role is not admin:', userData.role);
-            setUserDoc(null);
-            setRedirectUrl(`/${locale}/dashboard`);
+            redirectRef.current = `/${locale}/dashboard`;
           } else {
             console.log('✅ User is admin, allowing access');
             setUserDoc(userData);
@@ -114,14 +115,12 @@ export function AdminLayoutClient({
         } else {
           // User document doesn't exist, redirect to admin login
           console.log('❌ User document does not exist in Firestore');
-          setUserDoc(null);
-          setRedirectUrl(`/${locale}/admin/login`);
+          redirectRef.current = `/${locale}/admin/login`;
         }
       } catch (error) {
         console.error('❌ Error fetching user document:', error);
         if (isMounted) {
-          setUserDoc(null);
-          setRedirectUrl(`/${locale}/admin/login`);
+          redirectRef.current = `/${locale}/admin/login`;
         }
       } finally {
         if (isMounted) {
