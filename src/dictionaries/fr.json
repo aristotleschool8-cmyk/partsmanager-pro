@@ -100,5 +100,21 @@
     "price": "Prix",
     "total": "Total",
     "submit": "Enregistrer la Vente"
+  },
+  "logPurchaseDialog": {
+    "logPurchase": "Enregistrer Achat",
+    "title": "Enregistrer un Nouvel Achat",
+    "description": "Ajoutez des produits et un fournisseur pour enregistrer une commande d'achat.",
+    "supplier": "Fournisseur",
+    "supplierPlaceholder": "Rechercher ou créer un fournisseur...",
+    "noSupplierFound": "Aucun fournisseur trouvé.",
+    "newSupplier": "(Nouveau Fournisseur)",
+    "product": "Produit",
+    "productPlaceholder": "Rechercher un produit à ajouter...",
+    "noProductFound": "Aucun produit trouvé.",
+    "quantity": "Quantité",
+    "price": "Prix",
+    "total": "Total",
+    "submit": "Enregistrer l'Achat"
   }
 }

@@ -31,6 +31,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LogPurchaseDialog } from "@/components/dashboard/log-purchase-dialog";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query } from "firebase/firestore";
 
@@ -133,10 +134,36 @@ export default function PurchasesPage({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <Button>
-                <PlusCircle className="mr-2" />
-                Log Purchase
-              </Button>
+              <LogPurchaseDialog dictionary={dictionary} onPurchaseAdded={() => {
+                // Refresh purchases
+                const refreshPurchases = async () => {
+                  if (!firestore) return;
+                  try {
+                    const purchasesRef = collection(firestore, 'purchases');
+                    const q = query(purchasesRef);
+                    const querySnapshot = await getDocs(q);
+                    
+                    const fetchedPurchases: Purchase[] = [];
+                    querySnapshot.forEach((doc) => {
+                      const data = doc.data();
+                      fetchedPurchases.push({
+                        id: doc.id,
+                        product: data.product || '',
+                        supplier: data.supplier || '',
+                        date: data.date ? new Date(data.date.toDate?.() || data.date).toISOString() : new Date().toISOString(),
+                        quantity: data.quantity || 0,
+                        amount: data.amount || 0,
+                      });
+                    });
+
+                    setPurchases(fetchedPurchases);
+                  } catch (error) {
+                    console.error('Error refreshing purchases:', error);
+                  }
+                };
+
+                refreshPurchases();
+              }} />
             </div>
           </div>
         </CardHeader>

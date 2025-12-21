@@ -100,5 +100,21 @@
     "price": "Price",
     "total": "Total",
     "submit": "Log Sale"
+  },
+  "logPurchaseDialog": {
+    "logPurchase": "Log Purchase",
+    "title": "Log a New Purchase",
+    "description": "Add products and a supplier to record a purchase order.",
+    "supplier": "Supplier",
+    "supplierPlaceholder": "Search or create a supplier...",
+    "noSupplierFound": "No supplier found.",
+    "newSupplier": "(New Supplier)",
+    "product": "Product",
+    "productPlaceholder": "Search for a product to add...",
+    "noProductFound": "No product found.",
+    "quantity": "Quantity",
+    "price": "Price",
+    "total": "Total",
+    "submit": "Log Purchase"
   }
 }

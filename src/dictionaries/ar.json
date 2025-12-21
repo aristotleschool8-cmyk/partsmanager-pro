@@ -100,5 +100,21 @@
     "price": "السعر",
     "total": "المجموع",
     "submit": "تسجيل البيع"
+  },
+  "logPurchaseDialog": {
+    "logPurchase": "تسجيل عملية شراء",
+    "title": "تسجيل عملية شراء جديدة",
+    "description": "أضف المنتجات والمورد لتسجيل أمر شراء.",
+    "supplier": "المورد",
+    "supplierPlaceholder": "ابحث عن مورد أو أنشئ مورداً جديداً...",
+    "noSupplierFound": "لم يتم العثور على مورد.",
+    "newSupplier": "(مورد جديد)",
+    "product": "المنتج",
+    "productPlaceholder": "ابحث عن منتج لإضافته...",
+    "noProductFound": "لم يتم العثور على منتج.",
+    "quantity": "الكمية",
+    "price": "السعر",
+    "total": "المجموع",
+    "submit": "تسجيل الشراء"
   }
 }
