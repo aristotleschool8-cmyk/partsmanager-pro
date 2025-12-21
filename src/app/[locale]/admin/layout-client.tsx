@@ -71,49 +71,62 @@ export function AdminLayoutClient({
       // Not authenticated, set redirect
       console.log('❌ No user found, redirecting to login');
       setRedirectUrl(`/${locale}/admin/login`);
+      setIsChecking(false);
+      return;
+    }
+
+    if (!firestore) {
+      console.log('❌ Firestore not available');
+      setIsChecking(false);
       return;
     }
 
     // Fetch user document from Firestore
-    const fetchUserDoc = async () => {
+    let isMounted = true;
+    (async () => {
       try {
-        if (!firestore) {
-          console.log('❌ Firestore not available');
-          setIsChecking(false);
-          return;
-        }
-
         console.log('🔍 Fetching user doc for UID:', user.uid);
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
 
+        if (!isMounted) return;
+
         if (userDocSnap.exists()) {
           const userData = userDocSnap.data() as AppUser;
           console.log('✅ User document found:', userData);
-          setUserDoc(userData);
 
           // Check if user is admin
           if (userData.role !== 'admin') {
             // Not admin, redirect to dashboard
             console.log('❌ User role is not admin:', userData.role);
+            setUserDoc(null);
             setRedirectUrl(`/${locale}/dashboard`);
-            return;
+          } else {
+            console.log('✅ User is admin, allowing access');
+            setUserDoc(userData);
           }
-          console.log('✅ User is admin, allowing access');
         } else {
           // User document doesn't exist, redirect to admin login
           console.log('❌ User document does not exist in Firestore');
+          setUserDoc(null);
           setRedirectUrl(`/${locale}/admin/login`);
         }
       } catch (error) {
         console.error('❌ Error fetching user document:', error);
-        setRedirectUrl(`/${locale}/admin/login`);
+        if (isMounted) {
+          setUserDoc(null);
+          setRedirectUrl(`/${locale}/admin/login`);
+        }
       } finally {
-        setIsChecking(false);
+        if (isMounted) {
+          setIsChecking(false);
+        }
       }
-    };
+    })();
 
-    fetchUserDoc();
+    return () => {
+      isMounted = false;
+    };
   }, [user, firestore, isUserLoading, locale]);
 
   if (isUserLoading || isChecking || !dictionary) {
