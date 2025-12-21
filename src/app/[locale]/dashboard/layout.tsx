@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { useNotifications } from '@/hooks/use-notifications';
+import { DashboardLayoutClient } from './layout-client';
 
 export default function DashboardLayout({
   children,
@@ -223,7 +224,9 @@ export default function DashboardLayout({
           </Sidebar>
           <SidebarInset>
               <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-6">
-                {children}
+                <DashboardLayoutClient locale={locale}>
+                  {children}
+                </DashboardLayoutClient>
               </main>
           </SidebarInset>
         </SidebarProvider>
