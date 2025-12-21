@@ -27,7 +27,7 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useFirebase } from '@/firebase/provider';
-import { collection, getDocs, query, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, addDoc, serverTimestamp, where, updateDoc, doc } from 'firebase/firestore';
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -52,6 +52,13 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
   const [products, setProducts] = useState<Product[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [newProductForm, setNewProductForm] = useState({
+    name: '',
+    reference: '',
+    purchasePrice: '',
+    quantity: '1',
+  });
+  const [showNewProductForm, setShowNewProductForm] = useState(false);
 
   // Fetch products and suppliers from Firestore when dialog opens
   useEffect(() => {
@@ -139,6 +146,65 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
   const handleRemoveItem = (productId: string) => {
     setPurchaseItems(prev => prev.filter(item => item.id !== productId));
   };
+
+  const handleAddNewProduct = async () => {
+    if (!firestore || !newProductForm.name.trim() || !newProductForm.purchasePrice.trim()) {
+      return;
+    }
+
+    try {
+      // Create new product
+      const productsRef = collection(firestore, 'products');
+      const newProductRef = await addDoc(productsRef, {
+        name: newProductForm.name.trim(),
+        reference: newProductForm.reference.trim() || `REF-${Date.now()}`,
+        brand: '',
+        stock: 0,
+        purchasePrice: parseFloat(newProductForm.purchasePrice),
+        price: parseFloat(newProductForm.purchasePrice) * 1.25,
+        createdAt: serverTimestamp(),
+        isDeleted: false,
+      });
+
+      // Add to purchase items
+      const newProduct: PurchaseItem = {
+        id: newProductRef.id,
+        name: newProductForm.name.trim(),
+        reference: newProductForm.reference.trim() || `REF-${Date.now()}`,
+        brand: '',
+        sku: '',
+        stock: 0,
+        purchasePrice: parseFloat(newProductForm.purchasePrice),
+        price: parseFloat(newProductForm.purchasePrice) * 1.25,
+        purchaseQuantity: parseInt(newProductForm.quantity) || 1,
+      };
+
+      setPurchaseItems(prev => [...prev, newProduct]);
+
+      // Add to products list
+      setProducts(prev => [...prev, {
+        id: newProductRef.id,
+        name: newProductForm.name.trim(),
+        reference: newProductForm.reference.trim() || `REF-${Date.now()}`,
+        brand: '',
+        sku: '',
+        stock: 0,
+        purchasePrice: parseFloat(newProductForm.purchasePrice),
+        price: parseFloat(newProductForm.purchasePrice) * 1.25,
+      }]);
+
+      // Reset form
+      setNewProductForm({
+        name: '',
+        reference: '',
+        purchasePrice: '',
+        quantity: '1',
+      });
+      setShowNewProductForm(false);
+    } catch (error) {
+      console.error('Error adding new product:', error);
+    }
+  };
   
   const totalAmount = useMemo(() => {
     return purchaseItems.reduce((total, item) => total + (item.purchasePrice * item.purchaseQuantity), 0);
@@ -163,9 +229,12 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
         supplierId = newSupplierDoc.id;
       }
 
-      // Save each purchase item to the purchases collection
+      // Save each purchase item to the purchases collection and update product stock
       const purchasesRef = collection(firestore, 'purchases');
+      const productsRef = collection(firestore, 'products');
+
       for (const item of purchaseItems) {
+        // Save purchase record
         await addDoc(purchasesRef, {
           supplierId: supplierId,
           supplier: supplierName,
@@ -176,6 +245,18 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
           unitPrice: item.purchasePrice,
           reference: item.reference,
           date: serverTimestamp(),
+        });
+
+        // Update product stock: add purchase quantity to existing stock
+        const productRef = doc(firestore, 'products', item.id);
+        const currentStock = item.stock || 0;
+        const newStock = currentStock + item.purchaseQuantity;
+
+        await updateDoc(productRef, {
+          stock: newStock,
+          purchasePrice: item.purchasePrice, // Update purchase price
+          price: item.purchasePrice * 1.25, // Auto-calculate selling price (25% markup)
+          updatedAt: serverTimestamp(),
         });
       }
 
@@ -247,13 +328,89 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                 )}
             </div>
             <div className="grid gap-2">
-                <Label htmlFor="product">{d.product}</Label>
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="product">{d.product}</Label>
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowNewProductForm(!showNewProductForm)}
+                  >
+                    <PlusCircle className="w-4 h-4 mr-1" />
+                    New Product
+                  </Button>
+                </div>
                 <Autocomplete
                     options={productOptions}
                     placeholder={d.productPlaceholder}
                     emptyMessage={d.noProductFound}
                     onValueChange={handleAddProduct}
                 />
+
+                {/* New Product Form */}
+                {showNewProductForm && (
+                  <Card className="mt-2 p-4">
+                    <div className="space-y-3">
+                      <div className="grid gap-1">
+                        <Label htmlFor="productName" className="text-sm">Product Name *</Label>
+                        <Input
+                          id="productName"
+                          placeholder="Enter product name..."
+                          value={newProductForm.name}
+                          onChange={(e) => setNewProductForm(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <Label htmlFor="productRef" className="text-sm">Reference</Label>
+                        <Input
+                          id="productRef"
+                          placeholder="Auto-generated if empty"
+                          value={newProductForm.reference}
+                          onChange={(e) => setNewProductForm(prev => ({ ...prev, reference: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="grid gap-1">
+                          <Label htmlFor="productPrice" className="text-sm">Purchase Price *</Label>
+                          <Input
+                            id="productPrice"
+                            type="number"
+                            placeholder="0.00"
+                            value={newProductForm.purchasePrice}
+                            onChange={(e) => setNewProductForm(prev => ({ ...prev, purchasePrice: e.target.value }))}
+                          />
+                        </div>
+                        <div className="grid gap-1">
+                          <Label htmlFor="productQty" className="text-sm">Quantity</Label>
+                          <Input
+                            id="productQty"
+                            type="number"
+                            placeholder="1"
+                            value={newProductForm.quantity}
+                            onChange={(e) => setNewProductForm(prev => ({ ...prev, quantity: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button"
+                          size="sm"
+                          onClick={handleAddNewProduct}
+                        >
+                          Add Product
+                        </Button>
+                        <Button 
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowNewProductForm(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
             </div>
           
           {purchaseItems.length > 0 && (
