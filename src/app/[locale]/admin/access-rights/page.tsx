@@ -28,8 +28,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Trash2, Eye, Plus } from 'lucide-react';
 import CreateAccessRightDialog from '@/components/admin/create-access-right-dialog';
-import ViewAccessRightDialog from '@/components/admin/view-access-right-dialog';
-import EditAccessRightDialog from '@/components/admin/edit-access-right-dialog';
 
 interface AccessRightData extends AccessRightProfile {
   docId?: string;

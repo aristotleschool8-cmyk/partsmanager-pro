@@ -92,7 +92,7 @@ export function useAdminAccessRights() {
   }, [user, firestore]);
 
   /**
-   * Check if admin can view a specific resource
+   * Check if admin can view a specific admin page/feature
    */
   const canView = useCallback((resource: keyof AccessRightProfile['permissions']): boolean => {
     if (!accessRights) return false;
@@ -101,30 +101,30 @@ export function useAdminAccessRights() {
   }, [accessRights]);
 
   /**
-   * Check if admin can create a specific resource
+   * Check if admin can create items (users or access rights)
    */
   const canCreate = useCallback((resource: keyof AccessRightProfile['permissions']): boolean => {
     if (!accessRights) return false;
     const permission = accessRights.permissions[resource];
-    return permission && 'create' in permission ? permission.create : false;
+    return permission && 'create' in permission ? (permission as any).create : false;
   }, [accessRights]);
 
   /**
-   * Check if admin can edit a specific resource
+   * Check if admin can edit items (users, access rights, or system settings)
    */
   const canEdit = useCallback((resource: keyof AccessRightProfile['permissions']): boolean => {
     if (!accessRights) return false;
     const permission = accessRights.permissions[resource];
-    return permission && 'edit' in permission ? permission.edit : false;
+    return permission && 'edit' in permission ? (permission as any).edit : false;
   }, [accessRights]);
 
   /**
-   * Check if admin can delete a specific resource
+   * Check if admin can delete items (users or access rights)
    */
   const canDelete = useCallback((resource: keyof AccessRightProfile['permissions']): boolean => {
     if (!accessRights) return false;
     const permission = accessRights.permissions[resource];
-    return permission && 'delete' in permission ? permission.delete : false;
+    return permission && 'delete' in permission ? (permission as any).delete : false;
   }, [accessRights]);
 
   /**

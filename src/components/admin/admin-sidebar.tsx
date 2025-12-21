@@ -39,7 +39,7 @@ export function AdminSidebar({ locale }: AdminSidebarProps) {
       label: "Dashboard",
       href: `/${locale}/admin`,
       badge: null,
-      requiresPermission: null, // Dashboard always visible
+      requiresPermission: 'dashboard' as const,
     },
     {
       icon: Users,
@@ -53,42 +53,42 @@ export function AdminSidebar({ locale }: AdminSidebarProps) {
       label: "Analytics",
       href: `/${locale}/admin/analytics`,
       badge: null,
-      requiresPermission: null, // Available to all admins
+      requiresPermission: 'analytics' as const,
     },
     {
       icon: FileText,
       label: "Reports",
       href: `/${locale}/admin/reports`,
       badge: null,
-      requiresPermission: null, // Available to all admins
+      requiresPermission: 'reports' as const,
     },
     {
       icon: Activity,
       label: "Audit Logs",
       href: `/${locale}/admin/audit-logs`,
       badge: null,
-      requiresPermission: null, // Available to all admins
+      requiresPermission: 'auditLogs' as const,
     },
     {
       icon: Settings,
       label: "System Settings",
       href: `/${locale}/admin/system-settings`,
       badge: null,
-      requiresPermission: 'settings' as const,
+      requiresPermission: 'systemSettings' as const,
     },
     {
       icon: HardDrive,
       label: "Data Management",
       href: `/${locale}/admin/backup`,
       badge: null,
-      requiresPermission: null, // Available to all admins
+      requiresPermission: 'dataManagement' as const,
     },
     {
       icon: Lock,
       label: "Security",
       href: `/${locale}/admin/security`,
       badge: null,
-      requiresPermission: null, // Available to all admins
+      requiresPermission: 'security' as const,
     },
     {
       icon: Key,
