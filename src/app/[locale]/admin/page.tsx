@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatsCard } from "@/components/dashboard/stats-card";
@@ -14,31 +14,53 @@ import {
   Lock,
   AlertTriangle,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import { Locale } from "@/lib/config";
-import { initializeFirebase } from "@/firebase";
+import { useFirebase } from "@/firebase/provider";
 import { fetchAnalyticsData } from "@/lib/admin-analytics";
+import { useEffect, useState } from "react";
 
-export default async function AdminDashboard({ params }: { params: Promise<{ locale: Locale }> }) {
-  const { locale } = await params;
-  const { firestore } = initializeFirebase();
-  
-  let analyticsData = {
-    totalRevenue: 0,
-    totalOrders: 0,
-    activeUsers: 0,
-    totalProducts: 0,
-    lowStockProducts: 0,
-    totalCustomers: 0,
-    totalSuppliers: 0,
-    systemStatus: 'healthy' as const,
-  };
+export default function AdminDashboard({ params }: { params: { locale: Locale } }) {
+  const { locale } = params;
+  const { firestore } = useFirebase();
+  const [analyticsData, setAnalyticsData] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  try {
-    analyticsData = await fetchAnalyticsData(firestore);
-  } catch (error) {
-    console.error('Failed to fetch analytics:', error);
+  useEffect(() => {
+    if (!firestore) return;
+
+    const loadData = async () => {
+      try {
+        const data = await fetchAnalyticsData(firestore);
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Failed to fetch analytics:', error);
+        setAnalyticsData({
+          totalRevenue: 0,
+          totalOrders: 0,
+          activeUsers: 0,
+          totalProducts: 0,
+          lowStockProducts: 0,
+          totalCustomers: 0,
+          totalSuppliers: 0,
+          systemStatus: 'error',
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [firestore]);
+
+  if (isLoading || !analyticsData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   const statusIcon = analyticsData.systemStatus === 'healthy' 
