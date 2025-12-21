@@ -61,7 +61,7 @@ export function CreateInvoiceDialog({ locale, dictionary }: CreateInvoiceDialogP
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!canExport(userDoc)} title={!canExport(userDoc) ? 'Trial users cannot create invoices' : ''}>
+        <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Invoice
         </Button>
@@ -82,7 +82,7 @@ export function CreateInvoiceDialog({ locale, dictionary }: CreateInvoiceDialogP
           <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} type="button" disabled={!canExport(userDoc) || isLoading}>
+          <Button onClick={handleSubmit} type="button" disabled={isLoading}>
             Generate Invoice
           </Button>
         </DialogFooter>

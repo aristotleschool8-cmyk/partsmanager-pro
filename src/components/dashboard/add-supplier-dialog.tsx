@@ -141,7 +141,7 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!canWrite(userDoc)} title={!canWrite(userDoc) ? 'Trial users cannot add suppliers' : ''}>
+        <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Supplier
         </Button>

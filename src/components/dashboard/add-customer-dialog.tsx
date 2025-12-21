@@ -141,7 +141,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button disabled={!canWrite(userDoc)} title={!canWrite(userDoc) ? 'Trial users cannot add customers' : ''}>
+        <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
           Add Customer
         </Button>
