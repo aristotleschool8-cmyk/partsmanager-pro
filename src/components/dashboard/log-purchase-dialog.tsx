@@ -11,12 +11,6 @@ import {
   DialogTrigger,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,12 +61,6 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
     quantity: '1',
   });
   const [showNewProductForm, setShowNewProductForm] = useState(false);
-  const [batchProducts, setBatchProducts] = useState<Array<{
-    name: string;
-    reference: string;
-    purchasePrice: string;
-    quantity: string;
-  }>>([{ name: '', reference: '', purchasePrice: '', quantity: '' }]);
   const [showBatchForm, setShowBatchForm] = useState(false);
   const [importStatus, setImportStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [importMessage, setImportMessage] = useState('');
@@ -220,62 +208,6 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
       setShowNewProductForm(false);
     } catch (error) {
       console.error('Error adding new product:', error);
-    }
-  };
-
-  const handleAddBatchProducts = async () => {
-    const validProducts = batchProducts.filter(p => p.name.trim() && p.purchasePrice.trim());
-    if (validProducts.length === 0) return;
-
-    try {
-      const productsRef = collection(firestore, 'products');
-      
-      for (const batchProduct of validProducts) {
-        // Create new product
-        const newProductRef = await addDoc(productsRef, {
-          name: batchProduct.name.trim(),
-          reference: batchProduct.reference.trim() || `REF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          brand: '',
-          stock: 0,
-          purchasePrice: parseFloat(batchProduct.purchasePrice),
-          price: parseFloat(batchProduct.purchasePrice) * 1.25,
-          createdAt: serverTimestamp(),
-          isDeleted: false,
-        });
-
-        // Add to purchase items
-        const newProduct: PurchaseItem = {
-          id: newProductRef.id,
-          name: batchProduct.name.trim(),
-          reference: batchProduct.reference.trim() || `REF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          brand: '',
-          sku: '',
-          stock: 0,
-          purchasePrice: parseFloat(batchProduct.purchasePrice),
-          price: parseFloat(batchProduct.purchasePrice) * 1.25,
-          purchaseQuantity: parseInt(batchProduct.quantity) || 1,
-        };
-
-        setPurchaseItems(prev => [...prev, newProduct]);
-
-        // Add to products list
-        setProducts(prev => [...prev, {
-          id: newProductRef.id,
-          name: batchProduct.name.trim(),
-          reference: batchProduct.reference.trim() || `REF-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          brand: '',
-          sku: '',
-          stock: 0,
-          purchasePrice: parseFloat(batchProduct.purchasePrice),
-          price: parseFloat(batchProduct.purchasePrice) * 1.25,
-        }]);
-      }
-
-      // Reset batch form
-      setBatchProducts([{ name: '', reference: '', purchasePrice: '', quantity: '' }]);
-      setShowBatchForm(false);
-    } catch (error) {
-      console.error('Error adding batch products:', error);
     }
   };
 
@@ -469,22 +401,6 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
       setImportMessage('Failed to import products');
     }
   };
-
-  const updateBatchProduct = (index: number, field: string, value: string) => {
-    setBatchProducts(prev => {
-      const updated = [...prev];
-      updated[index] = { ...updated[index], [field]: value };
-      return updated;
-    });
-  };
-
-  const addBatchRow = () => {
-    setBatchProducts(prev => [...prev, { name: '', reference: '', purchasePrice: '', quantity: '' }]);
-  };
-
-  const removeBatchRow = (index: number) => {
-    setBatchProducts(prev => prev.filter((_, i) => i !== index));
-  };
   
   const totalAmount = useMemo(() => {
     return purchaseItems.reduce((total, item) => total + (item.purchasePrice * item.purchaseQuantity), 0);
@@ -647,163 +563,56 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                 {/* Batch Products Form */}
                 {showBatchForm && (
                   <Card className="mt-2 p-4">
-                    <Tabs defaultValue="manual" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-4">
-                        <TabsTrigger value="manual">Manual Entry</TabsTrigger>
-                        <TabsTrigger value="import">Import File</TabsTrigger>
-                      </TabsList>
+                    <div className="space-y-3">
+                      <div>
+                        <Label htmlFor="batchFile" className="text-sm font-semibold">Import CSV or Excel File</Label>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Columns: Designation (or Product), Reference, Purchase Price (or Price), Quantity (optional)
+                        </p>
+                      </div>
+                      
+                      <Input
+                        id="batchFile"
+                        type="file"
+                        accept=".csv,.xlsx,.xls"
+                        onChange={handleFileUpload}
+                        className="cursor-pointer"
+                      />
 
-                      {/* Manual Entry Tab */}
-                      <TabsContent value="manual" className="space-y-3">
-                        <div className="grid gap-2">
-                          <Label className="text-sm font-semibold">Add Multiple Products</Label>
-                          <div className="border rounded">
-                            <Table>
-                              <TableHeader>
-                                <TableRow className="hover:bg-transparent">
-                                  <TableHead className="py-2 px-3 text-xs">Product Name</TableHead>
-                                  <TableHead className="py-2 px-3 text-xs">Reference</TableHead>
-                                  <TableHead className="py-2 px-3 text-xs w-[100px]">Price</TableHead>
-                                  <TableHead className="py-2 px-3 text-xs w-[80px]">Qty</TableHead>
-                                  <TableHead className="py-2 px-3 text-xs w-[50px]"></TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {batchProducts.map((product, idx) => (
-                                  <TableRow key={idx} className="hover:bg-gray-50">
-                                    <TableCell className="p-1">
-                                      <Input
-                                        placeholder="Product name"
-                                        value={product.name}
-                                        onChange={(e) => updateBatchProduct(idx, 'name', e.target.value)}
-                                        className="h-8 text-xs"
-                                      />
-                                    </TableCell>
-                                    <TableCell className="p-1">
-                                      <Input
-                                        placeholder="Auto-generate"
-                                        value={product.reference}
-                                        onChange={(e) => updateBatchProduct(idx, 'reference', e.target.value)}
-                                        className="h-8 text-xs"
-                                      />
-                                    </TableCell>
-                                    <TableCell className="p-1">
-                                      <Input
-                                        type="number"
-                                        placeholder="0.00"
-                                        value={product.purchasePrice}
-                                        onChange={(e) => updateBatchProduct(idx, 'purchasePrice', e.target.value)}
-                                        className="h-8 text-xs"
-                                      />
-                                    </TableCell>
-                                    <TableCell className="p-1">
-                                      <Input
-                                        type="number"
-                                        placeholder="1"
-                                        value={product.quantity}
-                                        onChange={(e) => updateBatchProduct(idx, 'quantity', e.target.value)}
-                                        className="h-8 text-xs"
-                                      />
-                                    </TableCell>
-                                    <TableCell className="p-1">
-                                      <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8"
-                                        onClick={() => removeBatchRow(idx)}
-                                      >
-                                        <Trash2 className="h-4 w-4 text-destructive" />
-                                      </Button>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
+                      {importStatus === 'processing' && (
+                        <div className="flex items-center gap-2 text-sm text-blue-600">
+                          <div className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
+                          {importMessage}
                         </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={addBatchRow}
-                          >
-                            <PlusCircle className="w-4 h-4 mr-1" />
-                            Add Row
-                          </Button>
-                          <Button 
-                            type="button"
-                            size="sm"
-                            onClick={handleAddBatchProducts}
-                          >
-                            Add Products
-                          </Button>
-                          <Button 
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowBatchForm(false)}
-                          >
-                            Cancel
-                          </Button>
+                      )}
+
+                      {importStatus === 'success' && (
+                        <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
+                          <CheckCircle className="h-4 w-4" />
+                          {importMessage}
                         </div>
-                      </TabsContent>
+                      )}
 
-                      {/* Import File Tab */}
-                      <TabsContent value="import" className="space-y-3">
-                        <div className="space-y-3">
-                          <div>
-                            <Label htmlFor="batchFile" className="text-sm font-semibold">Import CSV or Excel File</Label>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Columns: Designation (or Product), Reference, Purchase Price (or Price), Quantity (optional)
-                            </p>
-                          </div>
-                          
-                          <Input
-                            id="batchFile"
-                            type="file"
-                            accept=".csv,.xlsx,.xls"
-                            onChange={handleFileUpload}
-                            className="cursor-pointer"
-                          />
-
-                          {importStatus === 'processing' && (
-                            <div className="flex items-center gap-2 text-sm text-blue-600">
-                              <div className="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin" />
-                              {importMessage}
-                            </div>
-                          )}
-
-                          {importStatus === 'success' && (
-                            <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
-                              <CheckCircle className="h-4 w-4" />
-                              {importMessage}
-                            </div>
-                          )}
-
-                          {importStatus === 'error' && (
-                            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
-                              <AlertCircle className="h-4 w-4" />
-                              {importMessage}
-                            </div>
-                          )}
-
-                          <Button 
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setShowBatchForm(false);
-                              setImportStatus('idle');
-                              setImportMessage('');
-                            }}
-                          >
-                            Close
-                          </Button>
+                      {importStatus === 'error' && (
+                        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                          <AlertCircle className="h-4 w-4" />
+                          {importMessage}
                         </div>
-                      </TabsContent>
-                    </Tabs>
+                      )}
+
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowBatchForm(false);
+                          setImportStatus('idle');
+                          setImportMessage('');
+                        }}
+                      >
+                        Close
+                      </Button>
+                    </div>
                   </Card>
                 )}
 
