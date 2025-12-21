@@ -37,6 +37,7 @@ export function AdminLayoutClient({
   const [userDoc, setUserDoc] = useState<AppUser | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
+  const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
 
   // Skip auth checks for login page
   const isLoginPage = pathname?.includes('/admin/login');
@@ -45,6 +46,13 @@ export function AdminLayoutClient({
   useEffect(() => {
     getDictionary(locale).then(setDictionary);
   }, [locale]);
+
+  // Handle redirects when redirectUrl is set
+  useEffect(() => {
+    if (redirectUrl) {
+      router.push(redirectUrl);
+    }
+  }, [redirectUrl, router]);
 
   // Skip all auth checks for login page and just show children
   if (isLoginPage) {
@@ -60,9 +68,9 @@ export function AdminLayoutClient({
     }
 
     if (!user) {
-      // Not authenticated, redirect to admin login
+      // Not authenticated, set redirect
       console.log('❌ No user found, redirecting to login');
-      router.push(`/${locale}/admin/login`);
+      setRedirectUrl(`/${locale}/admin/login`);
       return;
     }
 
@@ -71,6 +79,7 @@ export function AdminLayoutClient({
       try {
         if (!firestore) {
           console.log('❌ Firestore not available');
+          setIsChecking(false);
           return;
         }
 
@@ -87,18 +96,18 @@ export function AdminLayoutClient({
           if (userData.role !== 'admin') {
             // Not admin, redirect to dashboard
             console.log('❌ User role is not admin:', userData.role);
-            router.push(`/${locale}/dashboard`);
+            setRedirectUrl(`/${locale}/dashboard`);
             return;
           }
           console.log('✅ User is admin, allowing access');
         } else {
           // User document doesn't exist, redirect to admin login
           console.log('❌ User document does not exist in Firestore');
-          router.push(`/${locale}/admin/login`);
+          setRedirectUrl(`/${locale}/admin/login`);
         }
       } catch (error) {
         console.error('❌ Error fetching user document:', error);
-        router.push(`/${locale}/admin/login`);
+        setRedirectUrl(`/${locale}/admin/login`);
       } finally {
         setIsChecking(false);
       }
