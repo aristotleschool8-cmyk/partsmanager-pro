@@ -105,7 +105,7 @@ export function AdminLayoutClient({
     };
 
     fetchUserDoc();
-  }, [user, firestore, isUserLoading, router, locale]);
+  }, [user, firestore, isUserLoading, locale]);
 
   if (isUserLoading || isChecking || !dictionary) {
     return (

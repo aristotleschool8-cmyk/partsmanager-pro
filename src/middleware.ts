@@ -35,15 +35,10 @@ export function middleware(request: NextRequest) {
 
   // Handle admin route protection
   if (pathname.includes('/admin')) {
-    // For now, we skip server-side verification here because Firebase auth is client-side
-    // The client-side check in admin layout.tsx will handle access control
-    // In production, you could verify the JWT token as shown above
-    // If not authenticated, redirect to admin login
-    const authToken = request.cookies.get('__session')?.value
-    if (!authToken && !pathname.includes('/admin/login')) {
-      const locale = getLocale(request)
-      return NextResponse.redirect(new URL(`/${locale}/admin/login`, request.url))
-    }
+    // Skip middleware-level auth check for admin routes
+    // Client-side verification in admin/layout-client.tsx handles admin role checking
+    // This prevents cookie-based checks from interfering with Firebase client-side auth
+    return NextResponse.next()
   }
 
   return NextResponse.next()
