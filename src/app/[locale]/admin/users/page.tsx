@@ -10,6 +10,8 @@ import { fetchAllUsers, deleteUser, UserProfile } from "@/lib/user-management";
 import { EditUserDialog } from "@/components/admin/edit-user-dialog";
 import { CreateUserDialog } from "@/components/admin/create-user-dialog";
 import { Input } from "@/components/ui/input";
+import { collection, getDocs } from "firebase/firestore";
+import type { AccessRightProfile } from "@/lib/access-rights";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,7 @@ export default function AdminUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [accessRights, setAccessRights] = useState<Map<string, AccessRightProfile>>(new Map());
 
   const loadUsers = async () => {
     if (!firestore) return;
@@ -44,6 +47,16 @@ export default function AdminUsersPage() {
       setIsLoading(true);
       const fetchedUsers = await fetchAllUsers(firestore);
       setUsers(fetchedUsers);
+      
+      // Load access rights
+      const accessRightsRef = collection(firestore, 'accessRights');
+      const snapshot = await getDocs(accessRightsRef);
+      const rightsMap = new Map<string, AccessRightProfile>();
+      snapshot.forEach((doc) => {
+        const data = doc.data() as AccessRightProfile;
+        rightsMap.set(doc.id, data);
+      });
+      setAccessRights(rightsMap);
     } catch (error) {
       console.error('Error loading users:', error);
       toast({
@@ -138,6 +151,7 @@ export default function AdminUsersPage() {
                     <TableHead>Name</TableHead>
                     <TableHead>Subscription</TableHead>
                     <TableHead>Role</TableHead>
+                    <TableHead>Access Rights</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -157,6 +171,15 @@ export default function AdminUsersPage() {
                         <Badge variant={user.role === 'admin' ? 'destructive' : 'outline'}>
                           {user.role === 'admin' ? 'Admin' : 'User'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {user.role === 'admin' && user.accessRightId ? (
+                          <Badge variant="secondary">
+                            {accessRights.get(user.accessRightId)?.name || 'Unknown'}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">-</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
