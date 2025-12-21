@@ -28,17 +28,11 @@ export function middleware(request: NextRequest) {
 
   if (pathnameIsMissingLocale) {
     const locale = getLocale(request)
+    // Properly handle pathname - don't add extra slashes
+    const pathWithoutLeadingSlash = pathname.startsWith('/') ? pathname.slice(1) : pathname
     return NextResponse.redirect(
-      new URL(`/${locale}/${pathname}`, request.url)
+      new URL(`/${locale}/${pathWithoutLeadingSlash}`, request.url)
     )
-  }
-
-  // Handle admin route protection
-  if (pathname.includes('/admin')) {
-    // Skip middleware-level auth check for admin routes
-    // Client-side verification in admin/layout-client.tsx handles admin role checking
-    // This prevents cookie-based checks from interfering with Firebase client-side auth
-    return NextResponse.next()
   }
 
   return NextResponse.next()
