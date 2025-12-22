@@ -33,15 +33,21 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogPurchaseDialog } from "@/components/dashboard/log-purchase-dialog";
 import { useFirebase } from "@/firebase/provider";
-import { collection, getDocs, query } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+
+interface PurchaseItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+}
 
 interface Purchase {
   id: string;
-  product: string;
   supplier: string;
   date: string;
-  quantity: number;
-  amount: number;
+  items: PurchaseItem[];
+  totalAmount: number;
 }
 
 export default function PurchasesPage({
@@ -55,6 +61,16 @@ export default function PurchasesPage({
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const handleDeletePurchase = async (id: string) => {
+    if (!firestore) return;
+    try {
+      await deleteDoc(doc(firestore, 'purchases', id));
+      setPurchases(prev => prev.filter(p => p.id !== id));
+    } catch (error) {
+      console.error('Error deleting purchase:', error);
+    }
+  };
 
   // Load dictionary
   useEffect(() => {
@@ -81,11 +97,10 @@ export default function PurchasesPage({
           const data = doc.data();
           fetchedPurchases.push({
             id: doc.id,
-            product: data.product || '',
             supplier: data.supplier || '',
             date: data.date ? new Date(data.date.toDate?.() || data.date).toISOString() : new Date().toISOString(),
-            quantity: data.quantity || 0,
-            amount: data.amount || 0,
+            items: data.items || [],
+            totalAmount: data.totalAmount || 0,
           });
         });
 
@@ -111,8 +126,8 @@ export default function PurchasesPage({
   }
 
   const filteredPurchases = purchases.filter((purchase) =>
-    purchase.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    purchase.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+    purchase.supplier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    purchase.items.some(item => item.description.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   return (
@@ -148,11 +163,10 @@ export default function PurchasesPage({
                       const data = doc.data();
                       fetchedPurchases.push({
                         id: doc.id,
-                        product: data.product || '',
                         supplier: data.supplier || '',
                         date: data.date ? new Date(data.date.toDate?.() || data.date).toISOString() : new Date().toISOString(),
-                        quantity: data.quantity || 0,
-                        amount: data.amount || 0,
+                        items: data.items || [],
+                        totalAmount: data.totalAmount || 0,
                       });
                     });
 
@@ -176,11 +190,10 @@ export default function PurchasesPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
+                  <TableHead>Items</TableHead>
                   <TableHead className="hidden sm:table-cell">Supplier</TableHead>
                   <TableHead className="hidden sm:table-cell">Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Quantity</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead className="text-right">Total Amount</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
                   </TableHead>
@@ -189,18 +202,26 @@ export default function PurchasesPage({
               <TableBody>
                 {filteredPurchases.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       {purchases.length === 0 ? 'No purchases found. Log one to get started!' : 'No purchases match your search.'}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredPurchases.map((purchase) => (
                     <TableRow key={purchase.id}>
-                      <TableCell className="font-medium">{purchase.product}</TableCell>
+                      <TableCell className="font-medium">
+                        <div className="text-sm">
+                          {purchase.items.map((item, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <span>{item.description}</span>
+                              <span className="text-muted-foreground">({item.quantity}x @ {item.unitPrice.toFixed(2)} DZD)</span>
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
                       <TableCell className="hidden sm:table-cell">{purchase.supplier}</TableCell>
                       <TableCell className="hidden sm:table-cell">{new Date(purchase.date).toLocaleDateString()}</TableCell>
-                      <TableCell className="hidden md:table-cell">{purchase.quantity}</TableCell>
-                      <TableCell className="text-right">{purchase.amount.toFixed(2)} DZD</TableCell>
+                      <TableCell className="text-right font-medium">{purchase.totalAmount.toFixed(2)} DZD</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -211,7 +232,9 @@ export default function PurchasesPage({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeletePurchase(purchase.id)} className="text-destructive">
+                              Delete Purchase
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

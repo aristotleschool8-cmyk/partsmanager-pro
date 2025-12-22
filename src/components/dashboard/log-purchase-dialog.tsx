@@ -243,7 +243,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                 )}
             </div>
 
-            <div className="grid gap-4 border rounded-lg p-4 bg-gray-50">
+            <div className="grid gap-4 border rounded-lg p-4 bg-gray-50 dark:bg-slate-900">
               <div className="grid gap-2">
                 <Label htmlFor="item-description">{d.itemDescription}</Label>
                 <Input
@@ -280,7 +280,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                   />
                 </div>
                 <div className="flex flex-col justify-end">
-                  <Button onClick={handleAddItem} variant="outline" className="w-full">
+                  <Button onClick={handleAddItem} className="w-full">
                     {d.addItem}
                   </Button>
                 </div>
