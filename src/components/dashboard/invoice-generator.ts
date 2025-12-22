@@ -1,26 +1,12 @@
 
 'use client';
 
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
 import type { InvoiceFormData } from './create-invoice-form';
 import { User as AppUser } from '@/lib/types';
 import { canExport } from '@/lib/trial-utils';
-
-// Only import jsPDF and autotable in browser context
-let jsPDF: any = null;
-if (typeof window !== 'undefined') {
-  try {
-    const jsPDFModule = require('jspdf').jsPDF || require('jspdf').default;
-    jsPDF = jsPDFModule;
-    // Load autotable as side-effect to extend jsPDF
-    const autoTableModule = require('jspdf-autotable');
-    if (autoTableModule && typeof autoTableModule === 'function') {
-      autoTableModule(jsPDF);
-    }
-  } catch (e) {
-    // jsPDF not loaded
-    console.error('Failed to load jsPDF:', e);
-  }
-}
 
 export interface CompanyInfo {
   companyName: string;

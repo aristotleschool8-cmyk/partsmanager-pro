@@ -27,6 +27,7 @@ import { canExport, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { getUserSettings, getNextInvoiceNumber, updateLastInvoiceNumber } from '@/lib/settings-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Locale } from '@/lib/config';
+import { generateInvoicePdf } from './invoice-generator';
 
 const lineItemSchema = z.object({
   reference: z.string().optional(),
@@ -153,9 +154,6 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
         // Get company info from Firestore settings
         const settings = await getUserSettings(firestore, user.uid);
-        
-        // Dynamically import generateInvoicePdf to prevent server-side jsPDF bundling
-        const { generateInvoicePdf } = await import('./invoice-generator');
         
         // Generate PDF with form data
         await generateInvoicePdf(values);

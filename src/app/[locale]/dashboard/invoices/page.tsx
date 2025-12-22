@@ -25,7 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query } from "firebase/firestore";
-import { CreateInvoiceDialogWrapper } from "@/components/dashboard/create-invoice-dialog-wrapper";
+import { CreateInvoiceDialog } from "@/components/dashboard/create-invoice-dialog";
 
 interface Invoice {
   id: string;
@@ -115,7 +115,7 @@ export default function InvoicesPage({
         <CardHeader>
             <div className="flex justify-between items-center">
                 <CardTitle>Invoices</CardTitle>
-                <CreateInvoiceDialogWrapper locale={locale} dictionary={dictionary} />
+                <CreateInvoiceDialog locale={locale} dictionary={dictionary} />
             </div>
         </CardHeader>
         <CardContent>
