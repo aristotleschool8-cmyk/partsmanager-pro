@@ -29,6 +29,7 @@ import { saveInvoiceData, calculateInvoiceTotals } from '@/lib/invoices-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Locale } from '@/lib/config';
 import { generateInvoicePdf } from './invoice-generator';
+import { getCustomersForAutoComplete, getProductsForAutoComplete, type ClientAutoComplete, type ProductAutoComplete } from '@/lib/invoice-autocomplete-utils';
 
 const lineItemSchema = z.object({
   reference: z.string().optional(),
@@ -70,6 +71,10 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
     const [isLoading, setIsLoading] = React.useState(false);
     const [nextInvoiceNumber, setNextInvoiceNumber] = React.useState('FAC-2025-0001');
     const [settingsState, setSettingsState] = React.useState<AppSettings | null>(null);
+    const [customers, setCustomers] = React.useState<ClientAutoComplete[]>([]);
+    const [products, setProducts] = React.useState<ProductAutoComplete[]>([]);
+    const [clientSearchOpen, setClientSearchOpen] = React.useState(false);
+    const [productSearchOpen, setProductSearchOpen] = React.useState<Record<number, boolean>>({});
     
     // Fetch user document and settings
     React.useEffect(() => {
@@ -90,6 +95,12 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
           setNextInvoiceNumber(nextNumber);
           // ensure form field reflects computed next invoice number
           setTimeout(() => setValue('invoiceNumber', nextNumber), 0);
+
+          // Fetch customers and products for autocomplete
+          const customersData = await getCustomersForAutoComplete(firestore, user.uid);
+          const productsData = await getProductsForAutoComplete(firestore, user.uid);
+          setCustomers(customersData);
+          setProducts(productsData);
         } catch (error) {
           console.error('Error fetching user document and settings:', error);
         }
@@ -124,6 +135,26 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
     const { watch, setValue } = form;
     const applyVatToAll = watch('applyVatToAll');
+
+    // Handle client selection from autocomplete
+    const handleClientSelect = (client: ClientAutoComplete) => {
+      setValue('clientName', client.name);
+      setValue('clientAddress', client.address || '');
+      setValue('clientNis', client.nis || '');
+      setValue('clientNif', client.nif || '');
+      setValue('clientRc', client.rc || '');
+      setValue('clientArt', client.art || '');
+      setValue('clientRib', client.rib || '');
+      setClientSearchOpen(false);
+    };
+
+    // Handle product selection from autocomplete
+    const handleProductSelect = (product: ProductAutoComplete, index: number) => {
+      setValue(`lineItems.${index}.reference`, product.reference || '');
+      setValue(`lineItems.${index}.designation`, product.name);
+      setValue(`lineItems.${index}.unitPrice`, product.price || 0);
+      setProductSearchOpen(prev => ({ ...prev, [index]: false }));
+    };
 
     const onSubmit = async (values: InvoiceFormData) => {
       // Check export permissions
@@ -284,15 +315,41 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
             <FormField
               control={form.control}
               name="clientName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Client Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Client name or company" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const clientSearchValue = field.value;
+                const filteredClients = customers.filter(c =>
+                  c.name.toLowerCase().includes(clientSearchValue.toLowerCase())
+                );
+                return (
+                  <FormItem className="relative">
+                    <FormLabel>Client Name</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Client name or company" 
+                        onFocus={() => setClientSearchOpen(true)}
+                        onBlur={() => setTimeout(() => setClientSearchOpen(false), 200)}
+                        autoComplete="off"
+                      />
+                    </FormControl>
+                    {clientSearchOpen && filteredClients.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                        {filteredClients.map((client) => (
+                          <div
+                            key={client.id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                            onMouseDown={() => handleClientSelect(client)}
+                          >
+                            <div className="font-medium">{client.name}</div>
+                            {client.address && <div className="text-xs text-gray-500">{client.address}</div>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
 
             <FormField
@@ -427,15 +484,46 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                   <FormField
                     control={form.control}
                     name={`lineItems.${index}.designation`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-4">
-                        <FormLabel>Designation</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Product description" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const designationValue = field.value;
+                      const filteredProducts = products.filter(p =>
+                        p.name.toLowerCase().includes(designationValue.toLowerCase()) ||
+                        (p.reference && p.reference.toLowerCase().includes(designationValue.toLowerCase()))
+                      );
+                      return (
+                        <FormItem className="col-span-4 relative">
+                          <FormLabel>Designation</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="Product description" 
+                              onFocus={() => setProductSearchOpen(prev => ({ ...prev, [index]: true }))}
+                              onBlur={() => setTimeout(() => setProductSearchOpen(prev => ({ ...prev, [index]: false })), 200)}
+                              autoComplete="off"
+                            />
+                          </FormControl>
+                          {productSearchOpen[index] && filteredProducts.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                              {filteredProducts.map((product) => (
+                                <div
+                                  key={product.id}
+                                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  onMouseDown={() => handleProductSelect(product, index)}
+                                >
+                                  <div className="font-medium">{product.name}</div>
+                                  <div className="text-xs text-gray-500">
+                                    {product.reference && `Ref: ${product.reference}`}
+                                    {product.stock !== undefined && ` • Stock: ${product.stock}`}
+                                    {product.price && ` • Price: ${product.price} DZD`}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
