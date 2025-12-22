@@ -223,6 +223,7 @@ export function generateInvoicePdf(data: InvoiceFormData) {
   // Table
   const tableData = data.lineItems.map((item, index) => {
     const total = item.quantity * item.unitPrice;
+    const vatValue = (item as any).vat || 0;
     return [
       index + 1,
       item.reference || '',
@@ -230,7 +231,7 @@ export function generateInvoicePdf(data: InvoiceFormData) {
       item.unit || '',
       formatPrice(item.quantity),
       formatPrice(item.unitPrice),
-      formatPrice(item.vat),
+      formatPrice(vatValue),
       formatPrice(total),
     ];
   });

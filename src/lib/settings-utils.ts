@@ -10,6 +10,7 @@ export interface AppSettings {
   nis: string;
   rib: string;
   profitMargin: number;
+  vatPercentage?: number;
   lastInvoiceNumber: {
     year: number;
     number: number;
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   nis: '',
   rib: '',
   profitMargin: 25,
+  vatPercentage: 0,
   lastInvoiceNumber: {
     year: new Date().getFullYear(),
     number: 0,

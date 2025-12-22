@@ -35,7 +35,6 @@ const lineItemSchema = z.object({
   unit: z.string().optional(),
   quantity: z.coerce.number().positive('Must be > 0'),
   unitPrice: z.coerce.number().positive('Must be > 0'),
-  vat: z.coerce.number().min(0, 'Cannot be negative').default(0),
 });
 
 const formSchema = z.object({
@@ -144,19 +143,22 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
       setIsLoading(true);
       try {
-        // Apply VAT to all items if checkbox is selected
-        if (applyVatToAll) {
-          const defaultVat = values.lineItems[0]?.vat || 0;
-          values.lineItems.forEach((item) => {
-            item.vat = defaultVat;
-          });
-        }
-
-        // Get company info from Firestore settings
+        // Get company info from Firestore settings (includes VAT)
         const settings = await getUserSettings(firestore, user.uid);
-        
-        // Generate PDF with form data
-        await generateInvoicePdf(values);
+
+        // Inject VAT from settings into a copy of form values before generating PDF
+        const vatPercentage = settings.vatPercentage || 0;
+        const valuesWithVat: InvoiceFormData = {
+          ...values,
+          lineItems: values.lineItems.map((item) => ({
+            // add vat property for invoice generation
+            ...(item as any),
+            vat: applyVatToAll ? vatPercentage : 0,
+          } as any)),
+        };
+
+        // Generate PDF with augmented data
+        await generateInvoicePdf(valuesWithVat as any);
 
         // Update last invoice number in Firestore settings
         await updateLastInvoiceNumber(firestore, user.uid, settings);
@@ -437,19 +439,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name={`lineItems.${index}.vat`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>VAT %</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" placeholder="0" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+
 
                   <Button
                     type="button"
@@ -471,7 +461,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               size="sm"
               className="w-full"
               onClick={() =>
-                append({ designation: '', quantity: 1, unitPrice: 0, vat: 0, reference: '', unit: 'pcs' })
+                append({ designation: '', quantity: 1, unitPrice: 0, reference: '', unit: 'pcs' })
               }
             >
               <PlusCircle className="mr-2 h-4 w-4" />
