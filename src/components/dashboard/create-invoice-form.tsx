@@ -458,23 +458,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                       </FormItem>
                     )}
                   />
-                  <div className="col-span-2 flex items-center">
-                    <FormField
-                      control={form.control}
-                      name={`lineItems.${index}.applyVat` as any}
-                      render={({ field }) => (
-                        <FormItem className="flex items-center space-x-2">
-                          <FormControl>
-                            <Checkbox
-                              checked={!!field.value}
-                              onCheckedChange={(v) => field.onChange(!!v)}
-                            />
-                          </FormControl>
-                          <FormLabel className="text-sm">Apply VAT</FormLabel>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  {/* per-line VAT removed — VAT is controlled globally via applyVatToAll */}
 
                   <Button
                     type="button"
@@ -496,7 +480,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               size="sm"
               className="w-full"
               onClick={() =>
-                append({ designation: '', quantity: 1, unitPrice: 0, applyVat: false, reference: '', unit: 'pcs' })
+                append({ designation: '', quantity: 1, unitPrice: 0, reference: '', unit: 'pcs' })
               }
             >
               <PlusCircle className="mr-2 h-4 w-4" />
