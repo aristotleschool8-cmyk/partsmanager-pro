@@ -377,21 +377,42 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
   doc.line(summaryX + padding, sepY, summaryX + summaryBoxWidth - padding, sepY);
 
   doc.setFont('helvetica', 'normal');
-  let textY = startY + 40; // Position below payment method
-   if (textY < summaryY + 10) { // check if there is enough space, if not push it down
-     textY = summaryY + 10;
-   }
-   if (textY > 260) {
+
+  // Dynamically position the "amount in text" block so it never overlaps the summary box.
+  const leftMargin = 14;
+  const pageHeight = (doc.internal.pageSize as any).height;
+  const summaryBottom = summaryY - padding + summaryBoxHeight;
+
+  // Start at least 40pt below startY or just below the summary box
+  let textY = Math.max(startY + 40, summaryBottom + 6);
+
+  // If there's not enough horizontal space because the summary box is wide,
+  // limit the text width to the available area to the left of the summary box.
+  let availableWidth = summaryX - leftMargin - 8;
+  let isNewPageForText = false;
+
+  if (availableWidth < 120) {
+    // Not enough room on the current page; move the amount-in-text to a new page
     doc.addPage();
-    textY = 20;
-   }
-  doc.text('Arrêter la présente facture à la somme de :', 14, textY);
+    textY = 20 + padding;
+    isNewPageForText = true;
+    availableWidth = (doc.internal.pageSize as any).width - leftMargin * 2;
+  }
+
+  // If textY is too close to bottom, push to a new page
+  if (textY > pageHeight - 60 && !isNewPageForText) {
+    doc.addPage();
+    textY = 20 + padding;
+    availableWidth = (doc.internal.pageSize as any).width - leftMargin * 2;
+  }
+
+  doc.text('Arrêter la présente facture à la somme de :', leftMargin, textY);
   textY += 6;
   doc.setFont('helvetica', 'bold');
   const words = numberToWordsFr(netAPayer);
-  // Split into lines if too long
-  const splitWords = doc.splitTextToSize(words.charAt(0).toUpperCase() + words.slice(1), 180);
-  doc.text(splitWords, 14, textY);
+  const capitalized = words.charAt(0).toUpperCase() + words.slice(1);
+  const splitWords = doc.splitTextToSize(capitalized, availableWidth);
+  doc.text(splitWords, leftMargin, textY);
 
   
   // Page numbers - using a custom function to handle jsPDF's context
