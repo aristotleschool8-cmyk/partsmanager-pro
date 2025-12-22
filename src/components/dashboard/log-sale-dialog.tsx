@@ -28,7 +28,7 @@ import {
     TableRow,
   } from "@/components/ui/table";
 import { useFirebase } from '@/firebase/provider';
-import { collection, getDocs, query, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -62,15 +62,12 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
       try {
         setIsLoading(true);
         
-        // Fetch products
+        // Fetch products (only non-deleted)
         const productsRef = collection(firestore, 'products');
-        const productsSnapshot = await getDocs(query(productsRef));
+        const productsSnapshot = await getDocs(query(productsRef, where('isDeleted', '==', false)));
         const fetchedProducts: Product[] = [];
         productsSnapshot.forEach(doc => {
           const data = doc.data();
-          // Skip deleted products
-          if (data.isDeleted) return;
-          
           fetchedProducts.push({
             id: doc.id,
             name: data.name || '',

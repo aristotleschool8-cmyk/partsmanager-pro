@@ -85,7 +85,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       try {
         setIsLoading(true);
         const productsRef = collection(firestore, 'products');
-        const q = query(productsRef, where('isDeleted', '!=', true));
+        const q = query(productsRef, where('isDeleted', '==', false));
         const querySnapshot = await getDocs(q);
         
         const fetchedProducts: Product[] = [];
