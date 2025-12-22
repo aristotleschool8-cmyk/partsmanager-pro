@@ -104,8 +104,25 @@ export function CompanyInfoModal() {
         try {
           // If a new logo file was selected, upload it
           if (logoFile) {
-            // Use server-side upload when configured (no bucket CORS required)
-            if (process.env.NEXT_PUBLIC_USE_SERVER_UPLOAD === 'true') {
+            // Prefer Cloudinary unsigned upload when configured
+            if (
+              process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME &&
+              process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+            ) {
+              const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+              const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+              const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+              const fd = new FormData();
+              fd.append('file', logoFile);
+              fd.append('upload_preset', preset);
+              const r = await fetch(url, { method: 'POST', body: fd });
+              if (!r.ok) throw new Error('Cloudinary upload failed: ' + await r.text());
+              const jj = await r.json();
+              uploadedLogoUrl = jj.secure_url;
+              setPreviewUrl(uploadedLogoUrl);
+              // Update Firebase Auth profile photoURL (best-effort)
+              try { if (auth && auth.currentUser && uploadedLogoUrl) { await updateProfile(auth.currentUser, { photoURL: uploadedLogoUrl }); try { await auth.currentUser.getIdToken(true); } catch {} } } catch (e) { console.warn('Failed to update auth profile photoURL', e); }
+            } else if (process.env.NEXT_PUBLIC_USE_SERVER_UPLOAD === 'true') {
               const toBase64 = (file: File) => new Promise<string>((res, rej) => {
                 const reader = new FileReader();
                 reader.onload = () => res((reader.result as string).split(',')[1]);
