@@ -35,7 +35,7 @@ const lineItemSchema = z.object({
   unit: z.string().optional(),
   quantity: z.coerce.number().positive('Must be > 0'),
   unitPrice: z.coerce.number().positive('Must be > 0'),
-  vat: z.coerce.number().min(0, 'Cannot be negative').default(0),
+  applyVat: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -109,7 +109,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
         clientRc: '',
         clientArt: '',
         clientRib: '',
-        lineItems: [{ designation: '', quantity: 1, unitPrice: 0, vat: 0, reference: '', unit: 'pcs' }],
+        lineItems: [{ designation: '', quantity: 1, unitPrice: 0, applyVat: false, reference: '', unit: 'pcs' }],
         paymentMethod: 'Espèce',
         applyVatToAll: false,
       },
@@ -146,11 +146,10 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
       setIsLoading(true);
       try {
-        // Apply VAT to all items if checkbox is selected
+        // Apply VAT to all items if checkbox is selected (set applyVat flag)
         if (applyVatToAll) {
-          const defaultVat = values.lineItems[0]?.vat || 0;
           values.lineItems.forEach((item) => {
-            item.vat = defaultVat;
+            (item as any).applyVat = true;
           });
         }
 
@@ -171,7 +170,10 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
             }
           : undefined;
 
-        await generateInvoicePdf(values, companyInfo);
+        // Determine default VAT percentage from settings (if present)
+        const defaultVat = (settings as any)?.defaultVat ?? (settingsState as any)?.defaultVat ?? 0;
+
+        await generateInvoicePdf(values, companyInfo, defaultVat);
 
         // Update last invoice number in Firestore settings
         await updateLastInvoiceNumber(firestore, user.uid, settings);
@@ -235,6 +237,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="invoiceDate"
@@ -451,20 +454,23 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                       </FormItem>
                     )}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name={`lineItems.${index}.vat`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-2">
-                        <FormLabel>VAT %</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="number" placeholder="0" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="col-span-2 flex items-center">
+                    <FormField
+                      control={form.control}
+                      name={`lineItems.${index}.applyVat` as any}
+                      render={({ field }) => (
+                        <FormItem className="flex items-center space-x-2">
+                          <FormControl>
+                            <Checkbox
+                              checked={!!field.value}
+                              onCheckedChange={(v) => field.onChange(!!v)}
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm">Apply VAT</FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
                   <Button
                     type="button"
@@ -486,7 +492,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               size="sm"
               className="w-full"
               onClick={() =>
-                append({ designation: '', quantity: 1, unitPrice: 0, vat: 0, reference: '', unit: 'pcs' })
+                append({ designation: '', quantity: 1, unitPrice: 0, applyVat: false, reference: '', unit: 'pcs' })
               }
             >
               <PlusCircle className="mr-2 h-4 w-4" />

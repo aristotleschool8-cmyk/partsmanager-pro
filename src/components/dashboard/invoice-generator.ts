@@ -138,7 +138,7 @@ function getCompanyInfo(): CompanyInfo {
 }
 
 
-export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyInfo) {
+export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyInfo, defaultVat?: number) {
   const doc = new jsPDF();
   const resolvedCompanyInfo = companyInfo ?? getCompanyInfo();
 
@@ -221,8 +221,9 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
 
 
   // Table
-  const tableData = data.lineItems.map((item, index) => {
+  const tableData = data.lineItems.map((item: any, index) => {
     const total = item.quantity * item.unitPrice;
+    const vatPercent = item.applyVat ? (defaultVat ?? 0) : 0;
     return [
       index + 1,
       item.reference || '',
@@ -230,13 +231,16 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
       item.unit || '',
       formatPrice(item.quantity),
       formatPrice(item.unitPrice),
-      formatPrice(item.vat),
+      vatPercent > 0 ? `${vatPercent}` : '',
       formatPrice(total),
     ];
   });
   
-  const totalHT = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const totalTVA = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.vat / 100)), 0);
+  const totalHT = data.lineItems.reduce((sum: number, item: any) => sum + (item.quantity * item.unitPrice), 0);
+  const totalTVA = data.lineItems.reduce((sum: number, item: any) => {
+    const vatPercent = item.applyVat ? (defaultVat ?? 0) : 0;
+    return sum + (item.quantity * item.unitPrice * (vatPercent / 100));
+  }, 0);
   const timbre = 0; // As per image
   const totalTTC = totalHT + totalTVA;
   const netAPayer = totalTTC + timbre;
