@@ -41,7 +41,7 @@ export async function getUserSettings(
   userId: string
 ): Promise<AppSettings> {
   try {
-    const settingsRef = doc(firestore, 'appSettings', userId);
+    const settingsRef = doc(firestore, 'settings', userId);
     const settingsSnap = await getDoc(settingsRef);
 
     if (settingsSnap.exists()) {
@@ -65,7 +65,7 @@ export async function saveUserSettings(
   settings: Partial<AppSettings>
 ): Promise<void> {
   try {
-    const settingsRef = doc(firestore, 'appSettings', userId);
+    const settingsRef = doc(firestore, 'settings', userId);
     await setDoc(settingsRef, settings, { merge: true });
   } catch (error) {
     console.error('Error saving settings:', error);

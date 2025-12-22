@@ -2,7 +2,11 @@
 'use client';
 
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+
+// Extend jsPDF with autoTable functionality
+autoTable(jsPDF);
+
 import type { InvoiceFormData } from './create-invoice-form';
 import { User as AppUser } from '@/lib/types';
 import { canExport } from '@/lib/trial-utils';
