@@ -163,6 +163,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               art: settingsState.art,
               nis: settingsState.nis,
               rib: settingsState.rib,
+              logoUrl: (settingsState as any).logoUrl || undefined,
             }
           : undefined;
 

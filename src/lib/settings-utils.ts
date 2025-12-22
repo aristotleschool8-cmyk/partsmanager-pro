@@ -9,6 +9,7 @@ export interface AppSettings {
   art: string;
   nis: string;
   rib: string;
+  logoUrl?: string;
   profitMargin: number;
   lastInvoiceNumber: {
     year: number;
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   art: '',
   nis: '',
   rib: '',
+  logoUrl: '',
   profitMargin: 25,
   lastInvoiceNumber: {
     year: new Date().getFullYear(),

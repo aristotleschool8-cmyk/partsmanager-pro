@@ -16,7 +16,10 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useFirebase } from '@/firebase/provider';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { saveUserSettings, getUserSettings } from '@/lib/settings-utils';
 import { Save } from 'lucide-react';
 
 const companyInfoSchema = z.object({
@@ -34,6 +37,9 @@ export type CompanyInfo = z.infer<typeof companyInfoSchema>;
 
 export function CompanyInfoForm() {
   const { toast } = useToast();
+  const { firebaseApp, firestore, user } = useFirebase();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: {
@@ -54,24 +60,91 @@ export function CompanyInfoForm() {
       if (storedInfo) {
         form.reset(JSON.parse(storedInfo));
       }
+      // if user settings exist in Firestore, prefer them
+      (async () => {
+        try {
+          if (firestore && user) {
+            const settings = await getUserSettings(firestore, user.uid);
+            if (settings) {
+              form.reset({
+                companyName: settings.companyName || '',
+                address: settings.address || '',
+                phone: settings.phone || '',
+                rc: settings.rc || '',
+                nif: settings.nif || '',
+                art: settings.art || '',
+                nis: settings.nis || '',
+                rib: settings.rib || '',
+              });
+              if ((settings as any).logoUrl) setPreviewUrl((settings as any).logoUrl);
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      })();
     } catch (error) {
         console.error("Could not retrieve company info from local storage", error);
     }
   }, [form]);
 
-  function onSubmit(values: CompanyInfo) {
+  async function onSubmit(values: CompanyInfo) {
     try {
-        localStorage.setItem('companyInfo', JSON.stringify(values));
-        toast({
-          title: 'Information Saved',
-          description: 'Your company details have been updated.',
-        });
+      // If a logo file was selected and Firebase is available, upload it
+      let uploadedLogoUrl: string | undefined;
+      if (logoFile && firebaseApp && user) {
+        try {
+          const storage = getStorage(firebaseApp as any);
+          const sRef = storageRef(storage, `logos/${user.uid}/${Date.now()}_${logoFile.name}`);
+          await uploadBytes(sRef, logoFile);
+          uploadedLogoUrl = await getDownloadURL(sRef);
+        } catch (err) {
+          console.error('Logo upload failed', err);
+          toast({ title: 'Upload failed', description: 'Could not upload logo. Saved locally instead.', variant: 'destructive' });
+        }
+      }
+
+      // Save to Firestore settings if available
+      if (firestore && user) {
+        const savePayload: any = {
+          companyName: values.companyName,
+          address: values.address,
+          phone: values.phone,
+          rc: values.rc,
+          nif: values.nif,
+          art: values.art,
+          nis: values.nis,
+          rib: values.rib,
+        };
+        if (uploadedLogoUrl) savePayload.logoUrl = uploadedLogoUrl;
+        await saveUserSettings(firestore, user.uid, savePayload);
+      }
+
+      // Always persist locally for the invoice generator fallback
+      const localSave: any = { ...values };
+      if (uploadedLogoUrl) localSave.logoUrl = uploadedLogoUrl;
+      localStorage.setItem('companyInfo', JSON.stringify(localSave));
+      if (uploadedLogoUrl) setPreviewUrl(uploadedLogoUrl);
+
+      toast({
+        title: 'Information Saved',
+        description: 'Your company details have been updated.',
+      });
     } catch (error) {
-        toast({
-            title: 'Error Saving',
-            description: 'Could not save company information.',
-            variant: 'destructive',
-        });
+      console.error(error);
+      toast({
+        title: 'Error Saving',
+        description: 'Could not save company information.',
+        variant: 'destructive',
+      });
+    }
+  }
+
+  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    if (f) {
+      setLogoFile(f);
+      setPreviewUrl(URL.createObjectURL(f));
     }
   }
 
@@ -79,6 +152,15 @@ export function CompanyInfoForm() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="col-span-1 md:col-span-2">
+              <FormLabel>Company Logo (optional)</FormLabel>
+              <div className="flex items-center gap-4">
+                <input type="file" accept="image/*" onChange={onLogoChange} />
+                {previewUrl ? (
+                  <img src={previewUrl} alt="logo preview" className="h-12 w-12 object-contain rounded" />
+                ) : null}
+              </div>
+            </div>
             <FormField
             control={form.control}
             name="companyName"

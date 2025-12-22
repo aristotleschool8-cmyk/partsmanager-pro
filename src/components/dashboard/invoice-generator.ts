@@ -18,6 +18,7 @@ export interface CompanyInfo {
   art?: string;
   nis?: string;
   rib?: string;
+  logoUrl?: string;
 }
 
 /**
@@ -164,7 +165,7 @@ function getCompanyInfo(): CompanyInfo {
 }
 
 
-export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyInfo, defaultVat: number = 0, applyVat: boolean = false) {
+export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyInfo, defaultVat: number = 0, applyVat: boolean = false) {
   const doc = new jsPDF();
   const resolvedCompanyInfo = companyInfo ?? getCompanyInfo();
 
@@ -204,13 +205,57 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
   doc.text('N° RIB:', 150, 40);
   doc.text(resolvedCompanyInfo.rib || '', 165, 40);
 
-  // Logo Placeholder
-  doc.setFillColor(237, 28, 36);
-  doc.circle(25, 18, 5, 'F');
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(255,255,255);
-  const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
-  doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+  // Logo: if a logo URL is provided, attempt to load and draw it; otherwise draw placeholder initial.
+  try {
+    if (resolvedCompanyInfo.logoUrl) {
+      await new Promise<void>((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          // Draw image at left top area
+          const imgWidth = 20;
+          const imgHeight = (img.height / img.width) * imgWidth;
+          try {
+            doc.addImage(img, 'PNG', 15, 10, imgWidth, imgHeight);
+          } catch (e) {
+            // fallback to circle initial if addImage fails
+            doc.setFillColor(237, 28, 36);
+            doc.circle(25, 18, 5, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255,255,255);
+            const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
+            doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          // draw placeholder
+          doc.setFillColor(237, 28, 36);
+          doc.circle(25, 18, 5, 'F');
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255,255,255);
+          const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
+          doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+          resolve();
+        };
+        img.src = resolvedCompanyInfo.logoUrl as string;
+      });
+    } else {
+      doc.setFillColor(237, 28, 36);
+      doc.circle(25, 18, 5, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255,255,255);
+      const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
+      doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+    }
+  } catch (e) {
+    doc.setFillColor(237, 28, 36);
+    doc.circle(25, 18, 5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255,255,255);
+    const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
+    doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+  }
 
 
   // Invoice Number Box
