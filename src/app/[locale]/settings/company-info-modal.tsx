@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { saveUserSettings, getUserSettings } from '@/lib/settings-utils';
+import { useFirebase } from '@/firebase/provider';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -44,7 +47,9 @@ export type CompanyInfo = z.infer<typeof companyInfoSchema>;
 export function CompanyInfoModal() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { firestore, user, isUserLoading } = useFirebase();
+  const { firestore, user, isUserLoading, firebaseApp } = useFirebase();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: {
@@ -76,6 +81,7 @@ export function CompanyInfoModal() {
             rib: settings.rib || '',
           };
           if (!cancelled) form.reset(info);
+          if ((settings as any).logoUrl) setPreviewUrl((settings as any).logoUrl);
           return;
         }
 
@@ -93,12 +99,21 @@ export function CompanyInfoModal() {
 
   function onSubmit(values: CompanyInfo) {
     try {
-      localStorage.setItem('companyInfo', JSON.stringify(values));
-      // Persist to Firestore when available
       (async () => {
+        let uploadedLogoUrl: string | undefined;
         try {
+          // If a new logo file was selected, upload it
+          if (logoFile && firebaseApp && user) {
+            const storage = getStorage(firebaseApp as any);
+            const sRef = storageRef(storage, `logos/${user.uid}/${Date.now()}_${logoFile.name}`);
+            await uploadBytes(sRef, logoFile);
+            uploadedLogoUrl = await getDownloadURL(sRef);
+            setPreviewUrl(uploadedLogoUrl);
+          }
+
+          // Persist settings to Firestore when available
           if (user && firestore) {
-            await saveUserSettings(firestore, user.uid, {
+            const payload: any = {
               companyName: values.companyName,
               address: values.address,
               phone: values.phone,
@@ -107,11 +122,18 @@ export function CompanyInfoModal() {
               art: values.art,
               nis: values.nis,
               rib: values.rib,
-            });
+            };
+            if (uploadedLogoUrl) payload.logoUrl = uploadedLogoUrl;
+            await saveUserSettings(firestore, user.uid, payload);
           }
         } catch (e) {
-          console.error('Failed to save company info to Firestore', e);
+          console.error('Failed to save company info to Firestore or upload logo', e);
         }
+
+        // Always persist locally
+        const localSave: any = { ...values };
+        if (uploadedLogoUrl) localSave.logoUrl = uploadedLogoUrl;
+        localStorage.setItem('companyInfo', JSON.stringify(localSave));
       })();
       toast({
         title: 'Information Saved',
@@ -124,6 +146,14 @@ export function CompanyInfoModal() {
         description: 'Could not save company information.',
         variant: 'destructive',
       });
+    }
+  }
+
+  function onLogoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0] ?? null;
+    if (f) {
+      setLogoFile(f);
+      setPreviewUrl(URL.createObjectURL(f));
     }
   }
 
@@ -259,6 +289,16 @@ export function CompanyInfoModal() {
                 </FormItem>
               )}
             />
+
+            <div className="col-span-1 md:col-span-2">
+              <FormLabel>Company Logo (optional)</FormLabel>
+              <div className="flex items-center gap-4">
+                <input type="file" accept="image/*" onChange={onLogoChange} />
+                {previewUrl ? (
+                  <img src={previewUrl} alt="logo preview" className="h-12 w-12 object-contain rounded" />
+                ) : null}
+              </div>
+            </div>
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
