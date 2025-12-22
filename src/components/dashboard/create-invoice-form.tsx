@@ -259,24 +259,6 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="font-semibold">Invoice Details</h3>
-              <div className="flex items-center gap-2">
-                <FormField
-                  control={form.control}
-                  name="isProforma"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="proforma"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label htmlFor="proforma" className="text-sm font-normal">
-                        Proforma
-                      </Label>
-                    </div>
-                  )}
-                />
-              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -333,15 +315,15 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                       />
                     </FormControl>
                     {clientSearchOpen && filteredClients.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                      <div className="absolute top-full left-0 right-0 z-50 bg-background border border-primary rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
                         {filteredClients.map((client) => (
                           <div
                             key={client.id}
-                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                            className="px-4 py-2 hover:bg-primary hover:text-primary-foreground cursor-pointer text-sm transition-colors"
                             onMouseDown={() => handleClientSelect(client)}
                           >
                             <div className="font-medium">{client.name}</div>
-                            {client.address && <div className="text-xs text-gray-500">{client.address}</div>}
+                            {client.address && <div className="text-xs opacity-70">{client.address}</div>}
                           </div>
                         ))}
                       </div>
@@ -442,24 +424,6 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
             <div className="flex justify-between items-center">
               <h3 className="font-semibold">Line Items</h3>
-              <div className="flex items-center gap-2">
-                <FormField
-                  control={form.control}
-                  name="applyVatToAll"
-                  render={({ field }) => (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="applyVat"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                      <Label htmlFor="applyVat" className="text-sm font-normal">
-                        Apply VAT
-                      </Label>
-                    </div>
-                  )}
-                />
-              </div>
             </div>
 
             <div className="space-y-4">
@@ -470,15 +434,41 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                   <FormField
                     control={form.control}
                     name={`lineItems.${index}.reference`}
-                    render={({ field }) => (
-                      <FormItem className="col-span-3">
-                        <FormLabel>Reference</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Reference" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    render={({ field }) => {
+                      const referenceValue = field.value;
+                      const filteredProductsByRef = products.filter(p =>
+                        p.reference && p.reference.toLowerCase().includes(referenceValue.toLowerCase())
+                      );
+                      return (
+                        <FormItem className="col-span-3 relative">
+                          <FormLabel>Reference</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              placeholder="Reference" 
+                              onFocus={() => setProductSearchOpen(prev => ({ ...prev, [index]: true }))}
+                              onBlur={() => setTimeout(() => setProductSearchOpen(prev => ({ ...prev, [index]: false })), 200)}
+                              autoComplete="off"
+                            />
+                          </FormControl>
+                          {productSearchOpen[index] && filteredProductsByRef.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 z-50 bg-background border border-primary rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                              {filteredProductsByRef.map((product) => (
+                                <div
+                                  key={product.id}
+                                  className="px-4 py-2 hover:bg-primary hover:text-primary-foreground cursor-pointer text-sm transition-colors"
+                                  onMouseDown={() => handleProductSelect(product, index)}
+                                >
+                                  <div className="font-medium">{product.reference}</div>
+                                  <div className="text-xs opacity-70">{product.name} {product.stock !== undefined && `• Stock: ${product.stock}`}</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
                   />
 
                   <FormField
@@ -503,15 +493,15 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                             />
                           </FormControl>
                           {productSearchOpen[index] && filteredProducts.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
+                            <div className="absolute top-full left-0 right-0 z-50 bg-background border border-primary rounded-md shadow-lg max-h-48 overflow-y-auto mt-1">
                               {filteredProducts.map((product) => (
                                 <div
                                   key={product.id}
-                                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                  className="px-4 py-2 hover:bg-primary hover:text-primary-foreground cursor-pointer text-sm transition-colors"
                                   onMouseDown={() => handleProductSelect(product, index)}
                                 >
                                   <div className="font-medium">{product.name}</div>
-                                  <div className="text-xs text-gray-500">
+                                  <div className="text-xs opacity-70">
                                     {product.reference && `Ref: ${product.reference}`}
                                     {product.stock !== undefined && ` • Stock: ${product.stock}`}
                                     {product.price && ` • Price: ${product.price} DZD`}
@@ -599,29 +589,66 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
             <Separator />
 
             <h3 className="font-semibold">Payment</h3>
-            <FormField
-              control={form.control}
-              name="paymentMethod"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Payment Method</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="Espèce">Cash</SelectItem>
-                      <SelectItem value="Chèque">Check</SelectItem>
-                      <SelectItem value="Virement">Transfer</SelectItem>
-                      <SelectItem value="Carte">Card</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="paymentMethod"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Method</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Espèce">Cash</SelectItem>
+                        <SelectItem value="Chèque">Check</SelectItem>
+                        <SelectItem value="Virement">Transfer</SelectItem>
+                        <SelectItem value="Carte">Card</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex flex-col gap-4 p-4 border border-dashed border-primary/30 rounded-md bg-primary/5">
+                <FormField
+                  control={form.control}
+                  name="isProforma"
+                  render={({ field }) => (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="proforma-payment"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label htmlFor="proforma-payment" className="text-sm font-normal cursor-pointer">
+                        This is a Proforma Invoice
+                      </Label>
+                    </div>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="applyVatToAll"
+                  render={({ field }) => (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="applyVat-payment"
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                      <Label htmlFor="applyVat-payment" className="text-sm font-normal cursor-pointer">
+                        Apply VAT to all items
+                      </Label>
+                    </div>
+                  )}
+                />
+              </div>
+            </div>
           </div>
         </Form>
       </form>
