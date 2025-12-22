@@ -376,7 +376,7 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
   // Draw a separator above the net to pay (before last row). Place it
   // slightly above the pushed-down net row.
   const sepBase = summaryY + (rows - 1) * rowHeight;
-  const sepY = sepBase + 1; // separator just above the net row
+  const sepY = sepBase - 4; // move separator slightly higher above the net row
   doc.setLineWidth(0.2);
   doc.line(summaryX + padding, sepY, summaryX + summaryBoxWidth - padding, sepY);
 
