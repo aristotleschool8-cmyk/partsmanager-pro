@@ -242,6 +242,21 @@ export function generateInvoicePdf(data: InvoiceFormData) {
   const totalTTC = totalHT + totalTVA;
   const netAPayer = totalTTC + timbre;
 
+  // Compute column widths so the table fits the page margins
+  const pageWidth = (doc.internal.pageSize && (doc.internal.pageSize.width || doc.internal.pageSize.getWidth))
+    ? (typeof (doc.internal.pageSize.getWidth) === 'function' ? doc.internal.pageSize.getWidth() : doc.internal.pageSize.width)
+    : (doc.internal.pageSize.width || 210);
+  const margin = 14;
+  const availableWidth = pageWidth - margin * 2;
+  const desiredWidths = [10, 20, 60, 15, 15, 20, 15, 25];
+  const sumDesired = desiredWidths.reduce((s, v) => s + v, 0);
+  const scale = availableWidth / sumDesired;
+  const colStyles: any = {};
+  const haligns: any = { 0: 'center', 1: 'left', 2: 'left', 3: 'center', 4: 'right', 5: 'right', 6: 'right', 7: 'right' };
+  desiredWidths.forEach((w, i) => {
+    colStyles[i] = { halign: haligns[i] || 'left', cellWidth: Math.max(10, Math.floor(w * scale)) };
+  });
+
   (AutoTable as any)(doc, {
     startY: 102,
     head: [['N°', 'Référence', 'Désignation', 'U', 'Qté', 'PUV', 'TVA(%)', 'Montant HT']],
@@ -258,16 +273,7 @@ export function generateInvoicePdf(data: InvoiceFormData) {
         lineColor: [150, 150, 150],
         fontSize: 9
     },
-    columnStyles: {
-        0: { halign: 'center', cellWidth: 10 },
-        1: { halign: 'left', cellWidth: 20 },
-        2: { halign: 'left', cellWidth: 60 },
-        3: { halign: 'center', cellWidth: 15 },
-        4: { halign: 'right', cellWidth: 15 },
-        5: { halign: 'right', cellWidth: 20 },
-        6: { halign: 'right', cellWidth: 15 },
-        7: { halign: 'right', cellWidth: 25 },
-    },
+    columnStyles: colStyles,
     didDrawPage: (hookData: any) => {
         // We don't draw the footer here anymore to avoid complexity.
         // It will be drawn once after the table is finished.
