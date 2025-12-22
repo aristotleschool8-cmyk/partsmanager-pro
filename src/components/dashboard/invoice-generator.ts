@@ -2,8 +2,8 @@
 'use client';
 
 import { jsPDF } from 'jspdf';
-// Import AutoTable as side effect - must come after jsPDF import
-import AutoTable from 'jspdf-autotable';
+// side-effect import to extend jsPDF prototype with autoTable
+import 'jspdf-autotable';
 
 import type { InvoiceFormData } from './create-invoice-form';
 import { User as AppUser } from '@/lib/types';
@@ -138,9 +138,10 @@ function getCompanyInfo(): CompanyInfo {
 }
 
 
-export function generateInvoicePdf(data: InvoiceFormData) {
+export function generateInvoicePdf(data: InvoiceFormData, settings?: any) {
   const doc = new jsPDF();
-  const companyInfo = getCompanyInfo();
+  // Prefer company info from settings (Firestore) if provided, otherwise fallback to localStorage
+  const companyInfo = (settings && settings.companyInfo) ? settings.companyInfo as CompanyInfo : getCompanyInfo();
 
   const formatPrice = (price: number) => {
     if (typeof price !== 'number') return '0,00';
@@ -221,43 +222,30 @@ export function generateInvoicePdf(data: InvoiceFormData) {
 
 
   // Table
+  const marginPercent = settings?.marginPercent ? Number(settings.marginPercent) : 0;
+
   const tableData = data.lineItems.map((item, index) => {
-    const total = item.quantity * item.unitPrice;
-    const vatValue = (item as any).vat || 0;
+    const unitPriceAdjusted = item.unitPrice * (1 + marginPercent / 100);
+    const total = item.quantity * unitPriceAdjusted;
     return [
       index + 1,
       item.reference || '',
       item.designation,
       item.unit || '',
       formatPrice(item.quantity),
-      formatPrice(item.unitPrice),
-      formatPrice(vatValue),
+      formatPrice(unitPriceAdjusted),
+      formatPrice(item.vat),
       formatPrice(total),
     ];
   });
-  
-  const totalHT = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice), 0);
-  const totalTVA = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (item.vat / 100)), 0);
+
+  const totalHT = data.lineItems.reduce((sum, item) => sum + (item.quantity * item.unitPrice * (1 + marginPercent / 100)), 0);
+  const totalTVA = data.lineItems.reduce((sum, item) => sum + (item.quantity * (item.unitPrice * (1 + marginPercent / 100)) * (item.vat / 100)), 0);
   const timbre = 0; // As per image
   const totalTTC = totalHT + totalTVA;
   const netAPayer = totalTTC + timbre;
 
-  // Compute column widths so the table fits the page margins
-  const pageWidth = (doc.internal.pageSize && (doc.internal.pageSize.width || doc.internal.pageSize.getWidth))
-    ? (typeof (doc.internal.pageSize.getWidth) === 'function' ? doc.internal.pageSize.getWidth() : doc.internal.pageSize.width)
-    : (doc.internal.pageSize.width || 210);
-  const margin = 14;
-  const availableWidth = pageWidth - margin * 2;
-  const desiredWidths = [10, 20, 60, 15, 15, 20, 15, 25];
-  const sumDesired = desiredWidths.reduce((s, v) => s + v, 0);
-  const scale = availableWidth / sumDesired;
-  const colStyles: any = {};
-  const haligns: any = { 0: 'center', 1: 'left', 2: 'left', 3: 'center', 4: 'right', 5: 'right', 6: 'right', 7: 'right' };
-  desiredWidths.forEach((w, i) => {
-    colStyles[i] = { halign: haligns[i] || 'left', cellWidth: Math.max(10, Math.floor(w * scale)) };
-  });
-
-  (AutoTable as any)(doc, {
+  (doc as any).autoTable({
     startY: 102,
     head: [['N°', 'Référence', 'Désignation', 'U', 'Qté', 'PUV', 'TVA(%)', 'Montant HT']],
     body: tableData,
@@ -273,7 +261,16 @@ export function generateInvoicePdf(data: InvoiceFormData) {
         lineColor: [150, 150, 150],
         fontSize: 9
     },
-    columnStyles: colStyles,
+    columnStyles: {
+        0: { halign: 'center', cellWidth: 10 },
+        1: { halign: 'left', cellWidth: 20 },
+        2: { halign: 'left', cellWidth: 60 },
+        3: { halign: 'center', cellWidth: 15 },
+        4: { halign: 'right', cellWidth: 15 },
+        5: { halign: 'right', cellWidth: 20 },
+        6: { halign: 'right', cellWidth: 15 },
+        7: { halign: 'right', cellWidth: 25 },
+    },
     didDrawPage: (hookData: any) => {
         // We don't draw the footer here anymore to avoid complexity.
         // It will be drawn once after the table is finished.

@@ -157,8 +157,8 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
           } as any)),
         };
 
-        // Generate PDF with augmented data
-        await generateInvoicePdf(valuesWithVat as any);
+        // Generate PDF with augmented data and pass settings (VAT, margin, company info)
+        await generateInvoicePdf(valuesWithVat as any, settings as any);
 
         // Update last invoice number in Firestore settings
         await updateLastInvoiceNumber(firestore, user.uid, settings);
