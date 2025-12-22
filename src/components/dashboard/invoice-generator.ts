@@ -183,84 +183,97 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
     return Math.round(quantity).toString();
   };
   
-  // Company Header
+  // Company Header - positioning will be set after logo height is determined
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Adresse: ${resolvedCompanyInfo.address || ''}`, 14, 28);
-  doc.text('N° RC:', 14, 34);
-  doc.text(resolvedCompanyInfo.rc || '', 30, 34);
-  doc.text('N° NIF:', 14, 40);
-  doc.text(resolvedCompanyInfo.nif || '', 30, 40);
-  doc.text('N° Tél:', 14, 46);
-  doc.text(resolvedCompanyInfo.phone || '', 30, 46);
+  doc.text(`Adresse: ${resolvedCompanyInfo.address || ''}`, 14, headerStartY);
+  doc.text('N° RC:', 14, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.rc || '', 30, headerStartY + 6);
+  doc.text('N° NIF:', 14, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.nif || '', 30, headerStartY + 12);
+  doc.text('N° Tél:', 14, headerStartY + 18);
+  doc.text(resolvedCompanyInfo.phone || '', 30, headerStartY + 18);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text(resolvedCompanyInfo.companyName || '', 105, 18, { align: 'center'});
+  doc.text(resolvedCompanyInfo.companyName || '', 105, headerStartY - 8, { align: 'center'});
   doc.setLineWidth(0.5);
-  doc.line(85, 20, 125, 20); 
+  doc.line(85, headerStartY - 6, 125, headerStartY - 6); 
 
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.text('N° NIS:', 150, 28);
-  doc.text(resolvedCompanyInfo.nis || '', 165, 28);
-  doc.text('N° ART:', 150, 34);
-  doc.text(resolvedCompanyInfo.art || '', 165, 34);
-  doc.text('N° RIB:', 150, 40);
-  doc.text(resolvedCompanyInfo.rib || '', 165, 40);
+  doc.text('N° NIS:', 145, headerStartY);
+  doc.text(resolvedCompanyInfo.nis || '', 170, headerStartY);
+  doc.text('N° ART:', 145, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.art || '', 170, headerStartY + 6);
+  doc.text('N° RIB:', 145, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.rib || '', 170, headerStartY + 12);
 
   // Logo: if a logo URL is provided, attempt to load and draw it; otherwise draw placeholder initial.
+  // Track logo's actual height for dynamic positioning of content below
+  let logoHeight = 0;
+  const logoX = 15;
+  const logoY = 10;
+  const logoWidth = 20;
+  
   try {
     if (resolvedCompanyInfo.logoUrl) {
       await new Promise<void>((resolve) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          // Draw image at left top area
-          const imgWidth = 20;
-          const imgHeight = (img.height / img.width) * imgWidth;
+          // Draw image at left top area with dynamic sizing
+          const imgHeight = (img.height / img.width) * logoWidth;
+          logoHeight = imgHeight;
           try {
-            doc.addImage(img, 'PNG', 15, 10, imgWidth, imgHeight);
+            doc.addImage(img, 'PNG', logoX, logoY, logoWidth, imgHeight);
           } catch (e) {
             // fallback to circle initial if addImage fails
             doc.setFillColor(237, 28, 36);
-            doc.circle(25, 18, 5, 'F');
+            doc.circle(logoX + logoWidth/2, logoY + logoWidth/2, logoWidth/2, 'F');
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(255,255,255);
             const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
-            doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+            doc.text(logoInitial, logoX + logoWidth/2 - (doc.getTextWidth(logoInitial) / 2), logoY + logoWidth/2 + 1.5);
+            logoHeight = logoWidth;
           }
           resolve();
         };
         img.onerror = () => {
           // draw placeholder
           doc.setFillColor(237, 28, 36);
-          doc.circle(25, 18, 5, 'F');
+          doc.circle(logoX + logoWidth/2, logoY + logoWidth/2, logoWidth/2, 'F');
           doc.setFont('helvetica', 'bold');
           doc.setTextColor(255,255,255);
           const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
-          doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+          doc.text(logoInitial, logoX + logoWidth/2 - (doc.getTextWidth(logoInitial) / 2), logoY + logoWidth/2 + 1.5);
+          logoHeight = logoWidth;
           resolve();
         };
         img.src = resolvedCompanyInfo.logoUrl as string;
       });
     } else {
       doc.setFillColor(237, 28, 36);
-      doc.circle(25, 18, 5, 'F');
+      doc.circle(logoX + logoWidth/2, logoY + logoWidth/2, logoWidth/2, 'F');
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(255,255,255);
       const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
-      doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+      doc.text(logoInitial, logoX + logoWidth/2 - (doc.getTextWidth(logoInitial) / 2), logoY + logoWidth/2 + 1.5);
+      logoHeight = logoWidth;
     }
   } catch (e) {
     doc.setFillColor(237, 28, 36);
-    doc.circle(25, 18, 5, 'F');
+    doc.circle(logoX + logoWidth/2, logoY + logoWidth/2, logoWidth/2, 'F');
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(255,255,255);
     const logoInitial = (resolvedCompanyInfo.companyName || 'C').charAt(0) || 'C';
-    doc.text(logoInitial, 25 - (doc.getTextWidth(logoInitial) / 2), 19.5);
+    doc.text(logoInitial, logoX + logoWidth/2 - (doc.getTextWidth(logoInitial) / 2), logoY + logoWidth/2 + 1.5);
+    logoHeight = logoWidth;
   }
+  
+  // Dynamically position company header based on logo height
+  const headerStartY = logoY + logoHeight + 4; // 4pt spacing after logo
 
 
   // Invoice Number Box
