@@ -43,6 +43,19 @@ export default function InvoicesPage({
   const [dictionary, setDictionary] = useState<any>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
+  const fetchInvoicesList = async () => {
+    if (!firestore || !user) return;
+    try {
+      setIsLoading(true);
+      const fetchedInvoices = await getUserInvoices(firestore, user.uid);
+      setInvoices(fetchedInvoices);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load dictionary
   useEffect(() => {
     const loadDictionary = async () => {
@@ -56,19 +69,7 @@ export default function InvoicesPage({
   useEffect(() => {
     if (!firestore || !user) return;
 
-    const fetchInvoices = async () => {
-      try {
-        setIsLoading(true);
-        const fetchedInvoices = await getUserInvoices(firestore, user.uid);
-        setInvoices(fetchedInvoices);
-      } catch (error) {
-        console.error('Error fetching invoices:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchInvoices();
+    fetchInvoicesList();
   }, [firestore, user]);
 
   const handleRegenerateInvoice = async (invoice: StoredInvoice) => {
@@ -181,7 +182,11 @@ export default function InvoicesPage({
         <CardHeader>
             <div className="flex justify-between items-center">
                 <CardTitle>Invoices</CardTitle>
-                <CreateInvoiceDialog locale={locale} dictionary={dictionary} />
+                <CreateInvoiceDialog 
+                  locale={locale} 
+                  dictionary={dictionary}
+                  onInvoiceCreated={fetchInvoicesList}
+                />
             </div>
         </CardHeader>
         <CardContent>

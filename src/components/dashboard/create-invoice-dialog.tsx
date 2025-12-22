@@ -24,9 +24,10 @@ type Dictionary = Awaited<ReturnType<typeof import('@/lib/dictionaries').getDict
 interface CreateInvoiceDialogProps {
   locale: Locale;
   dictionary: Dictionary;
+  onInvoiceCreated?: () => void;
 }
 
-export function CreateInvoiceDialog({ locale, dictionary }: CreateInvoiceDialogProps) {
+export function CreateInvoiceDialog({ locale, dictionary, onInvoiceCreated }: CreateInvoiceDialogProps) {
   const [open, setOpen] = React.useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const { user, firestore } = useFirebase();
@@ -52,6 +53,13 @@ export function CreateInvoiceDialog({ locale, dictionary }: CreateInvoiceDialogP
     fetchUserDoc();
   }, [user, firestore]);
 
+  const handleSuccess = () => {
+    setOpen(false);
+    if (onInvoiceCreated) {
+      onInvoiceCreated();
+    }
+  };
+
   const handleSubmit = () => {
     if (formRef.current) {
       formRef.current.dispatchEvent(new Event('submit', { bubbles: true }));
@@ -76,7 +84,7 @@ export function CreateInvoiceDialog({ locale, dictionary }: CreateInvoiceDialogP
         <CreateInvoiceForm
           ref={formRef}
           locale={locale}
-          onSuccess={() => setOpen(false)}
+          onSuccess={handleSuccess}
         />
         <DialogFooter className="mt-6 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
