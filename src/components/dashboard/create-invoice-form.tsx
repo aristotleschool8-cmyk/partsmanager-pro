@@ -25,6 +25,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
 import { canExport, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { getUserSettings, getNextInvoiceNumber, updateLastInvoiceNumber, AppSettings } from '@/lib/settings-utils';
+import { saveInvoiceData, calculateInvoiceTotals } from '@/lib/invoices-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Locale } from '@/lib/config';
 import { generateInvoicePdf } from './invoice-generator';
@@ -172,6 +173,25 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
         // pass whether VAT should be applied to all lines
         await generateInvoicePdf(values, companyInfo, defaultVat, !!values.applyVatToAll);
+
+        // Calculate totals
+        const { subtotal, vatAmount, total } = calculateInvoiceTotals(
+          values.lineItems,
+          values.applyVatToAll,
+          defaultVat || 19
+        );
+
+        // Save invoice data to Firestore (for future regeneration)
+        await saveInvoiceData(
+          firestore,
+          user.uid,
+          values,
+          companyInfo,
+          defaultVat,
+          total,
+          subtotal,
+          vatAmount
+        );
 
         // Update last invoice number in Firestore settings
         await updateLastInvoiceNumber(firestore, user.uid, settings);

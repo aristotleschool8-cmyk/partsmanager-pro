@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Download, Loader2 } from "lucide-react";
+import { Download, Loader2, Trash2 } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -24,17 +24,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirebase } from "@/firebase/provider";
-import { collection, getDocs, query } from "firebase/firestore";
+import { getUserInvoices, deleteInvoice, type StoredInvoice } from "@/lib/invoices-utils";
+import { generateInvoicePdf } from "@/components/dashboard/invoice-generator";
+import { getUserSettings } from "@/lib/settings-utils";
 import { CreateInvoiceDialog } from "@/components/dashboard/create-invoice-dialog";
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  customer: string;
-  date: string;
-  amount: number;
-  status: 'Paid' | 'Pending';
-}
+import { useToast } from "@/hooks/use-toast";
 
 export default function InvoicesPage({
   params,
@@ -42,10 +36,12 @@ export default function InvoicesPage({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const { firestore, user } = useFirebase();
+  const { toast } = useToast();
+  const [invoices, setInvoices] = useState<StoredInvoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   // Load dictionary
   useEffect(() => {
@@ -58,30 +54,12 @@ export default function InvoicesPage({
 
   // Fetch invoices from Firestore
   useEffect(() => {
-    if (!firestore) return;
+    if (!firestore || !user) return;
 
     const fetchInvoices = async () => {
       try {
         setIsLoading(true);
-        const invoicesRef = collection(firestore, 'invoices');
-        const q = query(invoicesRef);
-        const querySnapshot = await getDocs(q);
-        
-        const fetchedInvoices: Invoice[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          fetchedInvoices.push({
-            id: doc.id,
-            invoiceNumber: data.invoiceNumber || `INV-${doc.id}`,
-            customer: data.clientName || '',
-            date: data.invoiceDate ? new Date(data.invoiceDate).toISOString() : new Date().toISOString(),
-            amount: data.total || 0,
-            status: data.status || 'Pending',
-          });
-        });
-
-        // Sort by date descending
-        fetchedInvoices.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const fetchedInvoices = await getUserInvoices(firestore, user.uid);
         setInvoices(fetchedInvoices);
       } catch (error) {
         console.error('Error fetching invoices:', error);
@@ -91,7 +69,95 @@ export default function InvoicesPage({
     };
 
     fetchInvoices();
-  }, [firestore]);
+  }, [firestore, user]);
+
+  const handleRegenerateInvoice = async (invoice: StoredInvoice) => {
+    if (!firestore || !user) return;
+
+    try {
+      setRegeneratingId(invoice.id || '');
+      
+      // Get fresh company settings
+      const settings = await getUserSettings(firestore, user.uid);
+      
+      // Use stored company info or fetch from settings
+      const companyInfo = invoice.companyInfo || {
+        companyName: settings.companyName,
+        address: settings.address,
+        phone: settings.phone,
+        rc: settings.rc,
+        nif: settings.nif,
+        art: settings.art,
+        nis: settings.nis,
+        rib: settings.rib,
+        logoUrl: (settings as any).logoUrl,
+      };
+
+      // Regenerate PDF from stored data
+      const formData = {
+        isProforma: invoice.isProforma,
+        invoiceNumber: invoice.invoiceNumber,
+        invoiceDate: invoice.invoiceDate,
+        clientName: invoice.clientName,
+        clientAddress: invoice.clientAddress || '',
+        clientNis: invoice.clientNis || '',
+        clientNif: invoice.clientNif || '',
+        clientRc: invoice.clientRc || '',
+        clientArt: invoice.clientArt || '',
+        clientRib: invoice.clientRib || '',
+        lineItems: invoice.lineItems,
+        paymentMethod: invoice.paymentMethod || 'Espèce',
+        applyVatToAll: invoice.applyVatToAll,
+      };
+
+      await generateInvoicePdf(
+        formData,
+        companyInfo,
+        invoice.defaultVat || 0,
+        invoice.applyVatToAll
+      );
+
+      toast({
+        title: 'Success',
+        description: 'Invoice regenerated and downloaded successfully.',
+      });
+    } catch (error) {
+      console.error('Error regenerating invoice:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to regenerate invoice. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setRegeneratingId(null);
+    }
+  };
+
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!firestore) return;
+
+    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const success = await deleteInvoice(firestore, invoiceId);
+      if (success) {
+        setInvoices(invoices.filter(inv => inv.id !== invoiceId));
+        toast({
+          title: 'Success',
+          description: 'Invoice deleted successfully.',
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete invoice.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   if (!dictionary) {
     return (
@@ -127,10 +193,9 @@ export default function InvoicesPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice ID</TableHead>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>Invoice Number</TableHead>
+                  <TableHead>Client</TableHead>
                   <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -138,7 +203,7 @@ export default function InvoicesPage({
               <TableBody>
                 {invoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                       No invoices found. Create one to get started!
                     </TableCell>
                   </TableRow>
@@ -146,18 +211,32 @@ export default function InvoicesPage({
                   invoices.map(invoice => (
                       <TableRow key={invoice.id}>
                           <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
-                          <TableCell>{invoice.customer}</TableCell>
-                          <TableCell>{new Date(invoice.date).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                              <Badge variant={invoice.status === 'Paid' ? 'default' : 'secondary'}>
-                                  {invoice.status}
-                              </Badge>
+                          <TableCell>{invoice.clientName}</TableCell>
+                          <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right font-semibold">
+                            {invoice.total?.toFixed(2) || '0.00'} DZD
                           </TableCell>
-                          <TableCell className="text-right">{invoice.amount.toFixed(2)} DZD</TableCell>
-                          <TableCell className="text-right">
-                             <Button variant="outline" size="sm">
-                                  <Download className="mr-2 h-4 w-4"/>
-                                  PDF
+                          <TableCell className="text-right space-x-2">
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               disabled={regeneratingId === invoice.id}
+                               onClick={() => handleRegenerateInvoice(invoice)}
+                             >
+                                  {regeneratingId === invoice.id ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin"/>
+                                  ) : (
+                                    <Download className="mr-2 h-4 w-4"/>
+                                  )}
+                                  Download
+                             </Button>
+                             <Button 
+                               variant="outline" 
+                               size="sm"
+                               className="text-destructive hover:text-destructive"
+                               onClick={() => invoice.id && handleDeleteInvoice(invoice.id)}
+                             >
+                                  <Trash2 className="h-4 w-4"/>
                              </Button>
                           </TableCell>
                       </TableRow>
