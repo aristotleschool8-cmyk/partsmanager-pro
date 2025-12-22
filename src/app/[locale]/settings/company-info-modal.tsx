@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { saveUserSettings, getUserSettings } from '@/lib/settings-utils';
 import { useFirebase } from '@/firebase/provider';
+import { updateProfile } from 'firebase/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -46,7 +47,7 @@ export type CompanyInfo = z.infer<typeof companyInfoSchema>;
 export function CompanyInfoModal() {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { firestore, user, isUserLoading, firebaseApp } = useFirebase();
+  const { firestore, user, isUserLoading, firebaseApp, auth } = useFirebase() as any;
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const form = useForm<CompanyInfo>({
@@ -108,6 +109,20 @@ export function CompanyInfoModal() {
             await uploadBytes(sRef, logoFile);
             uploadedLogoUrl = await getDownloadURL(sRef);
             setPreviewUrl(uploadedLogoUrl);
+            // Update Firebase Auth profile photoURL so header/avatar updates
+            try {
+              if (auth && auth.currentUser && uploadedLogoUrl) {
+                await updateProfile(auth.currentUser, { photoURL: uploadedLogoUrl });
+                // Force token refresh so onIdTokenChanged fires and provider updates
+                try {
+                  await auth.currentUser.getIdToken(true);
+                } catch (tokenErr) {
+                  // ignore token refresh errors
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to update auth profile photoURL', e);
+            }
           }
 
           // Persist settings to Firestore when available
