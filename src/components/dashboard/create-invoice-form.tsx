@@ -35,7 +35,6 @@ const lineItemSchema = z.object({
   unit: z.string().optional(),
   quantity: z.coerce.number().positive('Must be > 0'),
   unitPrice: z.coerce.number().positive('Must be > 0'),
-  applyVat: z.boolean().default(false),
 });
 
 const formSchema = z.object({
@@ -111,7 +110,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
         clientRc: '',
         clientArt: '',
         clientRib: '',
-        lineItems: [{ designation: '', quantity: 1, unitPrice: 0, applyVat: false, reference: '', unit: 'pcs' }],
+        lineItems: [{ designation: '', quantity: 1, unitPrice: 0, reference: '', unit: 'pcs' }],
         paymentMethod: 'Espèce',
         applyVatToAll: false,
       },
@@ -148,12 +147,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
       setIsLoading(true);
       try {
-        // Apply VAT to all items if checkbox is selected (set applyVat flag)
-        if (applyVatToAll) {
-          values.lineItems.forEach((item) => {
-            (item as any).applyVat = true;
-          });
-        }
+        // VAT is global (applyVatToAll) — handled in PDF generator via flag
 
         // Get company info from Firestore settings
         const settings = await getUserSettings(firestore, user.uid);

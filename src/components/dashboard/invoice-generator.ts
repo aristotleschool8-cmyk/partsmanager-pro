@@ -58,61 +58,87 @@ function addPageNumbers(this: any) {
 
 // A simple number to word converter for French
 function numberToWordsFr(n: number): string {
-    if (n === 0) return "zéro";
+  if (typeof n !== 'number' || isNaN(n)) return '';
+  if (n === 0) return 'zéro Dinar';
 
-    const a = [
-        "", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf",
-        "dix", "onze", "douze", "treize", "quatorze", "quinze", "seize", "dix-sept", "dix-huit", "dix-neuf"
-    ];
-    const b = ["", "", "vingt", "trente", "quarante", "cinquante", "soixante", "soixante-dix", "quatre-vingt", "quatre-vingt-dix"];
-    
-    const format = (num: number) => {
-        let str = '';
-        if (num >= 1000000000) {
-            str += format(Math.floor(num / 1000000000)) + " milliard ";
-            num %= 1000000000;
-        }
-        if (num >= 1000000) {
-            str += format(Math.floor(num / 1000000)) + " million ";
-            num %= 1000000;
-        }
-        if (num >= 1000) {
-            const thousands = Math.floor(num / 1000);
-            str += (thousands > 1 ? format(thousands) : (thousands === 1 ? 'mille' : '')) + " ";
-            num %= 1000;
-        }
-        if (num >= 100) {
-            const hundreds = Math.floor(num / 100);
-            str += (hundreds > 1 ? a[hundreds] + ' ' : '') + "cent ";
-            num %= 100;
-        }
+  const UNITS = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
+  const TENS = ['', '', 'vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
 
-        if (num > 0) {
-            if (num < 20) {
-                str += a[num];
-            } else {
-                const tens = Math.floor(num / 10);
-                const unit = num % 10;
-                if (tens === 7 || tens === 9) {
-                     str += b[tens-1] + (unit === 1 ? ' et ' : '-') + a[10 + unit];
-                } else {
-                    str += b[tens] + (unit === 1 ? ' et ' : '') + (unit > 0 ? '-' + a[unit] : '');
-                }
-            }
-        }
-        return str.trim();
-    };
-    const integerPart = Math.floor(n);
-    const decimalPart = Math.round((n - integerPart) * 100);
-
-    let words = format(integerPart);
-    if(integerPart > 1) words += " Dinars"; else words += " Dinar";
-
-    if (decimalPart > 0) {
-        words += " et " + format(decimalPart) + " centimes";
+  function belowThousand(num: number): string {
+    let words: string[] = [];
+    const hundreds = Math.floor(num / 100);
+    const rest = num % 100;
+    if (hundreds) {
+      if (hundreds > 1) words.push(UNITS[hundreds]);
+      words.push(hundreds > 1 ? 'cents' : 'cent');
+      if (rest === 0 && hundreds > 1) {
+        // keep 'cents' plural only when exact hundreds >1
+      }
     }
 
-    return words.replace(/\s+/g, ' ').trim();
+    if (rest) {
+      if (rest < 20) {
+        words.push(UNITS[rest]);
+      } else {
+        let tens = Math.floor(rest / 10);
+        let unit = rest % 10;
+        if (tens === 7 || tens === 9) {
+          // 70..79 = soixante-dix+..., 90..99 = quatre-vingt-dix+...
+          const base = TENS[tens];
+          const sub = 10 + unit;
+          if (unit === 1) words.push(base + ' et ' + UNITS[sub]);
+          else words.push(base + '-' + UNITS[sub]);
+        } else {
+          const base = TENS[tens];
+          if (unit === 1 && (tens === 1 || tens === 2 || tens === 3 || tens === 4 || tens === 5 || tens === 6)) {
+            // e.g., vingt et un
+            words.push(base + ' et ' + UNITS[unit]);
+          } else {
+            words.push(base + (unit ? '-' + UNITS[unit] : ''));
+          }
+        }
+      }
+    }
+
+    return words.join(' ').replace(/\s+/g, ' ').trim();
+  }
+
+  const integerPart = Math.floor(n);
+  const decimalPart = Math.round((n - integerPart) * 100);
+
+  const groups = [
+    { value: 1_000_000_000, name: 'milliard' },
+    { value: 1_000_000, name: 'million' },
+    { value: 1000, name: 'mille' }
+  ];
+
+  let remaining = integerPart;
+  let parts: string[] = [];
+
+  for (const g of groups) {
+    const count = Math.floor(remaining / g.value);
+    if (count) {
+      if (g.name === 'mille' && count === 1) {
+        parts.push('mille');
+      } else {
+        parts.push(belowThousand(count) + ' ' + g.name + (count > 1 && g.name !== 'mille' ? 's' : ''));
+      }
+      remaining = remaining % g.value;
+    }
+  }
+
+  if (remaining) {
+    parts.push(belowThousand(remaining));
+  }
+
+  let words = parts.join(' ').replace(/\s+/g, ' ').trim();
+  words += integerPart > 1 ? ' Dinars' : ' Dinar';
+
+  if (decimalPart > 0) {
+    words += ' et ' + belowThousand(decimalPart) + ' centimes';
+  }
+
+  return words;
 }
 
 function getCompanyInfo(): CompanyInfo {
@@ -295,28 +321,60 @@ export function generateInvoicePdf(data: InvoiceFormData, companyInfo?: CompanyI
   doc.setFont('helvetica', 'normal');
   doc.text(paymentMethodText, 14, startY);
 
-  const summaryX = 130;
-  let summaryY = startY;
-  doc.roundedRect(summaryX - 5, summaryY - 5, 70, 32, 2, 2);
-  doc.text(`Montant HT :`, summaryX, summaryY);
-  doc.text(`${formatPrice(totalHT)}`, summaryX + 63, summaryY, { align: 'right'});
-  summaryY += 6;
-  doc.text(`Montant TVA :`, summaryX, summaryY);
-  doc.text(`${formatPrice(totalTVA)}`, summaryX + 63, summaryY, { align: 'right'});
-  summaryY += 6;
-  doc.text(`Montant TTC :`, summaryX, summaryY);
-  doc.text(`${formatPrice(totalTTC)}`, summaryX + 63, summaryY, { align: 'right'});
-  summaryY += 6;
-  doc.text(`Timbre :`, summaryX, summaryY);
-  doc.text(`${formatPrice(timbre)}`, summaryX + 63, summaryY, { align: 'right'});
-  
-  doc.setLineWidth(0.2);
-  doc.line(summaryX, summaryY + 2, summaryX + 60, summaryY + 2);
-  summaryY += 8;
+  // Dynamic summary box sizing to avoid clipping long numbers
+  const labels = ['Montant HT :', 'Montant TVA :', 'Montant TTC :', 'Timbre :', 'Montant Net à payer'];
+  const values = [formatPrice(totalHT), formatPrice(totalTVA), formatPrice(totalTTC), formatPrice(timbre), formatPrice(netAPayer)];
 
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Montant Net à payer`, summaryX, summaryY);
-  doc.text(`${formatPrice(netAPayer)}`, summaryX + 63, summaryY, { align: 'right'});
+  doc.setFont('helvetica', 'normal');
+  const labelWidths = labels.map(l => doc.getTextWidth(l));
+  const valueWidths = values.map(v => doc.getTextWidth(v));
+  const maxLabelWidth = Math.max(...labelWidths);
+  const maxValueWidth = Math.max(...valueWidths);
+
+  const padding = 6;
+  const gap = 8; // space between label and value
+  const rowHeight = 7;
+  const rows = labels.length;
+
+  let summaryBoxWidth = maxLabelWidth + gap + maxValueWidth + padding * 2;
+  const pageWidth = (doc.internal.pageSize as any).width;
+  const rightMargin = 14;
+  if (summaryBoxWidth > pageWidth - 2 * rightMargin) {
+    summaryBoxWidth = pageWidth - 2 * rightMargin;
+  }
+
+  const summaryBoxHeight = rows * rowHeight + padding * 2;
+  let summaryX = pageWidth - summaryBoxWidth - rightMargin;
+  let summaryY = startY;
+
+  // If the box would overflow the page vertically, start a new page
+  if (summaryY + summaryBoxHeight > (doc.internal.pageSize as any).height - 20) {
+    doc.addPage();
+    summaryY = 20 + padding;
+  }
+
+  doc.roundedRect(summaryX, summaryY - padding, summaryBoxWidth, summaryBoxHeight, 2, 2);
+
+  // Draw rows
+  for (let i = 0; i < rows; i++) {
+    const y = summaryY + i * rowHeight;
+    // Bold the last label/value
+    if (i === rows - 1) doc.setFont('helvetica', 'bold');
+    else doc.setFont('helvetica', 'normal');
+
+    // Ensure label fits within left portion
+    const labelX = summaryX + padding;
+    doc.text(labels[i], labelX, y);
+
+    // Value aligned to the right inside the box
+    const valueX = summaryX + summaryBoxWidth - padding;
+    doc.text(values[i], valueX, y, { align: 'right' });
+  }
+
+  // Draw a separator above the net to pay (before last row)
+  const sepY = summaryY + (rows - 1) * rowHeight - (rowHeight / 3);
+  doc.setLineWidth(0.2);
+  doc.line(summaryX + padding, sepY, summaryX + summaryBoxWidth - padding, sepY);
 
   doc.setFont('helvetica', 'normal');
   let textY = startY + 40; // Position below payment method
