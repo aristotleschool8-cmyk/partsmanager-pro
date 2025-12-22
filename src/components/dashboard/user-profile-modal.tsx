@@ -32,9 +32,9 @@ export function UserProfileModal({ children, open: controlledOpen, onOpenChange 
   async function onSubmit(values: any) {
     try {
       // Update display name in Auth and user doc
-      if (values.displayName && firebaseApp && user) {
+      if (values.displayName && auth && user) {
         try {
-          await updateProfile(firebaseApp.auth?.currentUser || (firebaseApp as any).currentUser, { displayName: values.displayName });
+          if (auth.currentUser) await updateProfile(auth.currentUser, { displayName: values.displayName });
         } catch (e) {
           // ignore - fallback
         }
@@ -50,10 +50,10 @@ export function UserProfileModal({ children, open: controlledOpen, onOpenChange 
       // Change password if provided
       if (values.newPassword) {
         if (!values.currentPassword) throw new Error('Current password required to change password');
-        const authInst = (firebaseApp && (firebaseApp as any).auth) || firebaseApp;
+        if (!auth || !auth.currentUser) throw new Error('Authentication not available');
         const credential = EmailAuthProvider.credential(user.email, values.currentPassword);
-        await reauthenticateWithCredential(authInst.currentUser, credential);
-        await updatePassword(authInst.currentUser, values.newPassword);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        await updatePassword(auth.currentUser, values.newPassword);
       }
 
       toast({ title: 'Profile updated' });

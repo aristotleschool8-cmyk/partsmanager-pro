@@ -24,13 +24,14 @@ import { ThemeSwitcher } from '../theme-switcher';
 import { useAuth } from '@/firebase/provider';
 import { signOut } from '@/firebase/auth-functions';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUser } from '@/firebase/provider';
 
 export function UserNav({
-  user,
+  user: initialUser,
   dictionary,
 }: {
-  user: User;
+  user?: User;
   dictionary: Awaited<ReturnType<typeof getDictionary>>['auth'];
 }) {
   const pathname = usePathname();
@@ -39,7 +40,26 @@ export function UserNav({
   const auth = useAuth();
   const { toast } = useToast();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { user: firebaseUser } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [liveUser, setLiveUser] = useState<{ name?: string | null; email?: string | null; avatarUrl?: string | null }>({
+    name: initialUser?.name ?? null,
+    email: initialUser?.email ?? null,
+    avatarUrl: initialUser?.avatarUrl ?? null,
+  });
+
+  useEffect(() => {
+    // Prefer app-provided `initialUser` (server-rendered) but keep it in sync with auth profile
+    if (firebaseUser) {
+      setLiveUser({
+        name: firebaseUser.displayName ?? initialUser?.name ?? firebaseUser.email ?? null,
+        email: firebaseUser.email ?? initialUser?.email ?? null,
+        avatarUrl: (firebaseUser as any).photoURL ?? initialUser?.avatarUrl ?? null,
+      });
+    } else if (initialUser) {
+      setLiveUser({ name: initialUser.name ?? null, email: initialUser.email ?? null, avatarUrl: initialUser.avatarUrl ?? null });
+    }
+  }, [firebaseUser, initialUser]);
 
   const handleLogout = async () => {
     if (!auth) return;
@@ -71,18 +91,17 @@ export function UserNav({
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={user.avatarUrl} alt={user.name || user.email} />
-            <AvatarFallback>{(user.name || user.email).charAt(0)}</AvatarFallback>
+            <AvatarImage src={liveUser.avatarUrl ?? undefined} alt={liveUser.name || liveUser.email || 'User'} />
+            <AvatarFallback>{(liveUser.name || liveUser.email || 'U').charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <UserProfileModal open={false} onOpenChange={() => {}} />
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{user.name || user.email}</p>
+            <p className="text-sm font-medium leading-none">{liveUser.name || liveUser.email}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {user.email}
+              {liveUser.email}
             </p>
           </div>
         </DropdownMenuLabel>
