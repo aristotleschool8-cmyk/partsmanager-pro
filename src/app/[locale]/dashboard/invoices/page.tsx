@@ -23,6 +23,14 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useFirebase } from "@/firebase/provider";
 import { getUserInvoices, deleteInvoice, updateInvoicePaidStatus, type StoredInvoice } from "@/lib/invoices-utils";
 import { generateInvoicePdf } from "@/components/dashboard/invoice-generator";
@@ -43,6 +51,8 @@ export default function InvoicesPage({
   const [dictionary, setDictionary] = useState<any>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [updatingPaidId, setUpdatingPaidId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
   const fetchInvoicesList = async () => {
     if (!firestore || !user) return;
@@ -190,6 +200,18 @@ export default function InvoicesPage({
     }
   };
 
+  // Filter and sort invoices
+  const filteredAndSortedInvoices = invoices
+    .filter(invoice => 
+      invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.invoiceDate).getTime();
+      const dateB = new Date(b.invoiceDate).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
   if (!dictionary) {
     return (
       <div className="space-y-8">
@@ -210,13 +232,32 @@ export default function InvoicesPage({
       </div>
       <Card>
         <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center">
                 <CardTitle>Invoices</CardTitle>
                 <CreateInvoiceDialog 
                   locale={locale} 
                   dictionary={dictionary}
                   onInvoiceCreated={fetchInvoicesList}
                 />
+              </div>
+              <div className="flex gap-4 items-center">
+                <Input 
+                  placeholder="Search by invoice number or client name..." 
+                  className="flex-1"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
         </CardHeader>
         <CardContent>
@@ -237,14 +278,14 @@ export default function InvoicesPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {invoices.length === 0 ? (
+                {filteredAndSortedInvoices.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      No invoices found. Create one to get started!
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      {invoices.length === 0 ? 'No invoices found. Create one to get started!' : 'No invoices match your search.'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  invoices.map(invoice => (
+                  filteredAndSortedInvoices.map(invoice => (
                       <TableRow key={invoice.id}>
                           <TableCell className="font-medium">{invoice.invoiceNumber}</TableCell>
                           <TableCell>{invoice.clientName}</TableCell>
