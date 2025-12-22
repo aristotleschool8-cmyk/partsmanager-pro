@@ -9,11 +9,16 @@ import { canExport } from '@/lib/trial-utils';
 let jsPDF: any = null;
 if (typeof window !== 'undefined') {
   try {
-    const jsPDFModule = require('jspdf');
-    jsPDF = jsPDFModule.default || jsPDFModule;
-    require('jspdf-autotable');
+    const jsPDFModule = require('jspdf').jsPDF || require('jspdf').default;
+    jsPDF = jsPDFModule;
+    // Load autotable as side-effect to extend jsPDF
+    const autoTableModule = require('jspdf-autotable');
+    if (autoTableModule && typeof autoTableModule === 'function') {
+      autoTableModule(jsPDF);
+    }
   } catch (e) {
     // jsPDF not loaded
+    console.error('Failed to load jsPDF:', e);
   }
 }
 
