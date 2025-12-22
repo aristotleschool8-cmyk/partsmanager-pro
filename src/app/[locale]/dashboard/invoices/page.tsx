@@ -249,8 +249,8 @@ export default function InvoicesPage({
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
+                  <SelectTrigger className="w-44">
+                    <SelectValue placeholder="Sort by..." />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="newest">Newest First</SelectItem>
