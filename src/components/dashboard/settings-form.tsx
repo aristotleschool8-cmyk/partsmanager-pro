@@ -7,29 +7,29 @@ import { BusinessRulesModal } from '@/app/[locale]/settings/business-rules-modal
 import { BillingPanel } from './billing-panel';
 
 
-export function SettingsForm() {
+export function SettingsForm({ dictionary }: { dictionary?: any }) {
     return (
         <Tabs defaultValue="company">
             <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="company">Company</TabsTrigger>
-                <TabsTrigger value="business">Business</TabsTrigger>
-                <TabsTrigger value="billing">Billing</TabsTrigger>
+                <TabsTrigger value="company">{dictionary?.settings?.companyTab || 'Company'}</TabsTrigger>
+                <TabsTrigger value="business">{dictionary?.settings?.businessTab || 'Business'}</TabsTrigger>
+                <TabsTrigger value="billing">{dictionary?.settings?.billingTab || 'Billing'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="company">
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader>
-                        <CardTitle>Company Information</CardTitle>
+                        <CardTitle>{dictionary?.settings?.companyTitle || 'Company Information'}</CardTitle>
                         <CardDescription>
-                            This information will be displayed on your invoices.
+                            {dictionary?.settings?.companyDescription || 'This information will be displayed on your invoices.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                Manage your company details including registration numbers and bank information.
+                                {dictionary?.settings?.companySubtext || 'Manage your company details including registration numbers and bank information.'}
                             </p>
-                            <CompanyInfoModal />
+                            <CompanyInfoModal dictionary={dictionary} />
                         </div>
                     </CardContent>
                 </Card>
@@ -38,24 +38,24 @@ export function SettingsForm() {
             <TabsContent value="business">
                 <Card className="hover:shadow-md transition-shadow">
                     <CardHeader>
-                        <CardTitle>Business Rules</CardTitle>
+                        <CardTitle>{dictionary?.settings?.businessTitle || 'Business Rules'}</CardTitle>
                         <CardDescription>
-                            Set default values for business logic like pricing.
+                            {dictionary?.settings?.businessDescription || 'Set default values for business logic like pricing.'}
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             <p className="text-sm text-muted-foreground">
-                                Configure default profit margins and VAT settings for your business.
+                                {dictionary?.settings?.businessSubtext || 'Configure default profit margins and VAT settings for your business.'}
                             </p>
-                            <BusinessRulesModal />
+                            <BusinessRulesModal dictionary={dictionary} />
                         </div>
                     </CardContent>
                 </Card>
             </TabsContent>
 
             <TabsContent value="billing">
-                <BillingPanel />
+                <BillingPanel dictionary={dictionary} />
             </TabsContent>
         </Tabs>
     )

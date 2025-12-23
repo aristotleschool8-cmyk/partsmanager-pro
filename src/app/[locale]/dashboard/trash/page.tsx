@@ -88,21 +88,21 @@ export default function TrashPage({
       if (success) {
         setDeletedItems(deletedItems.filter(item => item.id !== productId));
         toast({
-          title: 'Success',
-          description: 'Product restored successfully',
+          title: dictionary?.table?.success || 'Success',
+          description: dictionary?.trash?.restoreSuccess || 'Product restored successfully',
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to restore product',
+          title: dictionary?.table?.error || 'Error',
+          description: dictionary?.trash?.restoreError || 'Failed to restore product',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error restoring product:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while restoring the product',
+        title: dictionary?.table?.error || 'Error',
+        description: dictionary?.trash?.restoreErrorGeneral || 'An error occurred while restoring the product',
         variant: 'destructive',
       });
     }
@@ -111,7 +111,7 @@ export default function TrashPage({
   const handlePermanentDelete = async (productId: string) => {
     if (!firestore) return;
     
-    if (!confirm('Are you sure you want to permanently delete this product? This action cannot be undone.')) {
+    if (!confirm(dictionary?.trash?.confirmDeleteMessage || 'Are you sure you want to permanently delete this product? This action cannot be undone.')) {
       return;
     }
     
@@ -120,21 +120,21 @@ export default function TrashPage({
       if (success) {
         setDeletedItems(deletedItems.filter(item => item.id !== productId));
         toast({
-          title: 'Success',
-          description: 'Product permanently deleted',
+          title: dictionary?.table?.success || 'Success',
+          description: dictionary?.trash?.deleteSuccess || 'Product permanently deleted',
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to permanently delete product',
+          title: dictionary?.table?.error || 'Error',
+          description: dictionary?.trash?.deleteError || 'Failed to permanently delete product',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error permanently deleting product:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while deleting the product',
+        title: dictionary?.table?.error || 'Error',
+        description: dictionary?.trash?.deleteErrorGeneral || 'An error occurred while deleting the product',
         variant: 'destructive',
       });
     }
@@ -169,21 +169,21 @@ export default function TrashPage({
         setDeletedItems(deletedItems.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         toast({
-          title: 'Success',
-          description: `${selectedItems.size} item(s) restored successfully`,
+          title: dictionary?.table?.success || 'Success',
+          description: dictionary?.trash?.batchRestoreSuccess?.replace('{count}', String(selectedItems.size)) || `${selectedItems.size} item(s) restored successfully`,
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to restore items',
+          title: dictionary?.table?.error || 'Error',
+          description: dictionary?.trash?.batchRestoreError || 'Failed to restore items',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error batch restoring items:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while restoring items',
+        title: dictionary?.table?.error || 'Error',
+        description: dictionary?.trash?.batchRestoreErrorGeneral || 'An error occurred while restoring items',
         variant: 'destructive',
       });
     }
@@ -192,7 +192,8 @@ export default function TrashPage({
   const handleBatchPermanentDelete = async () => {
     if (selectedItems.size === 0) return;
 
-    if (!confirm(`Permanently delete ${selectedItems.size} item(s)? This action cannot be undone.`)) {
+    const confirmMessage = dictionary?.trash?.confirmBatchDelete?.replace('{count}', String(selectedItems.size)) || `Permanently delete ${selectedItems.size} item(s)? This action cannot be undone.`;
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -204,21 +205,21 @@ export default function TrashPage({
         setDeletedItems(deletedItems.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         toast({
-          title: 'Success',
-          description: `${selectedItems.size} item(s) permanently deleted`,
+          title: dictionary?.table?.success || 'Success',
+          description: dictionary?.trash?.batchDeleteSuccess?.replace('{count}', String(selectedItems.size)) || `${selectedItems.size} item(s) permanently deleted`,
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to delete items',
+          title: dictionary?.table?.error || 'Error',
+          description: dictionary?.trash?.batchDeleteError || 'Failed to delete items',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error batch deleting items:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while deleting items',
+        title: dictionary?.table?.error || 'Error',
+        description: dictionary?.trash?.batchDeleteErrorGeneral || 'An error occurred while deleting items',
         variant: 'destructive',
       });
     }
@@ -248,7 +249,7 @@ export default function TrashPage({
                   onClick={handleBatchRestore}
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
-                  Restore Selected ({selectedItems.size})
+                  {dictionary?.trash?.restoreSelected || 'Restore Selected'} ({selectedItems.size})
                 </Button>
                 <Button 
                   variant="destructive" 
@@ -256,7 +257,7 @@ export default function TrashPage({
                   onClick={handleBatchPermanentDelete}
                 >
                   <Trash className="mr-2 h-4 w-4" />
-                  Delete Permanently ({selectedItems.size})
+                  {dictionary?.trash?.deleteSelectedPermanently || 'Delete Permanently'} ({selectedItems.size})
                 </Button>
               </div>
             )}
@@ -307,7 +308,7 @@ export default function TrashPage({
                       onClick={() => handleRestore(product.id)}
                     >
                       <RotateCcw className="mr-2 h-4 w-4" />
-                      Restore
+                      {dictionary?.trash?.restore || 'Restore'}
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -315,7 +316,7 @@ export default function TrashPage({
                       onClick={() => handlePermanentDelete(product.id)}
                     >
                       <Trash className="mr-2 h-4 w-4" />
-                      Delete Permanently
+                      {dictionary?.trash?.deletePermanently || 'Delete Permanently'}
                     </Button>
                   </TableCell>
                 </TableRow>

@@ -7,7 +7,7 @@ import { useFirebase } from '@/firebase/provider';
 import { fetchUserById, changeUserSubscription } from '@/lib/user-management';
 import { useToast } from '@/hooks/use-toast';
 
-export function BillingPanel() {
+export function BillingPanel({ dictionary }: { dictionary?: any }) {
   const { firestore, user } = useFirebase();
   const { toast } = useToast();
   const [loading, setLoading] = React.useState(false);
@@ -33,15 +33,15 @@ export function BillingPanel() {
     try {
       const ok = await changeUserSubscription(firestore, user.uid, 'premium');
       if (ok) {
-        toast({ title: 'Subscription Renewed', description: 'Your subscription has been renewed for 1 year.' });
+        toast({ title: dictionary?.billing?.renewalSuccess || 'Subscription Renewed', description: dictionary?.billing?.renewalSuccessMessage || 'Your subscription has been renewed for 1 year.' });
         const p = await fetchUserById(firestore, user.uid);
         setProfile(p);
       } else {
-        toast({ title: 'Renewal Failed', description: 'Could not renew subscription.', variant: 'destructive' });
+        toast({ title: dictionary?.billing?.renewalError || 'Renewal Failed', description: dictionary?.billing?.renewalErrorMessage || 'Could not renew subscription.', variant: 'destructive' });
       }
     } catch (e) {
       console.error('Renew failed', e);
-      toast({ title: 'Error', description: 'Unexpected error during renewal.', variant: 'destructive' });
+      toast({ title: dictionary?.table?.error || 'Error', description: dictionary?.billing?.renewalUnexpectedError || 'Unexpected error during renewal.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -50,20 +50,20 @@ export function BillingPanel() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Subscription</CardTitle>
-        <CardDescription>Manage your plan and renewal.</CardDescription>
+        <CardTitle>{dictionary?.billing?.title || 'Subscription'}</CardTitle>
+        <CardDescription>{dictionary?.billing?.description || 'Manage your plan and renewal.'}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <div>
-            <p className="text-sm">Plan: <strong>{profile?.subscription ?? 'unknown'}</strong></p>
+            <p className="text-sm">{dictionary?.billing?.plan || 'Plan:'} <strong>{profile?.subscription ?? 'unknown'}</strong></p>
             {profile?.premiumExpiryDate ? (
-              <p className="text-sm">Expires: {new Date(profile.premiumExpiryDate.seconds * 1000).toLocaleDateString()}</p>
+              <p className="text-sm">{dictionary?.billing?.expires || 'Expires:'} {new Date(profile.premiumExpiryDate.seconds * 1000).toLocaleDateString()}</p>
             ) : null}
           </div>
           <div className="flex gap-2">
             <Button onClick={handleRenew} disabled={loading}>
-              {loading ? 'Processing...' : 'Renew / Upgrade to Premium'}
+              {loading ? dictionary?.billing?.processing || 'Processing...' : dictionary?.billing?.renewButton || 'Renew / Upgrade to Premium'}
             </Button>
           </div>
         </div>

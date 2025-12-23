@@ -28,19 +28,20 @@ import { useFirebase } from '@/firebase/provider';
 import { getUserSettings, saveUserSettings } from '@/lib/settings-utils';
 import { Save, Edit, Percent, Loader2 } from 'lucide-react';
 
-const businessRulesSchema = z.object({
-  profitMargin: z.coerce.number().min(0, 'Profit margin cannot be negative.'),
-  defaultVat: z.coerce.number().min(0, 'VAT cannot be negative.').max(100, 'VAT cannot exceed 100%'),
+const getBusinessRulesSchema = (dictionary?: any) => z.object({
+  profitMargin: z.coerce.number().min(0, dictionary?.settings?.profitMarginError || 'Profit margin cannot be negative.'),
+  defaultVat: z.coerce.number().min(0, dictionary?.settings?.vatMinError || 'VAT cannot be negative.').max(100, dictionary?.settings?.vatMaxError || 'VAT cannot exceed 100%'),
 });
 
-export type BusinessRulesData = z.infer<typeof businessRulesSchema>;
+export type BusinessRulesData = z.infer<ReturnType<typeof getBusinessRulesSchema>>;
 
-export function BusinessRulesModal() {
+export function BusinessRulesModal({ dictionary }: { dictionary?: any }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const { firestore, user, isUserLoading } = useFirebase();
+  const businessRulesSchema = getBusinessRulesSchema(dictionary);
 
   const form = useForm<BusinessRulesData>({
     resolver: zodResolver(businessRulesSchema),
@@ -94,15 +95,15 @@ export function BusinessRulesModal() {
       }
 
       toast({
-        title: 'Business Rules Saved',
-        description: `Profit margin set to ${values.profitMargin}% and VAT to ${values.defaultVat}%.`,
+        title: dictionary?.settings?.businessRulesSaveSuccess || 'Business Rules Saved',
+        description: `${dictionary?.settings?.profitMargin || 'Profit margin'} set to ${values.profitMargin}% and ${dictionary?.settings?.defaultVAT || 'VAT'} to ${values.defaultVat}%.`,
       });
       setOpen(false);
     } catch (error) {
       console.error('Failed to save business rules:', error);
       toast({
-        title: 'Error Saving',
-        description: 'Could not save business rules.',
+        title: dictionary?.settings?.saveError || 'Error Saving',
+        description: dictionary?.settings?.businessRulesSaveError || 'Could not save business rules.',
         variant: 'destructive',
       });
     } finally {
@@ -115,14 +116,14 @@ export function BusinessRulesModal() {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-start">
           <Edit className="mr-2 h-4 w-4" />
-          Edit Business Rules
+          {dictionary?.settings?.businessRulesEditButton || 'Edit Business Rules'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Business Rules</DialogTitle>
+          <DialogTitle>{dictionary?.settings?.businessRulesDialogTitle || 'Edit Business Rules'}</DialogTitle>
           <DialogDescription>
-            Set default values for business logic and pricing.
+            {dictionary?.settings?.businessRulesDialogDescription || 'Set default values for business logic and pricing.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -133,7 +134,7 @@ export function BusinessRulesModal() {
               name="profitMargin"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Default Profit Margin (%)</FormLabel>
+                  <FormLabel>{dictionary?.settings?.profitMargin || 'Default Profit Margin'} (%)</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input 
@@ -157,7 +158,7 @@ export function BusinessRulesModal() {
               name="defaultVat"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Default VAT Logic (%)</FormLabel>
+                  <FormLabel>{dictionary?.settings?.defaultVAT || 'Default VAT'} (%)</FormLabel>
                   <div className="relative">
                     <FormControl>
                       <Input 
@@ -178,18 +179,18 @@ export function BusinessRulesModal() {
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                {dictionary?.settings?.cancelButton || 'Cancel'}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
+                    {dictionary?.table?.saving || 'Saving...'}
                   </>
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    Save Rules
+                    {dictionary?.settings?.saveButton || 'Save Rules'}
                   </>
                 )}
               </Button>

@@ -31,25 +31,26 @@ import { useToast } from '@/hooks/use-toast';
 import { Save, Edit } from 'lucide-react';
  
 
-const companyInfoSchema = z.object({
-  companyName: z.string().min(1, 'Company name is required.'),
-  address: z.string().min(1, 'Address is required.'),
-  phone: z.string().min(1, 'Phone number is required.'),
-  rc: z.string().min(1, 'R.C is required.'),
-  nif: z.string().min(1, 'NIF is required.'),
+const getCompanyInfoSchema = (dictionary?: any) => z.object({
+  companyName: z.string().min(1, dictionary?.settings?.companyNameRequired || 'Company name is required.'),
+  address: z.string().min(1, dictionary?.settings?.addressRequired || 'Address is required.'),
+  phone: z.string().min(1, dictionary?.settings?.phoneRequired || 'Phone number is required.'),
+  rc: z.string().min(1, dictionary?.settings?.rcRequired || 'R.C is required.'),
+  nif: z.string().min(1, dictionary?.settings?.nifRequired || 'NIF is required.'),
   art: z.string().optional(),
   nis: z.string().optional(),
   rib: z.string().optional(),
 });
 
-export type CompanyInfo = z.infer<typeof companyInfoSchema>;
+export type CompanyInfo = z.infer<ReturnType<typeof getCompanyInfoSchema>>;
 
-export function CompanyInfoModal() {
+export function CompanyInfoModal({ dictionary }: { dictionary?: any }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { firestore, user, isUserLoading, firebaseApp, auth } = useFirebase() as any;
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const companyInfoSchema = getCompanyInfoSchema(dictionary);
   const form = useForm<CompanyInfo>({
     resolver: zodResolver(companyInfoSchema),
     defaultValues: {
@@ -207,8 +208,8 @@ export function CompanyInfoModal() {
       }
 
       toast({
-        title: 'Information Saved',
-        description: 'Your company details have been updated.',
+        title: dictionary?.settings?.saveSuccess || 'Information Saved',
+        description: dictionary?.settings?.saveSuccessMessage || 'Your company details have been updated.',
       });
       setOpen(false);
 
@@ -222,8 +223,8 @@ export function CompanyInfoModal() {
       }, 300);
     } catch (error) {
       toast({
-        title: 'Error Saving',
-        description: 'Could not save company information.',
+        title: dictionary?.settings?.saveError || 'Error Saving',
+        description: dictionary?.settings?.saveErrorMessage || 'Could not save company information.',
         variant: 'destructive',
       });
     }
@@ -242,14 +243,14 @@ export function CompanyInfoModal() {
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-start">
           <Edit className="mr-2 h-4 w-4" />
-          Edit Company Information
+          {dictionary?.settings?.editCompanyButton || 'Edit Company Information'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Company Information</DialogTitle>
+          <DialogTitle>{dictionary?.settings?.editDialogTitle || 'Edit Company Information'}</DialogTitle>
           <DialogDescription>
-            This information will be displayed on your invoices.
+            {dictionary?.settings?.editDialogDescription || 'This information will be displayed on your invoices.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -261,9 +262,9 @@ export function CompanyInfoModal() {
                 name="companyName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Company Name *</FormLabel>
+                    <FormLabel>{dictionary?.settings?.companyName || 'Company Name'} *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Your Company Name" />
+                      <Input {...field} placeholder={dictionary?.settings?.companyNamePlaceholder || 'Your Company Name'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +275,9 @@ export function CompanyInfoModal() {
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone *</FormLabel>
+                    <FormLabel>{dictionary?.settings?.phone || 'Phone'} *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="+213 XXX XXX XXX" />
+                      <Input {...field} placeholder={dictionary?.settings?.phonePlaceholder || '+213 XXX XXX XXX'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -289,9 +290,9 @@ export function CompanyInfoModal() {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address *</FormLabel>
+                  <FormLabel>{dictionary?.settings?.address || 'Address'} *</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" />
+                    <Input {...field} placeholder={dictionary?.settings?.addressPlaceholder || 'Street address'} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -304,9 +305,9 @@ export function CompanyInfoModal() {
                 name="rc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>R.C (Registre de Commerce) *</FormLabel>
+                    <FormLabel>{dictionary?.settings?.rc || 'R.C (Registre de Commerce)'} *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="RC Number" />
+                      <Input {...field} placeholder={dictionary?.settings?.rcPlaceholder || 'RC Number'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -317,9 +318,9 @@ export function CompanyInfoModal() {
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF (Numéro d'Identification Fiscale) *</FormLabel>
+                    <FormLabel>{dictionary?.settings?.nif || 'NIF (Numéro d\'Identification Fiscale)'} *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF Number" />
+                      <Input {...field} placeholder={dictionary?.settings?.nifPlaceholder || 'NIF Number'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -333,9 +334,9 @@ export function CompanyInfoModal() {
                 name="art"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ART (Article d'imposition)</FormLabel>
+                    <FormLabel>{dictionary?.settings?.art || 'ART (Article d\'imposition)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ART Number" />
+                      <Input {...field} placeholder={dictionary?.settings?.artPlaceholder || 'ART Number'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -346,9 +347,9 @@ export function CompanyInfoModal() {
                 name="nis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS (Numéro d'Identification Statistique)</FormLabel>
+                    <FormLabel>{dictionary?.settings?.nis || 'NIS (Numéro d\'Identification Statistique)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS Number" />
+                      <Input {...field} placeholder={dictionary?.settings?.nisPlaceholder || 'NIS Number'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -361,9 +362,9 @@ export function CompanyInfoModal() {
               name="rib"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>RIB (Relevé d'Identité Bancaire)</FormLabel>
+                  <FormLabel>{dictionary?.settings?.rib || 'RIB (Relevé d\'Identité Bancaire)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Bank Account RIB" />
+                    <Input {...field} placeholder={dictionary?.settings?.ribPlaceholder || 'Bank Account RIB'} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -371,7 +372,7 @@ export function CompanyInfoModal() {
             />
 
             <div className="col-span-1 md:col-span-2">
-              <FormLabel>Company Logo (optional)</FormLabel>
+              <FormLabel>{dictionary?.settings?.logo || 'Company Logo'} ({dictionary?.table?.optional || 'optional'})</FormLabel>
               <div className="flex items-center gap-4">
                 <input type="file" accept="image/*" onChange={onLogoChange} />
                 {previewUrl ? (
@@ -382,11 +383,11 @@ export function CompanyInfoModal() {
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Cancel
+                {dictionary?.settings?.cancelButton || 'Cancel'}
               </Button>
               <Button type="submit">
                 <Save className="mr-2 h-4 w-4" />
-                Save Information
+                {dictionary?.settings?.saveButton || 'Save Information'}
               </Button>
             </DialogFooter>
           </form>

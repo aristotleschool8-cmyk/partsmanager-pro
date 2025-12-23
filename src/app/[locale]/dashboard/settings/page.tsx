@@ -12,9 +12,9 @@ export default async function SettingsPage({ params }: { params: Promise<{ local
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-headline font-bold">{dictionary.dashboard.settings}</h1>
-          <p className="text-muted-foreground">Manage your application and user settings.</p>
+          <p className="text-muted-foreground">{dictionary?.settings?.description || 'Manage your application and user settings.'}</p>
         </div>
-        <SettingsForm />
+        <SettingsForm dictionary={dictionary} />
       </div>
     </SettingsProvider>
   );
