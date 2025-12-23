@@ -171,7 +171,7 @@ export default function SalesPage({
                       <TableCell className="hidden sm:table-cell">{sale.customer}</TableCell>
                       <TableCell className="hidden sm:table-cell">{new Date(sale.date).toLocaleDateString()}</TableCell>
                       <TableCell className="hidden md:table-cell">{sale.quantity}</TableCell>
-                      <TableCell className="text-right">{sale.amount.toFixed(2)} DZD</TableCell>
+                      <TableCell className="text-right">{sale.amount.toFixed(2)} {dictionary?.dashboard?.currency || 'DZD'}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

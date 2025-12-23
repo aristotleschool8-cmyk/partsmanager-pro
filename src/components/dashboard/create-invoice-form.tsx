@@ -28,6 +28,7 @@ import { getUserSettings, getNextInvoiceNumber, updateLastInvoiceNumber, AppSett
 import { saveInvoiceData, calculateInvoiceTotals, deductStockFromInvoice } from '@/lib/invoices-utils';
 import { useToast } from '@/hooks/use-toast';
 import type { Locale } from '@/lib/config';
+import { getDictionary } from '@/lib/dictionaries';
 import { generateInvoicePdf } from './invoice-generator';
 import { getCustomersForAutoComplete, getProductsForAutoComplete, type ClientAutoComplete, type ProductAutoComplete } from '@/lib/invoice-autocomplete-utils';
 
@@ -75,6 +76,16 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
     const [products, setProducts] = React.useState<ProductAutoComplete[]>([]);
     const [clientSearchOpen, setClientSearchOpen] = React.useState(false);
     const [productSearchOpen, setProductSearchOpen] = React.useState<Record<number, boolean>>({});
+    const [dictionary, setDictionary] = React.useState<any>(null);
+    
+    // Load dictionary
+    React.useEffect(() => {
+      const loadDictionary = async () => {
+        const dict = await getDictionary(locale);
+        setDictionary(dict);
+      };
+      loadDictionary();
+    }, [locale]);
     
     // Fetch user document and settings
     React.useEffect(() => {
@@ -532,7 +543,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                                   <div className="text-xs opacity-70">
                                     {product.reference && `Ref: ${product.reference}`}
                                     {product.stock !== undefined && ` • Stock: ${product.stock}`}
-                                    {product.price && ` • Price: ${product.price} DZD`}
+                                    {product.price && ` • Price: ${product.price} ${dictionary?.dashboard?.currency || 'DZD'}`}
                                   </div>
                                 </div>
                               ))}

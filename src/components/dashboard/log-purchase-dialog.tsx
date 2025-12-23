@@ -328,7 +328,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                                             step="0.01"
                                         />
                                     </TableCell>
-                                    <TableCell className="text-right">{(item.unitPrice * item.quantity).toFixed(2)} DZD</TableCell>
+                                    <TableCell className="text-right">{(item.unitPrice * item.quantity).toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</TableCell>
                                     <TableCell>
                                         <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
                                             <Trash2 className="h-4 w-4 text-destructive"/>
@@ -343,7 +343,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
           )}
 
           <div className="flex justify-end font-bold text-lg">
-            <span>{d.total}: {totalAmount.toFixed(2)} DZD</span>
+            <span>{d.total}: {totalAmount.toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</span>
           </div>
 
         </div>

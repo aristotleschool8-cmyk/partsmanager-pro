@@ -100,7 +100,7 @@
     "brand": "Marque",
     "brandPlaceholder": "ex., CAT",
     "quantity": "Quantité à Ajouter",
-    "purchasePrice": "Prix d'Achat (DZD)",
+    "purchasePrice": "Prix d'Achat",
     "submit": "Ajouter/Mettre à jour le Produit",
     "batchDescription": "Glissez-déposez votre fichier ici ou cliquez pour le télécharger. Les fichiers CSV ou Excel sont pris en charge.",
     "downloadTemplate": "Télécharger le Modèle",

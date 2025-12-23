@@ -186,14 +186,14 @@ export default function PurchasesPage({
                           {purchase.items.map((item, idx) => (
                             <div key={idx} className="flex gap-2">
                               <span>{item.description}</span>
-                              <span className="text-muted-foreground">({item.quantity}x @ {item.unitPrice.toFixed(2)} DZD)</span>
+                              <span className="text-muted-foreground">({item.quantity}x @ {item.unitPrice.toFixed(2)} {dictionary?.dashboard?.currency || 'DZD'})</span>
                             </div>
                           ))}
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">{purchase.supplier}</TableCell>
                       <TableCell className="hidden sm:table-cell">{new Date(purchase.date).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-right font-medium">{purchase.totalAmount.toFixed(2)} DZD</TableCell>
+                      <TableCell className="text-right font-medium">{purchase.totalAmount.toFixed(2)} {dictionary?.dashboard?.currency || 'DZD'}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

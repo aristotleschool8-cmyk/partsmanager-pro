@@ -287,7 +287,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
                               <p className="font-medium text-foreground">{product.name}</p>
                               <p className="text-xs text-muted-foreground">Ref: {product.reference} • Stock: {product.stock}</p>
                             </div>
-                            <p className="font-semibold text-primary whitespace-nowrap">{product.price.toFixed(2)} DZD</p>
+                            <p className="font-semibold text-primary whitespace-nowrap">{product.price.toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</p>
                           </div>
                         </div>
                       ))}
@@ -335,8 +335,8 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
                             min="0"
                           />
                         </TableCell>
-                        <TableCell className="text-right font-medium">{item.price.toFixed(2)} DZD</TableCell>
-                        <TableCell className="text-right font-semibold text-primary">{(item.price * item.saleQuantity).toFixed(2)} DZD</TableCell>
+                        <TableCell className="text-right font-medium">{item.price.toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</TableCell>
+                        <TableCell className="text-right font-semibold text-primary">{(item.price * item.saleQuantity).toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</TableCell>
                         <TableCell>
                           <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
                             <Trash2 className="h-4 w-4 text-destructive"/>
@@ -354,7 +354,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
           {saleItems.length > 0 && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 flex justify-between items-center">
               <span className="text-lg font-semibold text-foreground">{d.total}:</span>
-              <span className="text-2xl font-bold text-primary">{totalAmount.toFixed(2)} DZD</span>
+              <span className="text-2xl font-bold text-primary">{totalAmount.toFixed(2)} {dictionary.dashboard?.currency || 'DZD'}</span>
             </div>
           )}
         </div>

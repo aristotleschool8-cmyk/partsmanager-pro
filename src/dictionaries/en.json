@@ -100,7 +100,7 @@
     "brand": "Brand",
     "brandPlaceholder": "e.g., CAT",
     "quantity": "Quantity to Add",
-    "purchasePrice": "Purchase Price (DZD)",
+    "purchasePrice": "Purchase Price",
     "submit": "Add/Update Product",
     "batchDescription": "Drag and drop your file here or click to upload. CSV or Excel files are supported.",
     "downloadTemplate": "Download Template",

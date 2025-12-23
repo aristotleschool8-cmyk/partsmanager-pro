@@ -291,7 +291,7 @@ export default function InvoicesPage({
                           <TableCell>{invoice.clientName}</TableCell>
                           <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right font-semibold">
-                            {invoice.total?.toFixed(2) || '0.00'} DZD
+                            {invoice.total?.toFixed(2) || '0.00'} {dictionary?.dashboard?.currency || 'DZD'}
                           </TableCell>
                           <TableCell>
                             <Badge variant={invoice.paid ? 'default' : 'secondary'}>

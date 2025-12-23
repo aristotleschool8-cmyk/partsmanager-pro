@@ -296,10 +296,10 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
                         {product.quantity}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {product.purchasePrice?.toFixed(2)} DZD
+                        {product.purchasePrice?.toFixed(2)} {dictionary?.dashboard?.currency || 'DZD'}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {product.price?.toFixed(2)} DZD
+                        {product.price?.toFixed(2)} {dictionary?.dashboard?.currency || 'DZD'}
                       </TableCell>
                       <TableCell className="w-[50px]">
                         <DropdownMenu>

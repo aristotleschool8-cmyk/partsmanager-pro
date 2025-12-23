@@ -100,7 +100,7 @@
     "brand": "العلامة التجارية",
     "brandPlaceholder": "مثال: CAT",
     "quantity": "الكمية المراد إضافتها",
-    "purchasePrice": "سعر الشراء (DZD)",
+    "purchasePrice": "سعر الشراء",
     "submit": "إضافة/تحديث المنتج",
     "batchDescription": "اسحب ملفك وأفلته هنا أو انقر للتحميل. يتم دعم ملفات CSV أو Excel.",
     "downloadTemplate": "تنزيل القالب",
