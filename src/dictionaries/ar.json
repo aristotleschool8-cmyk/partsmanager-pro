@@ -74,8 +74,17 @@
     "outOfStock": "نفد المخزون",
     "edit": "تعديل",
     "delete": "حذف",
-    "addButton": "Add Product",
-    "deleteSelected": "Delete Selected"
+    "deleteSelected": "حذف المحدد",
+    "deleteConfirmTitle": "حذف المنتجات",
+    "deleteConfirmMessage": "هل تريد حذف {count} منتج(ات)؟ سيتم نقلها إلى سلة المهملات.",
+    "deletedSuccessTitle": "نجح",
+    "deletedSuccessMessage": "تم نقل {count} منتج(ات) إلى سلة المهملات",
+    "deleteErrorTitle": "خطأ",
+    "deleteErrorMessage": "فشل حذف المنتجات",
+    "deleteErrorMessageSingle": "فشل حذف المنتج",
+    "deleteErrorGeneral": "حدث خطأ أثناء حذف المنتجات",
+    "deleteErrorGeneralSingle": "حدث خطأ أثناء حذف المنتج",
+    "deletedSuccessMessageSingle": "تم نقل المنتج إلى سلة المهملات"
   },
   "addProductDialog": {
     "title": "إضافة منتج جديد",

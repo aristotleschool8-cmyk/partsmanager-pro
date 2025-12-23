@@ -76,7 +76,15 @@
     "lowStock": "Low Stock",
     "outOfStock": "Out of Stock",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "deleteSelected": "Delete Selected",
+    "deleteConfirmMessage": "Delete {count} product(s)? They will be moved to trash.",
+    "deletedSuccessMessage": "{count} product(s) moved to trash",
+    "deletedSuccessMessageSingle": "Product moved to trash",
+    "deleteErrorMessage": "Failed to delete products",
+    "deleteErrorMessageSingle": "Failed to delete product",
+    "deleteErrorGeneral": "An error occurred while deleting products",
+    "deleteErrorGeneralSingle": "An error occurred while deleting the product"
   },
   "addProductDialog": {
     "title": "Add New Product",

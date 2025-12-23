@@ -123,21 +123,21 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       if (success) {
         setProducts(products.filter(p => p.id !== productId));
         toast({
-          title: 'Success',
-          description: 'Product moved to trash',
+          title: d.deletedSuccessTitle || 'Success',
+          description: d.deletedSuccessMessageSingle || 'Product moved to trash',
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to delete product',
+          title: d.deleteErrorTitle || 'Error',
+          description: d.deleteErrorMessageSingle || 'Failed to delete product',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error deleting product:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while deleting the product',
+        title: d.deleteErrorTitle || 'Error',
+        description: d.deleteErrorGeneralSingle || 'An error occurred while deleting the product',
         variant: 'destructive',
       });
     }
@@ -164,7 +164,10 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
   const handleBatchDelete = async () => {
     if (selectedProducts.size === 0) return;
 
-    if (!confirm(`Delete ${selectedProducts.size} product(s)? They will be moved to trash.`)) {
+    const confirmMessage = (d.deleteConfirmMessage || 'Delete {count} product(s)? They will be moved to trash.')
+      .replace('{count}', selectedProducts.size.toString());
+    
+    if (!confirm(confirmMessage)) {
       return;
     }
 
@@ -176,21 +179,22 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
         setProducts(products.filter(p => !selectedProducts.has(p.id)));
         setSelectedProducts(new Set());
         toast({
-          title: 'Success',
-          description: `${selectedProducts.size} product(s) moved to trash`,
+          title: d.deletedSuccessTitle || 'Success',
+          description: (d.deletedSuccessMessage || '{count} product(s) moved to trash')
+            .replace('{count}', selectedProducts.size.toString()),
         });
       } else {
         toast({
-          title: 'Error',
-          description: 'Failed to delete products',
+          title: d.deleteErrorTitle || 'Error',
+          description: d.deleteErrorMessage || 'Failed to delete products',
           variant: 'destructive',
         });
       }
     } catch (error) {
       console.error('Error batch deleting products:', error);
       toast({
-        title: 'Error',
-        description: 'An error occurred while deleting products',
+        title: d.deleteErrorTitle || 'Error',
+        description: d.deleteErrorGeneral || 'An error occurred while deleting products',
         variant: 'destructive',
       });
     }
@@ -230,7 +234,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
                   size="sm"
                   onClick={handleBatchDelete}
                 >
-                  Delete Selected ({selectedProducts.size})
+                  {d.deleteSelected || 'Delete Selected'} ({selectedProducts.size})
                 </Button>
               )}
               <Input 

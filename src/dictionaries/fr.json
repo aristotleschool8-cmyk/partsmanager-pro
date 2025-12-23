@@ -74,8 +74,17 @@
     "outOfStock": "En Rupture",
     "edit": "Modifier",
     "delete": "Supprimer",
-    "addButton": "Add Product",
-    "deleteSelected": "Delete Selected"
+    "deleteSelected": "Supprimer la Sélection",
+    "deleteConfirmTitle": "Supprimer les Produits",
+    "deleteConfirmMessage": "Supprimer {count} produit(s)? Ils seront déplacés à la corbeille.",
+    "deletedSuccessTitle": "Succès",
+    "deletedSuccessMessage": "{count} produit(s) déplacé(s) à la corbeille",
+    "deleteErrorTitle": "Erreur",
+    "deleteErrorMessage": "Échec de la suppression des produits",
+    "deleteErrorMessageSingle": "Échec de la suppression du produit",
+    "deleteErrorGeneral": "Une erreur s'est produite lors de la suppression des produits",
+    "deleteErrorGeneralSingle": "Une erreur s'est produite lors de la suppression du produit",
+    "deletedSuccessMessageSingle": "Produit déplacé à la corbeille"
   },
   "addProductDialog": {
     "title": "Ajouter un Nouveau Produit",
