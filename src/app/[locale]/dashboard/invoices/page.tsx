@@ -228,13 +228,13 @@ export default function InvoicesPage({
         <h1 className="text-3xl font-headline font-bold">
           {dictionary.dashboard.invoices}
         </h1>
-        <p className="text-muted-foreground">Generate and manage invoices.</p>
+        <p className="text-muted-foreground">{dictionary.invoices?.description || 'Generate and manage invoices.'}</p>
       </div>
       <Card>
         <CardHeader>
             <div className="flex flex-col gap-4">
               <div className="flex justify-between items-center">
-                <CardTitle>Invoices</CardTitle>
+                <CardTitle>{dictionary.invoices?.title || 'Invoices'}</CardTitle>
                 <CreateInvoiceDialog 
                   locale={locale} 
                   dictionary={dictionary}
@@ -243,7 +243,7 @@ export default function InvoicesPage({
               </div>
               <div className="flex gap-4 items-center">
                 <Input 
-                  placeholder="Search by invoice number or client name..." 
+                  placeholder={dictionary.invoices?.searchPlaceholder || 'Search by invoice number or client name...'} 
                   className="flex-1"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -281,7 +281,7 @@ export default function InvoicesPage({
                 {filteredAndSortedInvoices.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {invoices.length === 0 ? 'No invoices found. Create one to get started!' : 'No invoices match your search.'}
+                      {invoices.length === 0 ? (dictionary.invoices?.noDataTitle || 'No invoices found. Create one to get started!') : (dictionary.invoices?.noDataSearch || 'No invoices match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (

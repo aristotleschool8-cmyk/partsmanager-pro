@@ -139,20 +139,20 @@ export default function CustomersPage({
         <h1 className="text-3xl font-headline font-bold">
           {dictionary.dashboard.customers}
         </h1>
-        <p className="text-muted-foreground">Manage your customer information.</p>
+        <p className="text-muted-foreground">{dictionary.customers?.description || 'Manage your customer information.'}</p>
       </div>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Customers</CardTitle>
+            <CardTitle>{dictionary.customers?.title || 'Customers'}</CardTitle>
             <div className="flex items-center gap-4">
               <Input 
-                placeholder="Search customers..." 
+                placeholder={dictionary.customers?.searchPlaceholder || 'Search customers...'} 
                 className="w-full max-w-sm" 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <AddCustomerDialog onCustomerAdded={fetchCustomers} />
+              <AddCustomerDialog dictionary={dictionary} onCustomerAdded={fetchCustomers} />
             </div>
           </div>
         </CardHeader>
@@ -165,9 +165,9 @@ export default function CustomersPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
+                  <TableHead>{dictionary.table?.name || 'Name'}</TableHead>
+                  <TableHead className="hidden md:table-cell">{dictionary.table?.email || 'Email'}</TableHead>
+                  <TableHead className="hidden md:table-cell">{dictionary.table?.phone || 'Phone'}</TableHead>
                   <TableHead>
                     <span className="sr-only">{d.actions}</span>
                   </TableHead>
@@ -177,7 +177,7 @@ export default function CustomersPage({
                 {filteredCustomers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      {customers.length === 0 ? 'No customers found. Add one to get started!' : 'No customers match your search.'}
+                      {customers.length === 0 ? (dictionary.customers?.noDataTitle || 'No customers found. Add one to get started!') : (dictionary.customers?.noDataSearch || 'No customers match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -229,8 +229,8 @@ export default function CustomersPage({
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{filteredCustomers.length}</strong> of{" "}
-            <strong>{customers.length}</strong> customers
+            {(dictionary.table?.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredCustomers.length)).replace('{total}', String(customers.length))} <strong>1-{filteredCustomers.length}</strong> {dictionary.table?.of || 'of'}{" "}
+            <strong>{customers.length}</strong> {dictionary.customers?.itemName || 'customers'}
           </div>
         </CardFooter>
       </Card>

@@ -46,9 +46,10 @@ type CustomerFormData = z.infer<typeof customerSchema>;
 
 interface AddCustomerDialogProps {
   onCustomerAdded?: () => void;
+  dictionary?: any;
 }
 
-export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
+export function AddCustomerDialog({ onCustomerAdded, dictionary }: AddCustomerDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { user, firestore } = useFirebase();
@@ -120,7 +121,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
 
       toast({
         title: 'Success',
-        description: 'Customer added successfully.',
+        description: dictionary?.addCustomerDialog?.addSuccess || 'Customer added successfully.',
       });
 
       form.reset();
@@ -130,7 +131,7 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
       console.error('Error adding customer:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add customer. Please try again.',
+        description: error.message || dictionary?.addCustomerDialog?.addError || 'Failed to add customer. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -143,14 +144,14 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Customer
+          {dictionary?.addCustomerDialog?.submit || 'Add Customer'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Customer</DialogTitle>
+          <DialogTitle>{dictionary?.addCustomerDialog?.title || 'Add New Customer'}</DialogTitle>
           <DialogDescription>
-            Add a new customer to your database with contact and identification information.
+            {dictionary?.addCustomerDialog?.description || 'Add a new customer to your database with contact and identification information.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -161,9 +162,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Customer Name*</FormLabel>
+                  <FormLabel>{dictionary?.addCustomerDialog?.customerName || 'Customer Name*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g., ABC Company" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addCustomerDialog?.customerNamePlaceholder || 'e.g., ABC Company'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -175,9 +176,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email*</FormLabel>
+                  <FormLabel>{dictionary?.addCustomerDialog?.email || 'Email*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="customer@example.com" disabled={isLoading} />
+                    <Input {...field} type="email" placeholder={dictionary?.addCustomerDialog?.emailPlaceholder || 'customer@example.com'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -189,9 +190,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone*</FormLabel>
+                  <FormLabel>{dictionary?.addCustomerDialog?.phone || 'Phone*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="+213 XXX XXX XXX" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addCustomerDialog?.phonePlaceholder || '+213 XXX XXX XXX'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,9 +204,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.addCustomerDialog?.address || 'Address (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addCustomerDialog?.addressPlaceholder || 'Street address'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -218,9 +219,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
                 name="rc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RC (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addCustomerDialog?.rc || 'RC (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Registration Code" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addCustomerDialog?.rcPlaceholder || 'Registration Code'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,9 +233,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
                 name="nis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addCustomerDialog?.nis || 'NIS (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addCustomerDialog?.nisPlaceholder || 'NIS Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -248,9 +249,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addCustomerDialog?.nif || 'NIF (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addCustomerDialog?.nifPlaceholder || 'NIF Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -262,9 +263,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
                 name="art"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ART (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addCustomerDialog?.art || 'ART (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ART Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addCustomerDialog?.artPlaceholder || 'ART Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -277,9 +278,9 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
               name="rib"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>RIB (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.addCustomerDialog?.rib || 'RIB (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Bank Account RIB" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addCustomerDialog?.ribPlaceholder || 'Bank Account RIB'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -288,11 +289,11 @@ export function AddCustomerDialog({ onCustomerAdded }: AddCustomerDialogProps) {
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-                Cancel
+                {dictionary?.addCustomerDialog?.cancel || 'Cancel'}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Customer
+                {dictionary?.addCustomerDialog?.submit || 'Add Customer'}
               </Button>
             </DialogFooter>
           </form>

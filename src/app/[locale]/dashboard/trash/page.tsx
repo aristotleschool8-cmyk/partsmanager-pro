@@ -233,13 +233,13 @@ export default function TrashPage({
           {dictionary.dashboard.trash}
         </h1>
         <p className="text-muted-foreground">
-          View and restore deleted items.
+          {dictionary.trash?.description || 'View and restore deleted items.'}
         </p>
       </div>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Deleted Items</CardTitle>
+            <CardTitle>{dictionary.trash?.title || 'Deleted Items'}</CardTitle>
             {selectedItems.size > 0 && (
               <div className="flex gap-2">
                 <Button 
@@ -273,11 +273,11 @@ export default function TrashPage({
                   />
                 </TableHead>
                 <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">Image</span>
+                  <span className="sr-only">{dictionary.table?.image || 'Image'}</span>
                 </TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead className="hidden md:table-cell">SKU</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{dictionary.table?.product || 'Product'}</TableHead>
+                <TableHead className="hidden md:table-cell">{dictionary.table?.sku || 'SKU'}</TableHead>
+                <TableHead className="text-right">{dictionary.stockPage?.actions || 'Actions'}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -323,7 +323,7 @@ export default function TrashPage({
                 {deletedItems.length === 0 && (
                     <TableRow>
                         <TableCell colSpan={5} className="h-24 text-center">
-                            No deleted items.
+                            {dictionary.trash?.noData || 'No deleted items.'}
                         </TableCell>
                     </TableRow>
                 )}

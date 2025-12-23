@@ -136,15 +136,15 @@ export default function PurchasesPage({
         <h1 className="text-3xl font-headline font-bold">
           {dictionary.dashboard.purchases}
         </h1>
-        <p className="text-muted-foreground">Manage your purchase orders.</p>
+        <p className="text-muted-foreground">{dictionary.purchases?.description || 'Manage your purchase orders.'}</p>
       </div>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Purchases</CardTitle>
+            <CardTitle>{dictionary.purchases?.title || 'Purchases'}</CardTitle>
             <div className="flex items-center gap-4">
               <Input 
-                placeholder="Search purchases..." 
+                placeholder={dictionary.purchases?.searchPlaceholder || 'Search purchases...'} 
                 className="w-full max-w-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -162,12 +162,12 @@ export default function PurchasesPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Items</TableHead>
-                  <TableHead className="hidden sm:table-cell">Supplier</TableHead>
-                  <TableHead className="hidden sm:table-cell">Date</TableHead>
-                  <TableHead className="text-right">Total Amount</TableHead>
+                  <TableHead>{dictionary.table?.items || 'Items'}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{dictionary.table?.supplier || 'Supplier'}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{dictionary.table?.date || 'Date'}</TableHead>
+                  <TableHead className="text-right">{dictionary.table?.totalAmount || 'Total Amount'}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{dictionary.stockPage?.actions || 'Actions'}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -175,7 +175,7 @@ export default function PurchasesPage({
                 {filteredPurchases.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {purchases.length === 0 ? 'No purchases found. Log one to get started!' : 'No purchases match your search.'}
+                      {purchases.length === 0 ? (dictionary.purchases?.noDataTitle || 'No purchases found. Log one to get started!') : (dictionary.purchases?.noDataSearch || 'No purchases match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -219,7 +219,7 @@ export default function PurchasesPage({
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{filteredPurchases.length}</strong> of <strong>{purchases.length}</strong> purchases
+            {(dictionary.table?.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredPurchases.length)).replace('{total}', String(purchases.length))} <strong>1-{filteredPurchases.length}</strong> {dictionary.table?.of || 'of'} <strong>{purchases.length}</strong> {dictionary.purchases?.itemName || 'purchases'}
           </div>
         </CardFooter>
       </Card>

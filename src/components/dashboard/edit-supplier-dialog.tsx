@@ -47,13 +47,14 @@ interface Supplier extends SupplierFormData {
 }
 
 interface EditSupplierDialogProps {
+  dictionary?: any;
   supplier: Supplier;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSupplierUpdated?: () => void;
 }
 
-export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpdated }: EditSupplierDialogProps) {
+export function EditSupplierDialog({ dictionary, supplier, open, onOpenChange, onSupplierUpdated }: EditSupplierDialogProps) {
   const { toast } = useToast();
   const { user, firestore } = useFirebase();
   const [userDoc, setUserDoc] = useState<AppUser | null>(null);
@@ -139,7 +140,7 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
 
       toast({
         title: 'Success',
-        description: 'Supplier updated successfully.',
+        description: dictionary?.editSupplierDialog?.updateSuccess || 'Supplier updated successfully.',
       });
 
       onOpenChange(false);
@@ -148,7 +149,7 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
       console.error('Error updating supplier:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update supplier. Please try again.',
+        description: dictionary?.editSupplierDialog?.updateError || error.message || 'Failed to update supplier. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -160,9 +161,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Supplier</DialogTitle>
+          <DialogTitle>{dictionary?.editSupplierDialog?.title || 'Edit Supplier'}</DialogTitle>
           <DialogDescription>
-            Update supplier information and identification details.
+            {dictionary?.editSupplierDialog?.description || 'Update supplier information and identification details.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,9 +174,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supplier Name*</FormLabel>
+                  <FormLabel>{dictionary?.editSupplierDialog?.supplierName || 'Supplier Name*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g., ABC Supply Co" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editSupplierDialog?.supplierNamePlaceholder || 'e.g., ABC Supply Co'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,9 +188,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{dictionary?.editSupplierDialog?.email || 'Email'}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="supplier@example.com" disabled={isLoading} />
+                    <Input {...field} type="email" placeholder={dictionary?.editSupplierDialog?.emailPlaceholder || 'supplier@example.com'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,9 +202,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>{dictionary?.editSupplierDialog?.phone || 'Phone'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="+213 XXX XXX XXX" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editSupplierDialog?.phonePlaceholder || '+213 XXX XXX XXX'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -215,9 +216,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
               name="contactName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contact Name</FormLabel>
+                  <FormLabel>{dictionary?.editSupplierDialog?.contactName || 'Contact Name'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Contact person name" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editSupplierDialog?.contactNamePlaceholder || 'Contact person name'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -229,9 +230,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>{dictionary?.editSupplierDialog?.address || 'Address'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editSupplierDialog?.addressPlaceholder || 'Street address'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -244,9 +245,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
                 name="rc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RC</FormLabel>
+                    <FormLabel>{dictionary?.editSupplierDialog?.rc || 'RC'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Registration Code" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editSupplierDialog?.rcPlaceholder || 'Registration Code'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -258,9 +259,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
                 name="nis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS</FormLabel>
+                    <FormLabel>{dictionary?.editSupplierDialog?.nis || 'NIS'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editSupplierDialog?.nisPlaceholder || 'NIS Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +275,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF</FormLabel>
+                    <FormLabel>{dictionary?.editSupplierDialog?.nif || 'NIF'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editSupplierDialog?.nifPlaceholder || 'NIF Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -288,9 +289,9 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
                 name="rib"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RIB</FormLabel>
+                    <FormLabel>{dictionary?.editSupplierDialog?.rib || 'RIB'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Bank Account RIB" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editSupplierDialog?.ribPlaceholder || 'Bank Account RIB'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -300,11 +301,11 @@ export function EditSupplierDialog({ supplier, open, onOpenChange, onSupplierUpd
 
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Cancel
+                {dictionary?.editSupplierDialog?.cancel || 'Cancel'}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Supplier
+                {dictionary?.editSupplierDialog?.submit || 'Update Supplier'}
               </Button>
             </div>
           </form>

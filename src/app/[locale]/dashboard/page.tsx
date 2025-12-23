@@ -23,10 +23,10 @@ export default async function DashboardPage({ params }: { params: Promise<{ loca
       </div>
       <DashboardStats dictionary={dictionary} />
       <div className="space-y-4">
-        <h2 className="text-2xl font-headline font-bold">Recent Activity</h2>
+        <h2 className="text-2xl font-headline font-bold">{dictionary.dashboard?.recentActivity || 'Recent Activity'}</h2>
         {/* Placeholder for recent activity feed or table */}
         <div className="p-8 text-center text-muted-foreground bg-secondary rounded-lg">
-          Recent activity will be shown here.
+          {dictionary.dashboard?.recentActivityPlaceholder || 'Recent activity will be shown here.'}
         </div>
       </div>
     </div>

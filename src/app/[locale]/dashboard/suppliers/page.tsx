@@ -140,20 +140,20 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-headline font-bold">{dictionary.dashboard.suppliers}</h1>
-        <p className="text-muted-foreground">Manage your supplier information.</p>
+        <p className="text-muted-foreground">{dictionary.suppliers?.description || 'Manage your supplier information.'}</p>
       </div>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Suppliers</CardTitle>
+            <CardTitle>{dictionary.suppliers?.title || 'Suppliers'}</CardTitle>
             <div className="flex items-center gap-4">
               <Input 
-                placeholder="Search suppliers..." 
+                placeholder={dictionary.suppliers?.searchPlaceholder || 'Search suppliers...'} 
                 className="w-full max-w-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <AddSupplierDialog onSupplierAdded={fetchSuppliers} />
+              <AddSupplierDialog dictionary={dictionary} onSupplierAdded={fetchSuppliers} />
             </div>
           </div>
         </CardHeader>
@@ -166,9 +166,9 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Email</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
+                  <TableHead>{dictionary.table?.name || 'Name'}</TableHead>
+                  <TableHead className="hidden md:table-cell">{dictionary.table?.email || 'Email'}</TableHead>
+                  <TableHead className="hidden md:table-cell">{dictionary.table?.phone || 'Phone'}</TableHead>
                   <TableHead>
                     <span className="sr-only">{d.actions}</span>
                   </TableHead>
@@ -178,7 +178,7 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
                 {filteredSuppliers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                      {suppliers.length === 0 ? 'No suppliers found. Add one to get started!' : 'No suppliers match your search.'}
+                      {suppliers.length === 0 ? (dictionary.suppliers?.noDataTitle || 'No suppliers found. Add one to get started!') : (dictionary.suppliers?.noDataSearch || 'No suppliers match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -233,7 +233,7 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{filteredSuppliers.length}</strong> of <strong>{suppliers.length}</strong> suppliers
+            {(dictionary.table?.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredSuppliers.length)).replace('{total}', String(suppliers.length))} <strong>1-{filteredSuppliers.length}</strong> {dictionary.table?.of || 'of'} <strong>{suppliers.length}</strong> {dictionary.suppliers?.itemName || 'suppliers'}
           </div>
         </CardFooter>
       </Card>

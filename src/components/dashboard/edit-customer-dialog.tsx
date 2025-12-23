@@ -51,9 +51,10 @@ interface EditCustomerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCustomerUpdated?: () => void;
+  dictionary?: any;
 }
 
-export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpdated }: EditCustomerDialogProps) {
+export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpdated, dictionary }: EditCustomerDialogProps) {
   const { toast } = useToast();
   const { user, firestore } = useFirebase();
   const [userDoc, setUserDoc] = useState<AppUser | null>(null);
@@ -139,7 +140,7 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
 
       toast({
         title: 'Success',
-        description: 'Customer updated successfully.',
+        description: dictionary?.editCustomerDialog?.updateSuccess || 'Customer updated successfully.',
       });
 
       onOpenChange(false);
@@ -148,7 +149,7 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
       console.error('Error updating customer:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to update customer. Please try again.',
+        description: dictionary?.editCustomerDialog?.updateError || error.message || 'Failed to update customer. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -160,9 +161,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Customer</DialogTitle>
+          <DialogTitle>{dictionary?.editCustomerDialog?.title || 'Edit Customer'}</DialogTitle>
           <DialogDescription>
-            Update customer information and identification details.
+            {dictionary?.editCustomerDialog?.description || 'Update customer information and identification details.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,9 +174,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Customer Name*</FormLabel>
+                  <FormLabel>{dictionary?.editCustomerDialog?.customerName || 'Customer Name*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g., ABC Company" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addCustomerDialog?.customerNamePlaceholder || 'e.g., ABC Company'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,9 +188,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{dictionary?.editCustomerDialog?.email || 'Email'}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="customer@example.com" disabled={isLoading} />
+                    <Input {...field} type="email" placeholder={dictionary?.editCustomerDialog?.emailPlaceholder || 'customer@example.com'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,9 +202,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone</FormLabel>
+                  <FormLabel>{dictionary?.editCustomerDialog?.phone || 'Phone'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="+213 XXX XXX XXX" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editCustomerDialog?.phonePlaceholder || '+213 XXX XXX XXX'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -215,9 +216,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address</FormLabel>
+                  <FormLabel>{dictionary?.editCustomerDialog?.address || 'Address'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editCustomerDialog?.addressPlaceholder || 'Street address'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -230,9 +231,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
                 name="rc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RC</FormLabel>
+                    <FormLabel>{dictionary?.editCustomerDialog?.rc || 'RC'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Registration Code" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editCustomerDialog?.rcPlaceholder || 'Registration Code'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,9 +245,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
                 name="nis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS</FormLabel>
+                    <FormLabel>{dictionary?.editCustomerDialog?.nis || 'NIS'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editCustomerDialog?.nisPlaceholder || 'NIS Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -260,9 +261,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF</FormLabel>
+                    <FormLabel>{dictionary?.editCustomerDialog?.nif || 'NIF'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editCustomerDialog?.nifPlaceholder || 'NIF Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -274,9 +275,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
                 name="art"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ART</FormLabel>
+                    <FormLabel>{dictionary?.editCustomerDialog?.art || 'ART'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ART Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.editCustomerDialog?.artPlaceholder || 'ART Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -289,9 +290,9 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
               name="rib"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>RIB</FormLabel>
+                  <FormLabel>{dictionary?.editCustomerDialog?.rib || 'RIB'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Bank Account RIB" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.editCustomerDialog?.ribPlaceholder || 'Bank Account RIB'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -300,11 +301,11 @@ export function EditCustomerDialog({ customer, open, onOpenChange, onCustomerUpd
 
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-                Cancel
+                {dictionary?.editCustomerDialog?.cancel || 'Cancel'}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Customer
+                {dictionary?.editCustomerDialog?.submit || 'Update Customer'}
               </Button>
             </div>
           </form>

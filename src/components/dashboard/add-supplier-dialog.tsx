@@ -45,10 +45,11 @@ const supplierSchema = z.object({
 type SupplierFormData = z.infer<typeof supplierSchema>;
 
 interface AddSupplierDialogProps {
+  dictionary?: any;
   onSupplierAdded?: () => void;
 }
 
-export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
+export function AddSupplierDialog({ dictionary, onSupplierAdded }: AddSupplierDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const { user, firestore } = useFirebase();
@@ -120,7 +121,7 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
 
       toast({
         title: 'Success',
-        description: 'Supplier added successfully.',
+        description: dictionary?.addSupplierDialog?.addSuccess || 'Supplier added successfully.',
       });
 
       form.reset();
@@ -130,7 +131,7 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
       console.error('Error adding supplier:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add supplier. Please try again.',
+        description: dictionary?.addSupplierDialog?.addError || error.message || 'Failed to add supplier. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -143,14 +144,14 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Supplier
+          {dictionary?.addSupplierDialog?.submit || 'Add Supplier'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Add New Supplier</DialogTitle>
+          <DialogTitle>{dictionary?.addSupplierDialog?.title || 'Add New Supplier'}</DialogTitle>
           <DialogDescription>
-            Add a new supplier to your database with contact and identification information.
+            {dictionary?.addSupplierDialog?.description || 'Add a new supplier to your database with contact and identification information.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -161,9 +162,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Supplier Name*</FormLabel>
+                  <FormLabel>{dictionary?.addSupplierDialog?.supplierName || 'Supplier Name*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="e.g., XYZ Imports" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addSupplierDialog?.supplierNamePlaceholder || 'e.g., XYZ Imports'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -175,9 +176,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
               name="contactName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Contact Name (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.addSupplierDialog?.contactName || 'Contact Name (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Name of contact person" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addSupplierDialog?.contactNamePlaceholder || 'Name of contact person'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -189,9 +190,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email*</FormLabel>
+                  <FormLabel>{dictionary?.addSupplierDialog?.email || 'Email*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="supplier@example.com" disabled={isLoading} />
+                    <Input {...field} type="email" placeholder={dictionary?.addSupplierDialog?.emailPlaceholder || 'supplier@example.com'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -203,9 +204,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone*</FormLabel>
+                  <FormLabel>{dictionary?.addSupplierDialog?.phone || 'Phone*'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="+213 XXX XXX XXX" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addSupplierDialog?.phonePlaceholder || '+213 XXX XXX XXX'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -217,9 +218,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.addSupplierDialog?.address || 'Address (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Street address" disabled={isLoading} />
+                    <Input {...field} placeholder={dictionary?.addSupplierDialog?.addressPlaceholder || 'Street address'} disabled={isLoading} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -232,9 +233,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
                 name="rc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RC (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addSupplierDialog?.rc || 'RC (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Registration Code" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addSupplierDialog?.rcPlaceholder || 'Registration Code'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -246,9 +247,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
                 name="nis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addSupplierDialog?.nis || 'NIS (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addSupplierDialog?.nisPlaceholder || 'NIS Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -262,9 +263,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
                 name="nif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addSupplierDialog?.nif || 'NIF (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF Number" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addSupplierDialog?.nifPlaceholder || 'NIF Number'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -276,9 +277,9 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
                 name="rib"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RIB (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.addSupplierDialog?.rib || 'RIB (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Bank Account RIB" disabled={isLoading} />
+                      <Input {...field} placeholder={dictionary?.addSupplierDialog?.ribPlaceholder || 'Bank Account RIB'} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -288,11 +289,11 @@ export function AddSupplierDialog({ onSupplierAdded }: AddSupplierDialogProps) {
 
             <DialogFooter className="mt-6">
               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-                Cancel
+                {dictionary?.addSupplierDialog?.cancel || 'Cancel'}
               </Button>
               <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Add Supplier
+                {dictionary?.addSupplierDialog?.submit || 'Add Supplier'}
               </Button>
             </DialogFooter>
           </form>

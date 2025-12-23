@@ -121,15 +121,15 @@ export default function SalesPage({
         <h1 className="text-3xl font-headline font-bold">
           {dictionary.dashboard.sales}
         </h1>
-        <p className="text-muted-foreground">Manage your sales transactions.</p>
+        <p className="text-muted-foreground">{dictionary.sales?.description || 'Manage your sales transactions.'}</p>
       </div>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Sales</CardTitle>
+            <CardTitle>{dictionary.sales?.title || 'Sales'}</CardTitle>
             <div className="flex items-center gap-4">
               <Input 
-                placeholder="Search sales..." 
+                placeholder={dictionary.sales?.searchPlaceholder || 'Search sales...'} 
                 className="w-full max-w-sm"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -147,13 +147,13 @@ export default function SalesPage({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead className="hidden sm:table-cell">Customer</TableHead>
-                  <TableHead className="hidden sm:table-cell">Date</TableHead>
-                  <TableHead className="hidden md:table-cell">Quantity</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{dictionary.table?.product || 'Product'}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{dictionary.table?.customer || 'Customer'}</TableHead>
+                  <TableHead className="hidden sm:table-cell">{dictionary.table?.date || 'Date'}</TableHead>
+                  <TableHead className="hidden md:table-cell">{dictionary.table?.quantity || 'Quantity'}</TableHead>
+                  <TableHead className="text-right">{dictionary.table?.amount || 'Amount'}</TableHead>
                   <TableHead>
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{dictionary.stockPage?.actions || 'Actions'}</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -161,7 +161,7 @@ export default function SalesPage({
                 {filteredSales.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      {sales.length === 0 ? 'No sales found. Log one to get started!' : 'No sales match your search.'}
+                      {sales.length === 0 ? (dictionary.sales?.noDataTitle || 'No sales found. Log one to get started!') : (dictionary.sales?.noDataSearch || 'No sales match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -196,7 +196,7 @@ export default function SalesPage({
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{filteredSales.length}</strong> of <strong>{sales.length}</strong> sales
+            {(dictionary.table?.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredSales.length)).replace('{total}', String(sales.length))} <strong>1-{filteredSales.length}</strong> {dictionary.table?.of || 'of'} <strong>{sales.length}</strong> {dictionary.sales?.itemName || 'sales'}
           </div>
         </CardFooter>
       </Card>

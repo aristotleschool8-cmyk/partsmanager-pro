@@ -273,7 +273,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
                 {filteredProducts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      {products.length === 0 ? 'No products found. Add one to get started!' : 'No products match your search.'}
+                      {products.length === 0 ? (d.noDataTitle || 'No products found. Add one to get started!') : (d.noDataSearch || 'No products match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -330,7 +330,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
         </CardContent>
         <CardFooter>
           <div className="text-xs text-muted-foreground">
-            Showing <strong>1-{filteredProducts.length}</strong> of <strong>{products.length}</strong> products
+            {(d.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredProducts.length)).replace('{total}', String(products.length))} <strong>1-{filteredProducts.length}</strong> {d.of || 'of'} <strong>{products.length}</strong> {d.itemName || 'products'}
           </div>
         </CardFooter>
       </Card>
