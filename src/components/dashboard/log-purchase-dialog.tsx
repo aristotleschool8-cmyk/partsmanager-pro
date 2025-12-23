@@ -46,6 +46,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
   const d = dictionary.logPurchaseDialog;
   const { firestore } = useFirebase();
   const [open, setOpen] = useState(false);
+  const [supplierDropdownOpen, setSupplierDropdownOpen] = useState(false);
   const [purchaseItems, setPurchaseItems] = useState<PurchaseItem[]>([]);
   const [supplierInput, setSupplierInput] = useState<string>('');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | undefined>();
@@ -117,6 +118,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
     if (supplier) {
       setSelectedSupplier(supplier);
       setSupplierInput(supplier.name);
+      setSupplierDropdownOpen(false);
     }
   };
 
@@ -210,15 +212,18 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                         value={supplierInput}
                         onChange={(e) => {
                           setSupplierInput(e.target.value);
+                          setSupplierDropdownOpen(true);
                           // Clear selection if user is typing
                           if (selectedSupplier && e.target.value !== selectedSupplier.name) {
                             setSelectedSupplier(undefined);
                           }
                         }}
+                        onFocus={() => setSupplierDropdownOpen(true)}
+                        onBlur={() => setTimeout(() => setSupplierDropdownOpen(false), 200)}
                         className="w-full"
                     />
                     {/* Show dropdown suggestions */}
-                    {supplierInput.trim() && supplierOptions.length > 0 && (
+                    {supplierDropdownOpen && supplierInput.trim() && supplierOptions.length > 0 && (
                       <div className="border border-t-0 rounded-b bg-background mt-0 max-h-48 overflow-y-auto z-50">
                         {supplierOptions.map((option) => (
                           <div
@@ -231,7 +236,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                         ))}
                       </div>
                     )}
-                    {supplierInput.trim() && supplierOptions.length === 0 && (
+                    {supplierDropdownOpen && supplierInput.trim() && supplierOptions.length === 0 && (
                       <div className="border border-t-0 rounded-b bg-background mt-0 px-3 py-2 text-sm text-gray-500">
                         {d.noSupplierFound}
                       </div>
