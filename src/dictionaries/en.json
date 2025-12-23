@@ -264,5 +264,128 @@
   "settings": {
     "defaultProfitMargin": "Default Profit Margin (%)",
     "savingAndUpdating": "Saving and Updating Products..."
+  },
+  "companyInfo": {
+    "title": "Edit Company Information",
+    "description": "This information will be displayed on your invoices.",
+    "save": "Save Information",
+    "companyName": "Company Name *",
+    "address": "Address *",
+    "phone": "Phone *",
+    "rc": "R.C (Registre de Commerce) *",
+    "nif": "NIF (Numéro d'Identification Fiscale) *",
+    "art": "ART (Article d'imposition)",
+    "nis": "NIS (Numéro d'Identification Statistique)",
+    "rib": "RIB (Relevé d'Identité Bancaire)",
+    "logo": "Company Logo (optional)",
+    "placeholderCompanyName": "Your Company Name",
+    "placeholderAddress": "Street address",
+    "placeholderPhone": "+213 XXX XXX XXX",
+    "placeholderRC": "RC Number",
+    "placeholderNIF": "NIF Number",
+    "placeholderART": "ART Number",
+    "placeholderNIS": "NIS Number",
+    "placeholderRIB": "Bank Account RIB",
+    "successTitle": "Information Saved",
+    "successDescription": "Your company details have been updated.",
+    "errorTitle": "Error Saving",
+    "errorDescription": "Could not save company information.",
+    "validationCompanyNameRequired": "Company name is required.",
+    "validationAddressRequired": "Address is required.",
+    "validationPhoneRequired": "Phone number is required.",
+    "validationRCRequired": "R.C is required.",
+    "validationNIFRequired": "NIF is required."
+  },
+  "settingsTabs": {
+    "company": "Company",
+    "business": "Business",
+    "billing": "Billing"
+  },
+  "businessRules": {
+    "title": "Business Rules",
+    "description": "Set default values for business logic and pricing."
+  },
+  "table": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "actions": "Actions",
+    "noDataSuppliers": "No suppliers found. Add one to get started!",
+    "noDataSuppliersSearch": "No suppliers match your search.",
+    "noDataProducts": "No products found. Add one to get started!",
+    "noDataProductsSearch": "No products match your search.",
+    "noDataInvoices": "No invoices found. Create one to get started!",
+    "noDataInvoicesSearch": "No invoices match your search.",
+    "noDataTrash": "No deleted items.",
+    "showing": "Showing <strong>1-{count}</strong> of <strong>{total}</strong>",
+    "showingItems": "{count} items"
+  },
+  "invoices": {
+    "invoiceNumber": "Invoice Number",
+    "client": "Client",
+    "date": "Date",
+    "amount": "Amount",
+    "status": "Status",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "markAsPaid": "Mark as Paid",
+    "markAsUnpaid": "Mark as Unpaid",
+    "paidSuccessfully": "Invoice paid status updated.",
+    "unpaidSuccessfully": "Invoice unpaid status updated.",
+    "cannotMarkProforma": "Proforma invoices cannot be marked as paid",
+    "download": "Download",
+    "regenerating": "Regenerating...",
+    "deleteInvoiceTitle": "Success",
+    "deleteInvoiceSuccess": "Invoice deleted successfully.",
+    "deleteInvoiceErrorTitle": "Error",
+    "deleteInvoiceErrorDescription": "Failed to delete invoice.",
+    "sortNewest": "Newest First",
+    "sortOldest": "Oldest First"
+  },
+  "purchases": {
+    "title": "Purchases",
+    "deletePurchaseAction": "Delete Purchase",
+    "noData": "No purchases found",
+    "confirmDelete": "Are you sure?"
+  },
+  "stock": {
+    "title": "Stock Management",
+    "product": "Product",
+    "quantity": "Quantity",
+    "designation": "Designation",
+    "reference": "Reference",
+    "brand": "Brand",
+    "purchasePrice": "Purchase Price",
+    "sellingPrice": "Selling Price"
+  },
+  "sales": {
+    "title": "Sales",
+    "product": "Product",
+    "customer": "Customer",
+    "date": "Date",
+    "quantity": "Quantity",
+    "amount": "Amount"
+  },
+  "trash": {
+    "title": "Trash",
+    "restore": "Restore",
+    "deletePermanently": "Delete Permanently",
+    "restoreSelected": "Restore Selected ({count})",
+    "deletePermSelectedy": "Delete Permanently ({count})",
+    "image": "Image"
+  },
+  "suppliers": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "noData": "No suppliers found",
+    "noDataSearch": "No suppliers match your search."
+  },
+  "customers": {
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "noData": "No customers found",
+    "noDataSearch": "No customers match your search."
   }
 }

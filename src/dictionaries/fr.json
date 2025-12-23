@@ -264,5 +264,128 @@
   "settings": {
     "defaultProfitMargin": "Marge Bénéficiaire par Défaut (%)",
     "savingAndUpdating": "Enregistrement et mise à jour des produits..."
+  },
+  "companyInfo": {
+    "title": "Modifier les Informations Entreprise",
+    "description": "Ces informations s'afficheront sur vos factures.",
+    "save": "Enregistrer les Informations",
+    "companyName": "Nom Entreprise *",
+    "address": "Adresse *",
+    "phone": "Téléphone *",
+    "rc": "R.C (Registre de Commerce) *",
+    "nif": "NIF (Numéro d'Identification Fiscale) *",
+    "art": "ART (Article d'imposition)",
+    "nis": "NIS (Numéro d'Identification Statistique)",
+    "rib": "RIB (Relevé d'Identité Bancaire)",
+    "logo": "Logo Entreprise (optionnel)",
+    "placeholderCompanyName": "Nom de votre Entreprise",
+    "placeholderAddress": "Adresse",
+    "placeholderPhone": "+213 XXX XXX XXX",
+    "placeholderRC": "Numéro R.C",
+    "placeholderNIF": "Numéro NIF",
+    "placeholderART": "Numéro ART",
+    "placeholderNIS": "Numéro NIS",
+    "placeholderRIB": "Compte Bancaire RIB",
+    "successTitle": "Informations Enregistrées",
+    "successDescription": "Les détails de votre entreprise ont été mis à jour.",
+    "errorTitle": "Erreur d'Enregistrement",
+    "errorDescription": "Impossible d'enregistrer les informations de l'entreprise.",
+    "validationCompanyNameRequired": "Le nom de l'entreprise est requis.",
+    "validationAddressRequired": "L'adresse est requise.",
+    "validationPhoneRequired": "Le numéro de téléphone est requis.",
+    "validationRCRequired": "Le R.C est requis.",
+    "validationNIFRequired": "Le NIF est requis."
+  },
+  "settingsTabs": {
+    "company": "Entreprise",
+    "business": "Affaires",
+    "billing": "Facturation"
+  },
+  "businessRules": {
+    "title": "Règles Métier",
+    "description": "Définissez les valeurs par défaut pour la logique métier et la tarification."
+  },
+  "table": {
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "actions": "Actions",
+    "noDataSuppliers": "Aucun fournisseur trouvé. Ajoutez-en un pour commencer!",
+    "noDataSuppliersSearch": "Aucun fournisseur ne correspond à votre recherche.",
+    "noDataProducts": "Aucun produit trouvé. Ajoutez-en un pour commencer!",
+    "noDataProductsSearch": "Aucun produit ne correspond à votre recherche.",
+    "noDataInvoices": "Aucune facture trouvée. Créez-en une pour commencer!",
+    "noDataInvoicesSearch": "Aucune facture ne correspond à votre recherche.",
+    "noDataTrash": "Aucun élément supprimé.",
+    "showing": "Affichage <strong>1-{count}</strong> sur <strong>{total}</strong>",
+    "showingItems": "{count} articles"
+  },
+  "invoices": {
+    "invoiceNumber": "Numéro de Facture",
+    "client": "Client",
+    "date": "Date",
+    "amount": "Montant",
+    "status": "Statut",
+    "paid": "Payé",
+    "unpaid": "Non payé",
+    "markAsPaid": "Marquer comme Payé",
+    "markAsUnpaid": "Marquer comme Non Payé",
+    "paidSuccessfully": "Statut de paiement de la facture mis à jour.",
+    "unpaidSuccessfully": "Statut de paiement de la facture mis à jour.",
+    "cannotMarkProforma": "Les factures proforma ne peuvent pas être marquées comme payées",
+    "download": "Télécharger",
+    "regenerating": "Régénération...",
+    "deleteInvoiceTitle": "Succès",
+    "deleteInvoiceSuccess": "Facture supprimée avec succès.",
+    "deleteInvoiceErrorTitle": "Erreur",
+    "deleteInvoiceErrorDescription": "Impossible de supprimer la facture.",
+    "sortNewest": "Plus Récente d'Abord",
+    "sortOldest": "Plus Ancienne d'Abord"
+  },
+  "purchases": {
+    "title": "Achats",
+    "deletePurchaseAction": "Supprimer l'Achat",
+    "noData": "Aucun achat trouvé",
+    "confirmDelete": "Êtes-vous sûr?"
+  },
+  "stock": {
+    "title": "Gestion des Stocks",
+    "product": "Produit",
+    "quantity": "Quantité",
+    "designation": "Désignation",
+    "reference": "Référence",
+    "brand": "Marque",
+    "purchasePrice": "Prix d'Achat",
+    "sellingPrice": "Prix de Vente"
+  },
+  "sales": {
+    "title": "Ventes",
+    "product": "Produit",
+    "customer": "Client",
+    "date": "Date",
+    "quantity": "Quantité",
+    "amount": "Montant"
+  },
+  "trash": {
+    "title": "Corbeille",
+    "restore": "Restaurer",
+    "deletePermanently": "Supprimer Définitivement",
+    "restoreSelected": "Restaurer les Sélectionnés ({count})",
+    "deletePermSelectedy": "Supprimer Définitivement ({count})",
+    "image": "Image"
+  },
+  "suppliers": {
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "noData": "Aucun fournisseur trouvé",
+    "noDataSearch": "Aucun fournisseur ne correspond."
+  },
+  "customers": {
+    "name": "Nom",
+    "email": "E-mail",
+    "phone": "Téléphone",
+    "noData": "Aucun client trouvé",
+    "noDataSearch": "Aucun client ne correspond."
   }
 }

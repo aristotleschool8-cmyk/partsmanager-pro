@@ -264,5 +264,128 @@
   "settings": {
     "defaultProfitMargin": "هامش الربح الافتراضي (%)",
     "savingAndUpdating": "جاري الحفظ وتحديث المنتجات..."
+  },
+  "companyInfo": {
+    "title": "تعديل معلومات الشركة",
+    "description": "ستظهر هذه المعلومات على فواتيرك.",
+    "save": "حفظ المعلومات",
+    "companyName": "اسم الشركة *",
+    "address": "العنوان *",
+    "phone": "الهاتف *",
+    "rc": "ر.ت (سجل التجارة) *",
+    "nif": "رقم التعريف الضريبي *",
+    "art": "المادة (المادة الضريبية)",
+    "nis": "رقم التعريف الإحصائي",
+    "rib": "الرقم المصرفي",
+    "logo": "شعار الشركة (اختياري)",
+    "placeholderCompanyName": "اسم شركتك",
+    "placeholderAddress": "عنوان الشارع",
+    "placeholderPhone": "+213 XXX XXX XXX",
+    "placeholderRC": "رقم ر.ت",
+    "placeholderNIF": "رقم التعريف الضريبي",
+    "placeholderART": "رقم المادة",
+    "placeholderNIS": "رقم التعريف الإحصائي",
+    "placeholderRIB": "الحساب البنكي",
+    "successTitle": "تم حفظ المعلومات",
+    "successDescription": "تم تحديث تفاصيل شركتك.",
+    "errorTitle": "خطأ في الحفظ",
+    "errorDescription": "فشل في حفظ معلومات الشركة.",
+    "validationCompanyNameRequired": "اسم الشركة مطلوب.",
+    "validationAddressRequired": "العنوان مطلوب.",
+    "validationPhoneRequired": "رقم الهاتف مطلوب.",
+    "validationRCRequired": "ر.ت مطلوب.",
+    "validationNIFRequired": "رقم التعريف الضريبي مطلوب."
+  },
+  "settingsTabs": {
+    "company": "الشركة",
+    "business": "الأعمال",
+    "billing": "الفواتير"
+  },
+  "businessRules": {
+    "title": "قواعد الأعمال",
+    "description": "حدد القيم الافتراضية لمنطق الأعمال والتسعير."
+  },
+  "table": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "actions": "الإجراءات",
+    "noDataSuppliers": "لم يتم العثور على موردين. أضف واحداً للبدء!",
+    "noDataSuppliersSearch": "لا توجد موردون مطابقون لبحثك.",
+    "noDataProducts": "لم يتم العثور على منتجات. أضف واحداً للبدء!",
+    "noDataProductsSearch": "لا توجد منتجات مطابقة لبحثك.",
+    "noDataInvoices": "لم يتم العثور على فواتير. أنشئ واحدة للبدء!",
+    "noDataInvoicesSearch": "لا توجد فواتير مطابقة لبحثك.",
+    "noDataTrash": "لا توجد عناصر محذوفة.",
+    "showing": "عرض <strong>1-{count}</strong> من <strong>{total}</strong>",
+    "showingItems": "{count} عنصر"
+  },
+  "invoices": {
+    "invoiceNumber": "رقم الفاتورة",
+    "client": "العميل",
+    "date": "التاريخ",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "paid": "مدفوع",
+    "unpaid": "غير مدفوع",
+    "markAsPaid": "وضع علامة كمدفوع",
+    "markAsUnpaid": "وضع علامة كغير مدفوع",
+    "paidSuccessfully": "تم تحديث حالة الفاتورة.",
+    "unpaidSuccessfully": "تم تحديث حالة الفاتورة.",
+    "cannotMarkProforma": "لا يمكن وضع علامة على فواتير الفروماتو كمدفوعة",
+    "download": "تنزيل",
+    "regenerating": "جاري إعادة الإنشاء...",
+    "deleteInvoiceTitle": "نجاح",
+    "deleteInvoiceSuccess": "تم حذف الفاتورة بنجاح.",
+    "deleteInvoiceErrorTitle": "خطأ",
+    "deleteInvoiceErrorDescription": "فشل في حذف الفاتورة.",
+    "sortNewest": "الأحدث أولاً",
+    "sortOldest": "الأقدم أولاً"
+  },
+  "purchases": {
+    "title": "المشتريات",
+    "deletePurchaseAction": "حذف الشراء",
+    "noData": "لم يتم العثور على مشتريات",
+    "confirmDelete": "هل أنت متأكد؟"
+  },
+  "stock": {
+    "title": "إدارة المخزون",
+    "product": "المنتج",
+    "quantity": "الكمية",
+    "designation": "التسمية",
+    "reference": "المرجع",
+    "brand": "العلامة التجارية",
+    "purchasePrice": "سعر الشراء",
+    "sellingPrice": "سعر البيع"
+  },
+  "sales": {
+    "title": "المبيعات",
+    "product": "المنتج",
+    "customer": "العميل",
+    "date": "التاريخ",
+    "quantity": "الكمية",
+    "amount": "المبلغ"
+  },
+  "trash": {
+    "title": "سلة المحذوفات",
+    "restore": "استرجاع",
+    "deletePermanently": "حذف نهائياً",
+    "restoreSelected": "استرجاع المحددة ({count})",
+    "deletePermSelectedy": "حذف نهائياً ({count})",
+    "image": "الصورة"
+  },
+  "suppliers": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "noData": "لم يتم العثور على موردين",
+    "noDataSearch": "لا توجد موردون مطابقون."
+  },
+  "customers": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "noData": "لم يتم العثور على عملاء",
+    "noDataSearch": "لا توجد عملاء مطابقون."
   }
 }
