@@ -420,10 +420,19 @@
     "deleteInvoiceErrorDescription": "Impossible de supprimer la facture.",
     "sortNewest": "Plus Récente d'Abord",
     "sortOldest": "Plus Ancienne d'Abord",
+    "sortPlaceholder": "Trier par...",
     "title": "Factures",
     "description": "Gérer vos factures de vente.",
     "addButton": "Créer une Facture",
-    "searchPlaceholder": "Rechercher les factures..."
+    "searchPlaceholder": "Rechercher les factures...",
+    "noDataTitle": "Aucune facture trouvée. Créez-en une pour commencer!",
+    "noDataSearch": "Aucune facture ne correspond à votre recherche.",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cette facture? Cette action ne peut pas être annulée.",
+    "regenerateSuccess": "Facture régénérée et téléchargée avec succès.",
+    "regenerateError": "Impossible de régénérer la facture. Veuillez réessayer.",
+    "createDialogTitle": "Créer une Facture",
+    "createDialogDescription": "Créez une nouvelle facture avec des articles de vente, la TVA et les détails du client.",
+    "generateInvoiceButton": "Générer la Facture"
   },
   "purchases": {
     "title": "Achats",

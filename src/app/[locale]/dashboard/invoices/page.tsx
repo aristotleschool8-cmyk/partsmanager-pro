@@ -131,13 +131,13 @@ export default function InvoicesPage({
 
       toast({
         title: 'Success',
-        description: 'Invoice regenerated and downloaded successfully.',
+        description: dictionary.invoices?.regenerateSuccess || 'Invoice regenerated and downloaded successfully.',
       });
     } catch (error) {
       console.error('Error regenerating invoice:', error);
       toast({
         title: 'Error',
-        description: 'Failed to regenerate invoice. Please try again.',
+        description: dictionary.invoices?.regenerateError || 'Failed to regenerate invoice. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -148,7 +148,7 @@ export default function InvoicesPage({
   const handleDeleteInvoice = async (invoiceId: string) => {
     if (!firestore) return;
 
-    if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+    if (!confirm(dictionary.invoices?.deleteConfirm || 'Are you sure you want to delete this invoice? This action cannot be undone.')) {
       return;
     }
 
@@ -158,14 +158,14 @@ export default function InvoicesPage({
         setInvoices(invoices.filter(inv => inv.id !== invoiceId));
         toast({
           title: 'Success',
-          description: 'Invoice deleted successfully.',
+          description: dictionary.invoices?.deleteInvoiceSuccess || 'Invoice deleted successfully.',
         });
       }
     } catch (error) {
       console.error('Error deleting invoice:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete invoice.',
+        description: dictionary.invoices?.deleteInvoiceErrorDescription || 'Failed to delete invoice.',
         variant: 'destructive',
       });
     }
@@ -185,7 +185,7 @@ export default function InvoicesPage({
         ));
         toast({
           title: 'Success',
-          description: `Invoice marked as ${newPaidStatus ? 'paid' : 'unpaid'}.`,
+          description: newPaidStatus ? (dictionary.invoices?.paidSuccessfully || 'Invoice paid status updated.') : (dictionary.invoices?.unpaidSuccessfully || 'Invoice unpaid status updated.'),
         });
       }
     } catch (error) {
@@ -250,11 +250,11 @@ export default function InvoicesPage({
                 />
                 <Select value={sortOrder} onValueChange={(value) => setSortOrder(value as 'newest' | 'oldest')}>
                   <SelectTrigger className="w-44">
-                    <SelectValue placeholder="Sort by..." />
+                    <SelectValue placeholder={dictionary.invoices?.sortPlaceholder || 'Sort by...'} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="newest">{dictionary.invoices?.sortNewest || 'Newest First'}</SelectItem>
+                    <SelectItem value="oldest">{dictionary.invoices?.sortOldest || 'Oldest First'}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -279,8 +279,7 @@ export default function InvoicesPage({
               </TableHeader>
               <TableBody>
                 {filteredAndSortedInvoices.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                       {invoices.length === 0 ? (dictionary.invoices?.noDataTitle || 'No invoices found. Create one to get started!') : (dictionary.invoices?.noDataSearch || 'No invoices match your search.')}
                     </TableCell>
                   </TableRow>
@@ -295,7 +294,7 @@ export default function InvoicesPage({
                           </TableCell>
                           <TableCell>
                             <Badge variant={invoice.paid ? 'default' : 'secondary'}>
-                              {invoice.paid ? 'Paid' : 'Unpaid'}
+                              {invoice.paid ? dictionary.invoices?.paid || 'Paid' : dictionary.invoices?.unpaid || 'Unpaid'}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right space-x-2">
@@ -304,7 +303,7 @@ export default function InvoicesPage({
                                size="sm"
                                disabled={invoice.isProforma || updatingPaidId === invoice.id}
                                onClick={() => handleTogglePaidStatus(invoice)}
-                               title={invoice.isProforma ? 'Proforma invoices cannot be marked as paid' : invoice.paid ? 'Mark as Unpaid' : 'Mark as Paid'}
+                               title={invoice.isProforma ? dictionary.invoices?.cannotMarkProforma || 'Proforma invoices cannot be marked as paid' : invoice.paid ? dictionary.invoices?.markAsUnpaid || 'Mark as Unpaid' : dictionary.invoices?.markAsPaid || 'Mark as Paid'}
                                className={invoice.isProforma ? 'opacity-50 cursor-not-allowed' : ''}
                              >
                                   {updatingPaidId === invoice.id ? (
@@ -326,7 +325,7 @@ export default function InvoicesPage({
                                   ) : (
                                     <Download className="mr-2 h-4 w-4"/>
                                   )}
-                                  Download
+                                  {regeneratingId === invoice.id ? dictionary.invoices?.regenerating || 'Regenerating...' : dictionary.invoices?.download || 'Download'}
                              </Button>
                              <Button 
                                variant="outline" 

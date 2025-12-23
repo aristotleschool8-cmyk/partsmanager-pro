@@ -429,10 +429,19 @@
     "deleteInvoiceErrorDescription": "فشل في حذف الفاتورة.",
     "sortNewest": "الأحدث أولاً",
     "sortOldest": "الأقدم أولاً",
+    "sortPlaceholder": "ترتيب حسب...",
     "title": "الفواتير",
     "description": "إدارة فواتير المبيعات الخاصة بك.",
     "addButton": "إنشاء فاتورة",
-    "searchPlaceholder": "بحث عن فواتير..."
+    "searchPlaceholder": "بحث عن فواتير...",
+    "noDataTitle": "لم يتم العثور على فواتير. قم بإنشاء واحدة للبدء!",
+    "noDataSearch": "لا تطابق الفواتير بحثك.",
+    "deleteConfirm": "هل أنت متأكد من رغبتك في حذف هذه الفاتورة؟ لا يمكن التراجع عن هذا الإجراء.",
+    "regenerateSuccess": "تم إعادة إنشاء الفاتورة وتنزيلها بنجاح.",
+    "regenerateError": "فشل في إعادة إنشاء الفاتورة. يرجى المحاولة مرة أخرى.",
+    "createDialogTitle": "إنشاء فاتورة",
+    "createDialogDescription": "قم بإنشاء فاتورة جديدة مع بنود البيع والضريبة وتفاصيل العميل.",
+    "generateInvoiceButton": "إنشاء الفاتورة"
   },
   "purchases": {
     "title": "المشتريات",

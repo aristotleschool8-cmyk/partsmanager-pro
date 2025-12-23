@@ -431,7 +431,16 @@
     "deleteInvoiceErrorTitle": "Error",
     "deleteInvoiceErrorDescription": "Failed to delete invoice.",
     "sortNewest": "Newest First",
-    "sortOldest": "Oldest First"
+    "sortOldest": "Oldest First",
+    "sortPlaceholder": "Sort by...",
+    "noDataTitle": "No invoices found. Create one to get started!",
+    "noDataSearch": "No invoices match your search.",
+    "deleteConfirm": "Are you sure you want to delete this invoice? This action cannot be undone.",
+    "regenerateSuccess": "Invoice regenerated and downloaded successfully.",
+    "regenerateError": "Failed to regenerate invoice. Please try again.",
+    "createDialogTitle": "Create Invoice",
+    "createDialogDescription": "Create a new invoice with line items, VAT, and customer details.",
+    "generateInvoiceButton": "Generate Invoice"
   },
   "purchases": {
     "title": "Purchases",

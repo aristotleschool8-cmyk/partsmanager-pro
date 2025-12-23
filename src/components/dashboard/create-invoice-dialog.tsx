@@ -71,14 +71,14 @@ export function CreateInvoiceDialog({ locale, dictionary, onInvoiceCreated }: Cr
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Create Invoice
+          {dictionary?.invoices?.addButton || 'Create Invoice'}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create Invoice</DialogTitle>
+          <DialogTitle>{dictionary?.invoices?.createDialogTitle || 'Create Invoice'}</DialogTitle>
           <DialogDescription>
-            Create a new invoice with line items, VAT, and customer details.
+            {dictionary?.invoices?.createDialogDescription || 'Create a new invoice with line items, VAT, and customer details.'}
           </DialogDescription>
         </DialogHeader>
         <CreateInvoiceForm
@@ -88,10 +88,10 @@ export function CreateInvoiceDialog({ locale, dictionary, onInvoiceCreated }: Cr
         />
         <DialogFooter className="mt-6 flex justify-end gap-2">
           <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-            Cancel
+            {dictionary?.table?.cancel || 'Cancel'}
           </Button>
           <Button onClick={handleSubmit} type="button" disabled={isLoading}>
-            Generate Invoice
+            {dictionary?.invoices?.generateInvoiceButton || 'Generate Invoice'}
           </Button>
         </DialogFooter>
       </DialogContent>
