@@ -183,33 +183,6 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
     return Math.round(quantity).toString();
   };
   
-  // Company Header - positioning will be set after logo height is determined
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Adresse: ${resolvedCompanyInfo.address || ''}`, 14, headerStartY);
-  doc.text('N° RC:', 14, headerStartY + 6);
-  doc.text(resolvedCompanyInfo.rc || '', 30, headerStartY + 6);
-  doc.text('N° NIF:', 14, headerStartY + 12);
-  doc.text(resolvedCompanyInfo.nif || '', 30, headerStartY + 12);
-  doc.text('N° Tél:', 14, headerStartY + 18);
-  doc.text(resolvedCompanyInfo.phone || '', 30, headerStartY + 18);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.text(resolvedCompanyInfo.companyName || '', 105, headerStartY - 8, { align: 'center'});
-  doc.setLineWidth(0.5);
-  doc.line(85, headerStartY - 6, 125, headerStartY - 6); 
-
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.text('N° NIS:', 145, headerStartY);
-  doc.text(resolvedCompanyInfo.nis || '', 170, headerStartY);
-  doc.text('N° ART:', 145, headerStartY + 6);
-  doc.text(resolvedCompanyInfo.art || '', 170, headerStartY + 6);
-  doc.text('N° RIB:', 145, headerStartY + 12);
-  doc.text(resolvedCompanyInfo.rib || '', 170, headerStartY + 12);
-
   // Logo: if a logo URL is provided, attempt to load and draw it; otherwise draw placeholder initial.
   // Track logo's actual height for dynamic positioning of content below
   let logoHeight = 0;
@@ -275,6 +248,31 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   // Dynamically position company header based on logo height
   const headerStartY = logoY + logoHeight + 4; // 4pt spacing after logo
 
+  // Company Header - Now that headerStartY is defined
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Adresse: ${resolvedCompanyInfo.address || ''}`, 14, headerStartY);
+  doc.text('N° RC:', 14, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.rc || '', 30, headerStartY + 6);
+  doc.text('N° NIF:', 14, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.nif || '', 30, headerStartY + 12);
+  doc.text('N° Tél:', 14, headerStartY + 18);
+  doc.text(resolvedCompanyInfo.phone || '', 30, headerStartY + 18);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text(resolvedCompanyInfo.companyName || '', 105, headerStartY - 8, { align: 'center'});
+  doc.setLineWidth(0.5);
+  doc.line(85, headerStartY - 6, 125, headerStartY - 6); 
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.text('N° NIS:', 145, headerStartY);
+  doc.text(resolvedCompanyInfo.nis || '', 170, headerStartY);
+  doc.text('N° ART:', 145, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.art || '', 170, headerStartY + 6);
+  doc.text('N° RIB:', 145, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.rib || '', 170, headerStartY + 12);
 
   // Invoice Number Box
   doc.setFont('helvetica', 'normal');
