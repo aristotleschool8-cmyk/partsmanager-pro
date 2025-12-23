@@ -413,23 +413,23 @@
     "deleteInvoiceErrorDescription": "Impossible de supprimer la facture.",
     "sortNewest": "Plus Récente d'Abord",
     "sortOldest": "Plus Ancienne d'Abord",
-    "title": "Invoices",
-    "description": "Manage your sales invoices.",
-    "addButton": "Create Invoice",
-    "searchPlaceholder": "Search invoices..."
+    "title": "Factures",
+    "description": "Gérer vos factures de vente.",
+    "addButton": "Créer une Facture",
+    "searchPlaceholder": "Rechercher les factures..."
   },
   "purchases": {
     "title": "Achats",
     "deletePurchaseAction": "Supprimer l'Achat",
     "noData": "Aucun achat trouvé",
     "confirmDelete": "Êtes-vous sûr?",
-    "description": "Manage your purchase orders.",
-    "addButton": "Log Purchase",
-    "searchPlaceholder": "Search purchases...",
-    "supplier": "Supplier",
+    "description": "Gérer vos commandes d'achat.",
+    "addButton": "Enregistrer un Achat",
+    "searchPlaceholder": "Rechercher les achats...",
+    "supplier": "Fournisseur",
     "date": "Date",
-    "items": "Items",
-    "totalAmount": "Total Amount"
+    "items": "Éléments",
+    "totalAmount": "Montant Total"
   },
   "stock": {
     "title": "Gestion des Stocks",
@@ -448,9 +448,9 @@
     "date": "Date",
     "quantity": "Quantité",
     "amount": "Montant",
-    "description": "Manage your sales transactions.",
-    "addButton": "Log Sale",
-    "searchPlaceholder": "Search sales..."
+    "description": "Gérer vos transactions de ventes.",
+    "addButton": "Enregistrer une Vente",
+    "searchPlaceholder": "Rechercher les ventes..."
   },
   "trash": {
     "title": "Corbeille",
@@ -460,7 +460,7 @@
     "deletePermSelectedy": "Supprimer Définitivement ({count})",
     "image": "Image",
     "description": "View and manage your deleted items.",
-    "searchPlaceholder": "Search trash..."
+    "searchPlaceholder": "Rechercher dans la corbeille..."
   },
   "suppliers": {
     "name": "Nom",
@@ -468,10 +468,10 @@
     "phone": "Téléphone",
     "noData": "Aucun fournisseur trouvé",
     "noDataSearch": "Aucun fournisseur ne correspond.",
-    "title": "Suppliers",
-    "description": "Manage your supplier information.",
-    "addButton": "Add Supplier",
-    "searchPlaceholder": "Search suppliers..."
+    "title": "Fournisseurs",
+    "description": "Gérer vos informations de fournisseur.",
+    "addButton": "Ajouter un Fournisseur",
+    "searchPlaceholder": "Rechercher les fournisseurs..."
   },
   "customers": {
     "name": "Nom",
@@ -479,9 +479,9 @@
     "phone": "Téléphone",
     "noData": "Aucun client trouvé",
     "noDataSearch": "Aucun client ne correspond.",
-    "title": "Customers",
-    "description": "Manage your customer information.",
-    "addButton": "Add Customer",
-    "searchPlaceholder": "Search customers..."
+    "title": "Clients",
+    "description": "Gérer vos informations client.",
+    "addButton": "Ajouter un Client",
+    "searchPlaceholder": "Rechercher les clients..."
   }
 }

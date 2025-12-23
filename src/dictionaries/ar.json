@@ -422,23 +422,23 @@
     "deleteInvoiceErrorDescription": "فشل في حذف الفاتورة.",
     "sortNewest": "الأحدث أولاً",
     "sortOldest": "الأقدم أولاً",
-    "title": "Invoices",
-    "description": "Manage your sales invoices.",
-    "addButton": "Create Invoice",
-    "searchPlaceholder": "Search invoices..."
+    "title": "الفواتير",
+    "description": "إدارة فواتير المبيعات الخاصة بك.",
+    "addButton": "إنشاء فاتورة",
+    "searchPlaceholder": "بحث عن فواتير..."
   },
   "purchases": {
     "title": "المشتريات",
     "deletePurchaseAction": "حذف الشراء",
     "noData": "لم يتم العثور على مشتريات",
     "confirmDelete": "هل أنت متأكد؟",
-    "description": "Manage your purchase orders.",
-    "addButton": "Log Purchase",
-    "searchPlaceholder": "Search purchases...",
-    "supplier": "Supplier",
-    "date": "Date",
-    "items": "Items",
-    "totalAmount": "Total Amount"
+    "description": "إدارة طلبات الشراء الخاصة بك.",
+    "addButton": "تسجيل مشتريات",
+    "searchPlaceholder": "بحث عن مشتريات...",
+    "supplier": "المورد",
+    "date": "التاريخ",
+    "items": "العناصر",
+    "totalAmount": "المبلغ الإجمالي"
   },
   "stock": {
     "title": "إدارة المخزون",
@@ -457,9 +457,9 @@
     "date": "التاريخ",
     "quantity": "الكمية",
     "amount": "المبلغ",
-    "description": "Manage your sales transactions.",
-    "addButton": "Log Sale",
-    "searchPlaceholder": "Search sales..."
+    "description": "إدارة معاملات مبيعاتك.",
+    "addButton": "تسجيل مبيعة",
+    "searchPlaceholder": "بحث عن مبيعات..."
   },
   "trash": {
     "title": "سلة المحذوفات",
@@ -468,8 +468,8 @@
     "restoreSelected": "استرجاع المحددة ({count})",
     "deletePermSelectedy": "حذف نهائياً ({count})",
     "image": "الصورة",
-    "description": "View and manage your deleted items.",
-    "searchPlaceholder": "Search trash..."
+    "description": "عرض وإدارة العناصر المحذوفة الخاصة بك.",
+    "searchPlaceholder": "بحث في السلة..."
   },
   "suppliers": {
     "name": "الاسم",
@@ -477,10 +477,10 @@
     "phone": "الهاتف",
     "noData": "لم يتم العثور على موردين",
     "noDataSearch": "لا توجد موردون مطابقون.",
-    "title": "Suppliers",
-    "description": "Manage your supplier information.",
-    "addButton": "Add Supplier",
-    "searchPlaceholder": "Search suppliers..."
+    "title": "الموردون",
+    "description": "إدارة معلومات المورد الخاصة بك.",
+    "addButton": "إضافة مورد",
+    "searchPlaceholder": "بحث عن موردين..."
   },
   "customers": {
     "name": "الاسم",
@@ -488,9 +488,9 @@
     "phone": "الهاتف",
     "noData": "لم يتم العثور على عملاء",
     "noDataSearch": "لا توجد عملاء مطابقون.",
-    "title": "Customers",
-    "description": "Manage your customer information.",
-    "addButton": "Add Customer",
-    "searchPlaceholder": "Search customers..."
+    "title": "العملاء",
+    "description": "إدارة معلومات العميل الخاصة بك.",
+    "addButton": "إضافة عميل",
+    "searchPlaceholder": "بحث عن عملاء..."
   }
 }
