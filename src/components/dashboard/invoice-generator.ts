@@ -268,11 +268,15 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text('N° NIS:', 145, headerStartY);
-  doc.text(resolvedCompanyInfo.nis || '', 170, headerStartY);
+  doc.text(resolvedCompanyInfo.nis || '', 185, headerStartY);
   doc.text('N° ART:', 145, headerStartY + 6);
-  doc.text(resolvedCompanyInfo.art || '', 170, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.art || '', 185, headerStartY + 6);
   doc.text('N° RIB:', 145, headerStartY + 12);
-  doc.text(resolvedCompanyInfo.rib || '', 170, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.rib || '', 185, headerStartY + 12);
+
+  // Calculate invoice box Y position dynamically based on company header height
+  const headerEndY = headerStartY + 18; // 4 lines of text (address, RC, NIF, Tel) at 6pt spacing
+  const invoiceBoxSpacingY = headerEndY + 4; // 4pt spacing after header
 
   // Invoice Number Box
   doc.setFont('helvetica', 'normal');
@@ -286,20 +290,21 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   const textWidth = doc.getTextWidth(fullTitleText);
   const boxWidth = textWidth + 10; // Add some padding
   const boxX = (doc.internal.pageSize.width - boxWidth) / 2;
-  const boxY = 52;
+  const boxY = invoiceBoxSpacingY;
   const boxHeight = 10;
   
   doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3);
   doc.text(fullTitleText, boxX + 5, boxY + 6.5);
   
   // Client Info - Dynamic positioning based on content
+  const clientInfoSpacingY = boxY + boxHeight + 4; // 4pt spacing after invoice box
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(0, 0, 0);
   doc.setFontSize(11);
-  doc.text('Renseignements Client', 14, 70);
+  doc.text('Renseignements Client', 14, clientInfoSpacingY);
   
   // Track Y position for dynamic layout
-  let clientBoxY = 73;
+  let clientBoxY = clientInfoSpacingY + 3; // 3pt below the label
   const clientBoxX = 12;
   const clientBoxWidth = 186;
   const clientTextLeftX = 16;
