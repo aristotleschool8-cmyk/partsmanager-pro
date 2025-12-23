@@ -224,7 +224,7 @@ export function LogPurchaseDialog({ dictionary, onPurchaseAdded }: { dictionary:
                           <div
                             key={option.value}
                             onClick={() => handleSupplierSelect(option)}
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                            className="px-4 py-3 hover:bg-primary/10 cursor-pointer text-sm transition-colors border-b border-primary/10 last:border-b-0"
                           >
                             {option.label}
                           </div>
