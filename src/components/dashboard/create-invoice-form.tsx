@@ -297,7 +297,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
         <Form {...form}>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold">Invoice Details</h3>
+              <h3 className="font-semibold">{dictionary?.createInvoiceForm?.invoiceDetails || 'Invoice Details'}</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -306,7 +306,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="invoiceNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Invoice Number</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.invoiceNumber || 'Invoice Number'}</FormLabel>
                     <FormControl>
                       <Input {...field} readOnly className="bg-muted" />
                     </FormControl>
@@ -320,7 +320,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="invoiceDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Invoice Date</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.invoiceDate || 'Invoice Date'}</FormLabel>
                     <FormControl>
                       <Input {...field} type="date" />
                     </FormControl>
@@ -332,7 +332,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
 
             <Separator />
 
-            <h3 className="font-semibold">Client Information</h3>
+            <h3 className="font-semibold">{dictionary?.createInvoiceForm?.clientInformation || 'Client Information'}</h3>
             <FormField
               control={form.control}
               name="clientName"
@@ -343,11 +343,11 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 );
                 return (
                   <FormItem className="relative">
-                    <FormLabel>Client Name</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.clientName || 'Client Name'}</FormLabel>
                     <FormControl>
                       <Input 
                         {...field} 
-                        placeholder="Client name or company" 
+                        placeholder={dictionary?.createInvoiceForm?.clientNamePlaceholder || 'Client name or company'} 
                         onFocus={() => setClientSearchOpen(true)}
                         onBlur={() => setTimeout(() => setClientSearchOpen(false), 200)}
                         autoComplete="off"
@@ -378,9 +378,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               name="clientAddress"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.createInvoiceForm?.address || 'Address (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Client address" />
+                    <Input {...field} placeholder={dictionary?.createInvoiceForm?.addressPlaceholder || 'Client address'} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -393,9 +393,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="clientNis"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIS (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.nis || 'NIS (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIS" />
+                      <Input {...field} placeholder={dictionary?.createInvoiceForm?.nisPlaceholder || 'NIS'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -406,9 +406,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="clientNif"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>NIF (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.nif || 'NIF (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="NIF" />
+                      <Input {...field} placeholder={dictionary?.createInvoiceForm?.nifPlaceholder || 'NIF'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -422,9 +422,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="clientRc"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>RC (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.rc || 'RC (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="RC" />
+                      <Input {...field} placeholder={dictionary?.createInvoiceForm?.rcPlaceholder || 'RC'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -435,9 +435,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                 name="clientArt"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>ART (Optional)</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.art || 'ART (Optional)'}</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="ART" />
+                      <Input {...field} placeholder={dictionary?.createInvoiceForm?.artPlaceholder || 'ART'} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -450,9 +450,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               name="clientRib"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>RIB (Optional)</FormLabel>
+                  <FormLabel>{dictionary?.createInvoiceForm?.rib || 'RIB (Optional)'}</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="RIB" />
+                    <Input {...field} placeholder={dictionary?.createInvoiceForm?.ribPlaceholder || 'RIB'} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -462,13 +462,13 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
             <Separator />
 
             <div className="flex justify-between items-center">
-              <h3 className="font-semibold">Line Items</h3>
+              <h3 className="font-semibold">{dictionary?.createInvoiceForm?.lineItems || 'Line Items'}</h3>
             </div>
 
             <div className="space-y-4">
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-12 gap-x-4 gap-y-2 p-4 border rounded-md relative">
-                  <p className="col-span-12 text-sm font-medium">Item {index + 1}</p>
+                  <p className="col-span-12 text-sm font-medium">{dictionary?.createInvoiceForm?.itemNumber?.replace('{number}', String(index + 1)) || `Item ${index + 1}`}</p>
 
                   <FormField
                     control={form.control}
@@ -480,11 +480,11 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                       );
                       return (
                         <FormItem className="col-span-3 relative">
-                          <FormLabel>Reference</FormLabel>
+                          <FormLabel>{dictionary?.createInvoiceForm?.reference || 'Reference'}</FormLabel>
                           <FormControl>
                             <Input 
                               {...field} 
-                              placeholder="Reference" 
+                              placeholder={dictionary?.createInvoiceForm?.referencePlaceholder || 'Reference'} 
                               onFocus={() => setProductSearchOpen(prev => ({ ...prev, [index]: true }))}
                               onBlur={() => setTimeout(() => setProductSearchOpen(prev => ({ ...prev, [index]: false })), 200)}
                               autoComplete="off"
@@ -521,11 +521,11 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                       );
                       return (
                         <FormItem className="col-span-4 relative">
-                          <FormLabel>Designation</FormLabel>
+                          <FormLabel>{dictionary?.createInvoiceForm?.designation || 'Designation'}</FormLabel>
                           <FormControl>
                             <Input 
                               {...field} 
-                              placeholder="Product description" 
+                              placeholder={dictionary?.createInvoiceForm?.designationPlaceholder || 'Product description'} 
                               onFocus={() => setProductSearchOpen(prev => ({ ...prev, [index]: true }))}
                               onBlur={() => setTimeout(() => setProductSearchOpen(prev => ({ ...prev, [index]: false })), 200)}
                               autoComplete="off"
@@ -560,9 +560,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                     name={`lineItems.${index}.unit`}
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>Unit</FormLabel>
+                        <FormLabel>{dictionary?.createInvoiceForm?.unit || 'Unit'}</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="pcs" />
+                          <Input {...field} placeholder={dictionary?.createInvoiceForm?.unitPlaceholder || 'pcs'} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -574,9 +574,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                     name={`lineItems.${index}.quantity`}
                     render={({ field }) => (
                       <FormItem className="col-span-2">
-                        <FormLabel>Qty</FormLabel>
+                        <FormLabel>{dictionary?.createInvoiceForm?.quantity || 'Qty'}</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" placeholder="0" />
+                          <Input {...field} type="number" placeholder={dictionary?.createInvoiceForm?.quantityPlaceholder || '1'} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -588,9 +588,9 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                     name={`lineItems.${index}.unitPrice`}
                     render={({ field }) => (
                       <FormItem className="col-span-3">
-                        <FormLabel>Price</FormLabel>
+                        <FormLabel>{dictionary?.createInvoiceForm?.price || 'Price'}</FormLabel>
                         <FormControl>
-                          <Input {...field} type="number" placeholder="0" />
+                          <Input {...field} type="number" placeholder={dictionary?.createInvoiceForm?.pricePlaceholder || '0'} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -622,19 +622,19 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               }
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Add Line Item
+              {dictionary?.createInvoiceForm?.addLineItem || 'Add Line Item'}
             </Button>
 
             <Separator />
 
-            <h3 className="font-semibold">Payment</h3>
+            <h3 className="font-semibold">{dictionary?.createInvoiceForm?.payment || 'Payment'}</h3>
             <div className="space-y-4">
               <FormField
                 control={form.control}
                 name="paymentMethod"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Method</FormLabel>
+                    <FormLabel>{dictionary?.createInvoiceForm?.paymentMethod || 'Payment Method'}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
@@ -642,10 +642,10 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Espèce">Cash</SelectItem>
-                        <SelectItem value="Chèque">Check</SelectItem>
-                        <SelectItem value="Virement">Transfer</SelectItem>
-                        <SelectItem value="Carte">Card</SelectItem>
+                        <SelectItem value="Espèce">{dictionary?.createInvoiceForm?.cash || 'Cash'}</SelectItem>
+                        <SelectItem value="Chèque">{dictionary?.createInvoiceForm?.check || 'Check'}</SelectItem>
+                        <SelectItem value="Virement">{dictionary?.createInvoiceForm?.transfer || 'Transfer'}</SelectItem>
+                        <SelectItem value="Carte">{dictionary?.createInvoiceForm?.card || 'Card'}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -665,7 +665,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                         onCheckedChange={field.onChange}
                       />
                       <Label htmlFor="proforma-payment" className="text-sm font-normal cursor-pointer">
-                        This is a Proforma Invoice
+                        {dictionary?.createInvoiceForm?.isProforma || 'This is a Proforma Invoice'}
                       </Label>
                     </div>
                   )}
@@ -681,7 +681,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
                         onCheckedChange={field.onChange}
                       />
                       <Label htmlFor="applyVat-payment" className="text-sm font-normal cursor-pointer">
-                        Apply VAT to all items
+                        {dictionary?.createInvoiceForm?.applyVat || 'Apply VAT to all items'}
                       </Label>
                     </div>
                   )}
