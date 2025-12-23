@@ -499,7 +499,7 @@
     "description": "Gérez les paramètres de votre application et de l'utilisateur.",
     "companyTab": "Entreprise",
     "businessTab": "Affaires",
-    "billingTab": "Facturation",
+    "subscriptionTab": "Abonnement",
     "companyTitle": "Informations de l'Entreprise",
     "companyDescription": "Ces informations seront affichées sur vos factures.",
     "companySubtext": "Gérez les détails de votre entreprise, notamment les numéros d'enregistrement et les informations bancaires.",

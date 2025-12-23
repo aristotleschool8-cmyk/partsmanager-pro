@@ -506,7 +506,7 @@
     "description": "Manage your application and user settings.",
     "companyTab": "Company",
     "businessTab": "Business",
-    "billingTab": "Billing",
+    "subscriptionTab": "Subscription",
     "companyTitle": "Company Information",
     "companyDescription": "This information will be displayed on your invoices.",
     "companySubtext": "Manage your company details including registration numbers and bank information.",

@@ -508,7 +508,7 @@
     "description": "إدارة إعدادات التطبيق والمستخدم.",
     "companyTab": "الشركة",
     "businessTab": "الأعمال",
-    "billingTab": "الفواتير",
+    "subscriptionTab": "الاشتراك",
     "companyTitle": "معلومات الشركة",
     "companyDescription": "سيتم عرض هذه المعلومات على الفواتير الخاصة بك.",
     "companySubtext": "إدارة تفاصيل شركتك بما في ذلك أرقام التسجيل ومعلومات البنك.",

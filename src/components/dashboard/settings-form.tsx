@@ -13,7 +13,7 @@ export function SettingsForm({ dictionary }: { dictionary?: any }) {
             <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="company">{dictionary?.settings?.companyTab || 'Company'}</TabsTrigger>
                 <TabsTrigger value="business">{dictionary?.settings?.businessTab || 'Business'}</TabsTrigger>
-                <TabsTrigger value="billing">{dictionary?.settings?.billingTab || 'Billing'}</TabsTrigger>
+                <TabsTrigger value="subscription">{dictionary?.settings?.subscriptionTab || 'Subscription'}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="company">
@@ -54,7 +54,7 @@ export function SettingsForm({ dictionary }: { dictionary?: any }) {
                 </Card>
             </TabsContent>
 
-            <TabsContent value="billing">
+            <TabsContent value="subscription">
                 <BillingPanel dictionary={dictionary} />
             </TabsContent>
         </Tabs>
