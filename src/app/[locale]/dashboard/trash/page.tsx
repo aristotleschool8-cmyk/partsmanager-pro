@@ -1,6 +1,5 @@
 'use client';
 
-import Image from "next/image";
 import { getDictionary } from "@/lib/dictionaries";
 import { Locale } from "@/lib/config";
 import { useEffect, useState } from "react";
@@ -273,9 +272,6 @@ export default function TrashPage({
                     onCheckedChange={handleSelectAll}
                   />
                 </TableHead>
-                <TableHead className="hidden w-[100px] sm:table-cell">
-                  <span className="sr-only">{dictionary.table?.image || 'Image'}</span>
-                </TableHead>
                 <TableHead>{dictionary.table?.product || 'Product'}</TableHead>
                 <TableHead className="hidden md:table-cell">{dictionary.table?.sku || 'SKU'}</TableHead>
                 <TableHead className="text-right">{dictionary.stockPage?.actions || 'Actions'}</TableHead>
@@ -290,15 +286,6 @@ export default function TrashPage({
                         onCheckedChange={() => handleToggleSelect(product.id)}
                       />
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell">
-                        <Image
-                        alt={product.name}
-                        className="aspect-square rounded-md object-cover"
-                        height="40"
-                        src={product.image || 'https://via.placeholder.com/40'}
-                        width="40"
-                        />
-                  </TableCell>
                   <TableCell className="font-medium">{product.name}</TableCell>
                   <TableCell className="hidden md:table-cell">{product.reference}</TableCell>
                   <TableCell className="text-right space-x-2">
