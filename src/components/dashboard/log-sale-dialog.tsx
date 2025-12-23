@@ -231,7 +231,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
               />
               {/* Customer Dropdown - Theme Styled */}
               {showCustomerDropdown && customerInput.trim() && filteredCustomers.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-primary/20 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
                   {filteredCustomers.map((customer) => (
                     <div
                       key={customer.id}
@@ -245,7 +245,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
                 </div>
               )}
               {showCustomerDropdown && customerInput.trim() && filteredCustomers.length === 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-primary/20 rounded-md shadow-lg px-4 py-3 text-sm text-muted-foreground z-50">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-md shadow-lg px-4 py-3 text-sm text-muted-foreground z-50">
                   {d.noCustomerFound}
                 </div>
               )}
@@ -275,7 +275,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
                   />
                   {/* Product Dropdown - Theme Styled */}
                   {showProductDropdown && filteredProducts.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-primary/20 rounded-md shadow-lg z-50 max-h-56 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-md shadow-lg z-50 max-h-56 overflow-y-auto">
                       {filteredProducts.map((product) => (
                         <div
                           key={product.id}
@@ -294,7 +294,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
                     </div>
                   )}
                   {showProductDropdown && productInput.trim() && filteredProducts.length === 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-primary/20 rounded-md shadow-lg px-4 py-3 text-sm text-muted-foreground z-50">
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-primary/20 rounded-md shadow-lg px-4 py-3 text-sm text-muted-foreground z-50">
                       {d.noProductFound}
                     </div>
                   )}
