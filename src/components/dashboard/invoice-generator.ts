@@ -268,11 +268,11 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.text('N° NIS:', 145, headerStartY);
-  doc.text(resolvedCompanyInfo.nis || '', 185, headerStartY);
+  doc.text(resolvedCompanyInfo.nis || '', 160, headerStartY);
   doc.text('N° ART:', 145, headerStartY + 6);
-  doc.text(resolvedCompanyInfo.art || '', 185, headerStartY + 6);
+  doc.text(resolvedCompanyInfo.art || '', 160, headerStartY + 6);
   doc.text('N° RIB:', 145, headerStartY + 12);
-  doc.text(resolvedCompanyInfo.rib || '', 185, headerStartY + 12);
+  doc.text(resolvedCompanyInfo.rib || '', 160, headerStartY + 12);
 
   // Calculate invoice box Y position dynamically based on company header height
   const headerEndY = headerStartY + 18; // 4 lines of text (address, RC, NIF, Tel) at 6pt spacing
@@ -308,7 +308,7 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   const clientBoxX = 12;
   const clientBoxWidth = 186;
   const clientTextLeftX = 16;
-  const clientTextRightX = 105;
+  const clientTextRightX = 145; // Moved right to use available space
   const lineSpacing = 5.5;
   const clientPadding = 6; // Increased padding for better text spacing inside box
   
@@ -340,11 +340,11 @@ export async function generateInvoicePdf(data: InvoiceFormData, companyInfo?: Co
   let currentRightY = clientBoxY + clientPadding;
   
   const rcLines = doc.splitTextToSize(`R.C : ${data.clientRc || ''}`, availableWidth);
-  doc.text(rcLines, 130, currentRightY);
+  doc.text(rcLines, clientTextRightX, currentRightY);
   currentRightY += rcLines.length * lineSpacing;
   
   const nifLines = doc.splitTextToSize(`NIF : ${data.clientNif || ''}`, availableWidth);
-  doc.text(nifLines, 130, currentRightY);
+  doc.text(nifLines, clientTextRightX, currentRightY);
   const rightColumnHeight = currentRightY - (clientBoxY + clientPadding) + lineSpacing;
   
   // Calculate total client box height based on taller column
