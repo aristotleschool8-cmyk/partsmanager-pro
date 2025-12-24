@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Save, Edit } from 'lucide-react';
+import { Save, Edit, Upload, X } from 'lucide-react';
+import { Card } from '@/components/ui/card';
  
 
 const getCompanyInfoSchema = (dictionary?: any) => z.object({
@@ -371,14 +372,61 @@ export function CompanyInfoModal({ dictionary }: { dictionary?: any }) {
               )}
             />
 
-            <div className="col-span-1 md:col-span-2">
-              <FormLabel>{dictionary?.settings?.logo || 'Company Logo'} ({dictionary?.table?.optional || 'optional'})</FormLabel>
-              <div className="flex items-center gap-4">
-                <input type="file" accept="image/*" onChange={onLogoChange} />
-                {previewUrl ? (
-                  <img src={previewUrl} alt="logo preview" className="h-12 w-12 object-contain rounded" />
-                ) : null}
-              </div>
+            <div className="col-span-1 md:col-span-2 space-y-3">
+              <FormLabel className="text-base font-semibold">{dictionary?.settings?.logo || 'Company Logo'} <span className="text-xs text-muted-foreground">({dictionary?.table?.optional || 'optional'})</span></FormLabel>
+              
+              {/* Logo Upload Card */}
+              <Card className="border-2 border-dashed hover:border-primary transition-colors p-6 sm:p-8 text-center cursor-pointer group">
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  onChange={onLogoChange}
+                  id="logo-upload"
+                  className="hidden"
+                />
+                <label htmlFor="logo-upload" className="cursor-pointer block w-full">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    {!previewUrl ? (
+                      <>
+                        <div className="p-3 rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                          <Upload className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{dictionary?.settings?.dragDrop || 'Drag and drop your logo'}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{dictionary?.settings?.orClick || 'or click to select from device'}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="relative w-20 h-20 sm:w-24 sm:h-24">
+                            <img 
+                              src={previewUrl} 
+                              alt="logo preview" 
+                              className="w-full h-full object-contain rounded-lg border border-primary/30"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setLogoFile(null);
+                                setPreviewUrl(null);
+                              }}
+                              className="absolute -top-2 -right-2 p-1 rounded-full bg-destructive text-white hover:bg-destructive/90 transition-colors"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <p className="text-sm font-medium text-primary">{logoFile?.name || 'Logo uploaded'}</p>
+                          <p className="text-xs text-muted-foreground">{dictionary?.settings?.clickToChange || 'Click to change'}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </label>
+              </Card>
+              
+              <p className="text-xs text-muted-foreground text-center">{dictionary?.settings?.logoInfo || 'Recommended: Square image, min 100x100px, max 5MB'}</p>
             </div>
 
             <DialogFooter className="mt-6">
