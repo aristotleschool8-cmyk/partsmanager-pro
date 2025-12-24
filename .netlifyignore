@@ -1,0 +1,43 @@
+# Git
+.git
+.gitignore
+
+# Development
+.env.example
+.env.local
+.env.*.local
+.vscode
+.idea
+
+# Build artifacts
+.next
+out
+dist
+
+# Dependencies
+node_modules
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Testing
+coverage
+.nyc_output
+
+# IDE
+*.swp
+*.swo
+*~
+
+# Docs (optional - remove if needed)
+docs
+
+# Build output artifacts (excluded from deployment, kept in build)
+build-*.txt
+final-build.txt
+SECURITY_AUDIT_REPORT.md
