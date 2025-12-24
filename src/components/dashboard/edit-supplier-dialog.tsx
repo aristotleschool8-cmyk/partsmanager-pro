@@ -159,7 +159,7 @@ export function EditSupplierDialog({ dictionary, supplier, open, onOpenChange, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[500px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{dictionary?.editSupplierDialog?.title || 'Edit Supplier'}</DialogTitle>
           <DialogDescription>
@@ -239,7 +239,7 @@ export function EditSupplierDialog({ dictionary, supplier, open, onOpenChange, o
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="rc"
@@ -269,7 +269,7 @@ export function EditSupplierDialog({ dictionary, supplier, open, onOpenChange, o
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="nif"

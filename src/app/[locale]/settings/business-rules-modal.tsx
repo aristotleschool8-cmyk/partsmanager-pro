@@ -119,7 +119,7 @@ export function BusinessRulesModal({ dictionary }: { dictionary?: any }) {
           {dictionary?.settings?.businessRulesEditButton || 'Edit Business Rules'}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[500px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{dictionary?.settings?.businessRulesDialogTitle || 'Edit Business Rules'}</DialogTitle>
           <DialogDescription>

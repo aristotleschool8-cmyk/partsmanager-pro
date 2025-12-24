@@ -204,7 +204,7 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
           {d.logSale}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[900px]">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[900px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{d.title}</DialogTitle>
           <DialogDescription>{d.description}</DialogDescription>

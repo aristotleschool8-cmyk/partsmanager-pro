@@ -555,7 +555,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
                   disabled={isLoading}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <div className="grid gap-2">
                   <Label htmlFor="quantity">{d.quantity}</Label>
                   <Input

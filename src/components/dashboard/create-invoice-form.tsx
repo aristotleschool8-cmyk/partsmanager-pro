@@ -300,7 +300,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               <h3 className="font-semibold">{dictionary?.createInvoiceForm?.invoiceDetails || 'Invoice Details'}</h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="invoiceNumber"
@@ -387,7 +387,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="clientNis"
@@ -416,7 +416,7 @@ export const CreateInvoiceForm = React.forwardRef<HTMLFormElement, CreateInvoice
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <FormField
                 control={form.control}
                 name="clientRc"
