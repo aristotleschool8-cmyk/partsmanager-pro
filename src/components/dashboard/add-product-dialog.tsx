@@ -268,7 +268,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
           reference,
           brand: brand || null,
           stock: parseInt(stockStr) || 0,
-          purchasePrice: parseFloat(priceStr) || 0,
+          purchasePrice: !isNaN(parseFloat(priceStr)) ? parseFloat(priceStr) : 0,
         };
       });
 

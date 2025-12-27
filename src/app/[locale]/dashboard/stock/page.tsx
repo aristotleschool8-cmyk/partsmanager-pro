@@ -60,10 +60,13 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
   const { firestore, user } = useFirebase();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+  const [displayLimit, setDisplayLimit] = useState(50); // Initial load: 50 items
+  const LOAD_MORE_INCREMENT = 50;
 
   const fetchProducts = async () => {
     if (!firestore || !user?.uid) return;
@@ -93,12 +96,24 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       });
 
       setProducts(fetchedProducts);
+      setDisplayedProducts(fetchedProducts.slice(0, 50)); // Show first 50
+      setDisplayLimit(50);
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Update displayed products when search or displayLimit changes
+  useEffect(() => {
+    const filtered = products.filter(p =>
+      p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.reference?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    setDisplayedProducts(filtered.slice(0, displayLimit));
+  }, [searchTerm, products, displayLimit]);
 
   // Load dictionary
   useEffect(() => {
@@ -154,10 +169,10 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
   };
 
   const handleSelectAll = () => {
-    if (selectedProducts.size === filteredProducts.length) {
+    if (selectedProducts.size === displayedProducts.length && displayedProducts.length > 0) {
       setSelectedProducts(new Set());
     } else {
-      setSelectedProducts(new Set(filteredProducts.map(p => p.id)));
+      setSelectedProducts(new Set(displayedProducts.map(p => p.id)));
     }
   };
 
@@ -211,11 +226,11 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
   }
 
   const d = dictionary.stockPage;
-  const filteredProducts = products.filter((product) =>
+  const totalFilteredCount = products.filter((product) =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.brand?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).length;
 
   return (
     <div className="space-y-8">
@@ -274,14 +289,14 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProducts.length === 0 ? (
+                {displayedProducts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       {products.length === 0 ? (d.noDataTitle || 'No products found. Add one to get started!') : (d.noDataSearch || 'No products match your search.')}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredProducts.map((product) => (
+                  displayedProducts.map((product) => (
                     <TableRow key={product.id}>
                       <TableCell className="w-[50px]">
                         <Checkbox 
@@ -332,10 +347,19 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
             </Table>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex justify-between items-center">
           <div className="text-xs text-muted-foreground">
-            {(d.showingText || 'Showing').replace('{start}', '1').replace('{end}', String(filteredProducts.length)).replace('{total}', String(products.length))} <strong>1-{filteredProducts.length}</strong> {d.of || 'of'} <strong>{products.length}</strong> {d.itemName || 'products'}
+            Showing <strong>{displayedProducts.length}</strong> of <strong>{totalFilteredCount}</strong> {d.itemName || 'products'}
           </div>
+          {displayedProducts.length < totalFilteredCount && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setDisplayLimit(prev => prev + LOAD_MORE_INCREMENT)}
+            >
+              Load More
+            </Button>
+          )}
         </CardFooter>
       </Card>
     </div>

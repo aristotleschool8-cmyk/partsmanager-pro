@@ -32,7 +32,7 @@ export default function TrashPage({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const { toast } = useToast();
   const [dictionary, setDictionary] = useState<any>(null);
   const [deletedItems, setDeletedItems] = useState<any[]>([]);
@@ -50,14 +50,14 @@ export default function TrashPage({
 
   // Fetch deleted products from Firestore
   useEffect(() => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
 
     const fetchDeletedItems = async () => {
       try {
         setIsLoading(true);
         const productsRef = collection(firestore, 'products');
         const deletedSnap = await getDocs(
-          query(productsRef, where('isDeleted', '==', true))
+          query(productsRef, where('isDeleted', '==', true), where('userId', '==', user.uid))
         );
 
         const items = deletedSnap.docs.map(doc => ({
@@ -77,7 +77,7 @@ export default function TrashPage({
     };
 
     fetchDeletedItems();
-  }, [firestore]);
+  }, [firestore, user?.uid]);
 
   const handleRestore = async (productId: string) => {
     if (!firestore) return;
