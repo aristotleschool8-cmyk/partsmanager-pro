@@ -8,9 +8,6 @@ command = "npm run build"
 # The directory that contains the built site
 publish = ".next"
 
-# Reduce deployment blob size by excluding unnecessary files
-ignore = "git diff --quiet HEAD~1 HEAD -- docs/ "
-
 # Build environment variables
 [build.environment]
 NODE_ENV = "production"
