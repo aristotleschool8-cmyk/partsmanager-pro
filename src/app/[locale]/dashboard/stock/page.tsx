@@ -273,7 +273,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
                 <TableRow>
                   <TableHead className="w-[50px]">
                     <Checkbox 
-                      checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0}
+                      checked={selectedProducts.size === displayedProducts.length && displayedProducts.length > 0}
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
