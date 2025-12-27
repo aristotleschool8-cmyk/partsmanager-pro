@@ -113,9 +113,19 @@ export function AddSupplierDialog({ dictionary, onSupplierAdded }: AddSupplierDi
 
     setIsLoading(true);
     try {
+      if (!user?.uid) {
+        toast({
+          title: 'Error',
+          description: 'User ID not available. Please log in again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const suppliersRef = collection(firestore, 'suppliers');
       await addDoc(suppliersRef, {
         ...data,
+        userId: user.uid, // ← Add userId for per-user isolation
         createdAt: new Date(),
       });
 

@@ -174,67 +174,84 @@ service cloud.firestore {
     // --------------------------------------------------------------------
 
     /**
-     * @description Manages supplier data
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Manages supplier data with per-user isolation
+     * @access Users can only read/write their own suppliers
+     * Each supplier document MUST have a userId field matching the authenticated user
      */
     match /suppliers/{supplierId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Manages customer data
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Manages customer data with per-user isolation
+     * @access Users can only read/write their own customers
+     * Each customer document MUST have a userId field matching the authenticated user
      */
     match /customers/{customerId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Manages product inventory
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Manages product inventory with per-user isolation
+     * @access Users can only read/write their own products
+     * Each product document MUST have a userId field matching the authenticated user
      */
     match /products/{productId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Manages purchase orders
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Manages purchase orders with per-user isolation
+     * @access Users can only read/write their own purchases
+     * Each purchase document MUST have a userId field matching the authenticated user
      */
     match /purchases/{purchaseId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
 
       /**
        * @description Manages line items within a purchase order
+       * Users can only access purchase items from their own purchases
        */
       match /purchaseItems/{purchaseItemId} {
-        allow read: if canRead() && parentPurchaseExists(purchaseId);
-        allow create: if canWrite() && parentPurchaseExists(purchaseId) && hasValidPurchaseItemData(purchaseId);
-        allow update: if canWrite() && parentPurchaseExists(purchaseId) && resource != null && isPurchaseItemImmutable();
-        allow delete: if canWrite() && parentPurchaseExists(purchaseId) && resource != null;
+        allow read: if canRead() && get(/databases/$(database)/documents/purchases/$(purchaseId)).data.userId == request.auth.uid && parentPurchaseExists(purchaseId);
+        allow create: if canWrite() && get(/databases/$(database)/documents/purchases/$(purchaseId)).data.userId == request.auth.uid && parentPurchaseExists(purchaseId) && hasValidPurchaseItemData(purchaseId);
+        allow update: if canWrite() && get(/databases/$(database)/documents/purchases/$(purchaseId)).data.userId == request.auth.uid && parentPurchaseExists(purchaseId) && resource != null && isPurchaseItemImmutable();
+        allow delete: if canWrite() && get(/databases/$(database)/documents/purchases/$(purchaseId)).data.userId == request.auth.uid && parentPurchaseExists(purchaseId) && resource != null;
       }
     }
 
     /**
-     * @description Manages sales to customers
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Manages sales to customers with per-user isolation
+     * @access Users can only read/write their own sales
+     * Each sale document MUST have a userId field matching the authenticated user
      */
     match /sales/{saleId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
 
       /**
        * @description Manages line items within a sale
+       * Users can only access sale items from their own sales
        */
       match /saleItems/{saleItemId} {
-        allow read: if canRead() && parentSaleExists(saleId);
-        allow create: if canWrite() && parentSaleExists(saleId) && hasValidSaleItemData(saleId);
-        allow update: if canWrite() && parentSaleExists(saleId) && resource != null && isSaleItemImmutable();
-        allow delete: if canWrite() && parentSaleExists(saleId) && resource != null;
+        allow read: if canRead() && get(/databases/$(database)/documents/sales/$(saleId)).data.userId == request.auth.uid && parentSaleExists(saleId);
+        allow create: if canWrite() && get(/databases/$(database)/documents/sales/$(saleId)).data.userId == request.auth.uid && parentSaleExists(saleId) && hasValidSaleItemData(saleId);
+        allow update: if canWrite() && get(/databases/$(database)/documents/sales/$(saleId)).data.userId == request.auth.uid && parentSaleExists(saleId) && resource != null && isSaleItemImmutable();
+        allow delete: if canWrite() && get(/databases/$(database)/documents/sales/$(saleId)).data.userId == request.auth.uid && parentSaleExists(saleId) && resource != null;
       }
     }
 
@@ -259,12 +276,15 @@ service cloud.firestore {
     }
 
     /**
-     * @description Invoices collection
-     * @access Admins and premium users: read/write; Trial users: read-only; Unverified: denied
+     * @description Invoices collection with per-user isolation
+     * @access Users can only read/write their own invoices
+     * Each invoice document MUST have a userId field matching the authenticated user
      */
     match /invoices/{invoiceId} {
-      allow read: if canRead();
-      allow write: if canWrite();
+      allow read: if canRead() && resource.data.userId == request.auth.uid;
+      allow create: if canWrite() && request.resource.data.userId == request.auth.uid;
+      allow update: if canWrite() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if canWrite() && resource.data.userId == request.auth.uid;
     }
 
     /**

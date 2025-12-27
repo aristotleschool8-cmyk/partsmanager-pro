@@ -113,9 +113,19 @@ export function AddCustomerDialog({ onCustomerAdded, dictionary }: AddCustomerDi
 
     setIsLoading(true);
     try {
+      if (!user?.uid) {
+        toast({
+          title: 'Error',
+          description: 'User ID not available. Please log in again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const customersRef = collection(firestore, 'customers');
       await addDoc(customersRef, {
         ...data,
+        userId: user.uid, // ← Add userId for per-user isolation
         createdAt: new Date(),
       });
 

@@ -102,6 +102,15 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
 
     setIsLoading(true);
     try {
+      if (!user?.uid) {
+        toast({
+          title: 'Error',
+          description: 'User ID not available. Please log in again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const productsRef = collection(firestore, 'products');
       await addDoc(productsRef, {
         name: formData.designation,
@@ -110,6 +119,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
         stock: parseInt(formData.quantity),
         purchasePrice: parseFloat(formData.purchasePrice),
         price: parseFloat(formData.purchasePrice) * 1.25, // Default 25% markup
+        userId: user.uid, // ← Add userId for per-user isolation
         createdAt: new Date(),
         isDeleted: false,
       });
@@ -289,6 +299,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
               stock: stock,
               purchasePrice: purchasePrice,
               price: purchasePrice * 1.25, // Default 25% markup
+              userId: user?.uid, // ← Add userId for per-user isolation
               createdAt: new Date(),
               isDeleted: false,
             });

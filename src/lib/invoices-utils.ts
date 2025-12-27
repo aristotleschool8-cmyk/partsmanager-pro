@@ -71,6 +71,7 @@ export async function saveInvoiceData(
       subtotal,
       vatAmount,
       paid: false,
+      userId: userId, // ← Add userId for per-user isolation
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     };
