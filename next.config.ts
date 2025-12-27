@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   },
   
   // Optimize build output size
-  swcMinify: true,
+  // Note: swcMinify is deprecated in Next.js 15.x (enabled by default)
   productionBrowserSourceMaps: false,
   
   // Enable compression
