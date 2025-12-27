@@ -32,7 +32,6 @@ export function AdminLoginForm({ dictionary, locale = 'en' }: { dictionary: Awai
   const router = useRouter()
   const { auth, firestore, isUserLoading } = useFirebase()
   const [isLoading, setIsLoading] = useState(false)
-  const [showBypassField, setShowBypassField] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -120,23 +119,6 @@ export function AdminLoginForm({ dictionary, locale = 'en' }: { dictionary: Awai
             )}
           />
           
-          {/* TEMPORARY: Bypass field (hidden, click "Forgot?" text to show) */}
-          {showBypassField && (
-            <FormItem>
-              <FormLabel className="text-xs text-muted-foreground">Temporary Access Code</FormLabel>
-              <FormControl>
-                <Input 
-                  name="bypass"
-                  type="password" 
-                  placeholder="Enter bypass code" 
-                  disabled={isLoading}
-                  className="text-xs"
-                />
-              </FormControl>
-              <p className="text-xs text-muted-foreground mt-1">Temporary access - will be removed later</p>
-            </FormItem>
-          )}
-          
           <Button 
             type="submit" 
             className="w-full"
@@ -147,17 +129,6 @@ export function AdminLoginForm({ dictionary, locale = 'en' }: { dictionary: Awai
           </Button>
         </form>
       </Form>
-      
-      {/* TEMPORARY: Bypass code toggle (hidden in plain sight) */}
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={() => setShowBypassField(!showBypassField)}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          {showBypassField ? 'Hide access code' : 'Need temporary access?'}
-        </button>
-      </div>
     </div>
   )
 }

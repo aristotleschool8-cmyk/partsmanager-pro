@@ -37,7 +37,7 @@ import { Locale } from "@/lib/config";
 import { AddSupplierDialog } from "@/components/dashboard/add-supplier-dialog";
 import { EditSupplierDialog } from "@/components/dashboard/edit-supplier-dialog";
 import { useFirebase } from "@/firebase/provider";
-import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, where } from "firebase/firestore";
 
 interface Supplier {
   id: string;
@@ -73,11 +73,11 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
   };
 
   const fetchSuppliers = async () => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
     try {
       setIsLoading(true);
       const suppliersRef = collection(firestore, 'suppliers');
-      const q = query(suppliersRef);
+      const q = query(suppliersRef, where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const fetchedSuppliers: Supplier[] = [];
@@ -248,10 +248,10 @@ export default function SuppliersPage({ params }: { params: Promise<{ locale: Lo
             setEditingSupplier(null);
             // Refresh suppliers
             const refreshSuppliers = async () => {
-              if (!firestore) return;
+              if (!firestore || !user?.uid) return;
               try {
                 const suppliersRef = collection(firestore, 'suppliers');
-                const q = query(suppliersRef);
+                const q = query(suppliersRef, where('userId', '==', user.uid));
                 const querySnapshot = await getDocs(q);
                 
                 const fetchedSuppliers: Supplier[] = [];

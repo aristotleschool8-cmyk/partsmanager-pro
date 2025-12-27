@@ -57,7 +57,7 @@ interface Product {
 
 export default function StockPage({ params }: { params: Promise<{ locale: Locale }> }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -66,7 +66,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
 
   const fetchProducts = async () => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
     try {
       setIsLoading(true);
       
@@ -74,7 +74,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       await ensureAllProductsHaveDeletedField(firestore);
       
       const productsRef = collection(firestore, 'products');
-      const q = query(productsRef, where('isDeleted', '==', false));
+      const q = query(productsRef, where('isDeleted', '==', false), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const fetchedProducts: Product[] = [];

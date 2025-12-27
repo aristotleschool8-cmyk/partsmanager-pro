@@ -237,11 +237,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
           const stock = parseInt(stockStr) || 0;
           const purchasePrice = parseFloat(priceStr) || 0;
 
-          if (purchasePrice <= 0) {
-            errors.push(`Row ${i + 1}: Invalid Purchase Price`);
-            errorCount++;
-            continue;
-          }
+          // Purchase price can be 0 for unknown costs
 
           // Check if product already exists by reference or designation
           const productsRef = collection(firestore, 'products');

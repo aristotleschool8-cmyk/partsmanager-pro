@@ -50,7 +50,7 @@ export default function SalesPage({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const [sales, setSales] = useState<Sale[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
@@ -66,11 +66,11 @@ export default function SalesPage({
   }, [locale]);
 
   const fetchSales = async () => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
     try {
       setIsLoading(true);
       const salesRef = collection(firestore, 'sales');
-      const q = query(salesRef);
+      const q = query(salesRef, where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const fetchedSales: Sale[] = [];

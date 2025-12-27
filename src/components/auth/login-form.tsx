@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -168,7 +169,15 @@ export function LoginForm({ dictionary, locale = 'en' }: { dictionary: Awaited<R
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{dictionary.passwordLabel}</FormLabel>
+                <div className="flex items-center justify-between">
+                  <FormLabel>{dictionary.passwordLabel}</FormLabel>
+                  <Link
+                    href={`/${locale}/reset-password`}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <FormControl>
                   <Input type="password" placeholder="********" {...field} disabled={isLoading} />
                 </FormControl>

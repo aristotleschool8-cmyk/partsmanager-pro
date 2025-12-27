@@ -34,7 +34,7 @@ import {
 import { AddCustomerDialog } from "@/components/dashboard/add-customer-dialog";
 import { EditCustomerDialog } from "@/components/dashboard/edit-customer-dialog";
 import { useFirebase } from "@/firebase/provider";
-import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, where } from "firebase/firestore";
 
 interface Customer {
   id: string;
@@ -53,7 +53,7 @@ export default function CustomersPage({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
@@ -72,11 +72,11 @@ export default function CustomersPage({
   };
 
   const fetchCustomers = async () => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
     try {
       setIsLoading(true);
       const customersRef = collection(firestore, 'customers');
-      const q = query(customersRef);
+      const q = query(customersRef, where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const fetchedCustomers: Customer[] = [];

@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogPurchaseDialog } from "@/components/dashboard/log-purchase-dialog";
 import { useFirebase } from "@/firebase/provider";
-import { collection, getDocs, query, deleteDoc, doc } from "firebase/firestore";
+import { collection, getDocs, query, deleteDoc, doc, where } from "firebase/firestore";
 
 interface PurchaseItem {
   description: string;
@@ -56,7 +56,7 @@ export default function PurchasesPage({
   params: Promise<{ locale: Locale }>;
 }) {
   const { locale } = use(params);
-  const { firestore } = useFirebase();
+  const { firestore, user } = useFirebase();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dictionary, setDictionary] = useState<any>(null);
@@ -73,11 +73,11 @@ export default function PurchasesPage({
   };
 
   const fetchPurchases = async () => {
-    if (!firestore) return;
+    if (!firestore || !user?.uid) return;
     try {
       setIsLoading(true);
       const purchasesRef = collection(firestore, 'purchases');
-      const q = query(purchasesRef);
+      const q = query(purchasesRef, where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
       
       const fetchedPurchases: Purchase[] = [];

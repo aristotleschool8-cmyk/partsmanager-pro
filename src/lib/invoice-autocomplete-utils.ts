@@ -29,7 +29,7 @@ export async function getCustomersForAutoComplete(
 ): Promise<ClientAutoComplete[]> {
   try {
     const customersRef = collection(firestore, 'customers');
-    const q = query(customersRef);
+    const q = query(customersRef, where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     
     const customers: ClientAutoComplete[] = [];
@@ -62,7 +62,7 @@ export async function getProductsForAutoComplete(
 ): Promise<ProductAutoComplete[]> {
   try {
     const productsRef = collection(firestore, 'products');
-    const q = query(productsRef, where('isDeleted', '==', false));
+    const q = query(productsRef, where('userId', '==', userId), where('isDeleted', '==', false));
     const querySnapshot = await getDocs(q);
     
     const products: ProductAutoComplete[] = [];

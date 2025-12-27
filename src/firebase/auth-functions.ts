@@ -8,6 +8,9 @@ import {
   sendEmailVerification,
   updateProfile,
   User as FirebaseUser,
+  sendPasswordResetEmail,
+  confirmPasswordReset,
+  verifyPasswordResetCode,
 } from 'firebase/auth';
 import { 
   Firestore, 
@@ -189,4 +192,60 @@ export async function updateUserProfile(
  */
 export async function signOut(auth: Auth): Promise<void> {
   await auth.signOut();
+}
+
+/**
+ * Sends password reset email to user
+ * User clicks link in email to reset password
+ */
+export async function sendPasswordReset(
+  auth: Auth,
+  email: string
+): Promise<void> {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error: any) {
+    if (error.code === 'auth/user-not-found') {
+      throw new Error('No user found with this email address.');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Verifies password reset code and returns the associated email
+ */
+export async function verifyResetCode(
+  auth: Auth,
+  code: string
+): Promise<string> {
+  try {
+    return await verifyPasswordResetCode(auth, code);
+  } catch (error: any) {
+    if (error.code === 'auth/invalid-action-code' || error.code === 'auth/expired-action-code') {
+      throw new Error('Reset link has expired or is invalid. Please request a new password reset.');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Confirms password reset with new password
+ */
+export async function resetPassword(
+  auth: Auth,
+  code: string,
+  newPassword: string
+): Promise<void> {
+  try {
+    await confirmPasswordReset(auth, code, newPassword);
+  } catch (error: any) {
+    if (error.code === 'auth/invalid-action-code' || error.code === 'auth/expired-action-code') {
+      throw new Error('Reset link has expired or is invalid. Please request a new password reset.');
+    }
+    if (error.code === 'auth/weak-password') {
+      throw new Error('Password should be at least 6 characters long.');
+    }
+    throw error;
+  }
 }
