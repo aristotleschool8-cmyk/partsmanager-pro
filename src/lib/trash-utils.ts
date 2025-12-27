@@ -1,7 +1,7 @@
-import { Firestore, doc, updateDoc, deleteDoc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
+import { Firestore, doc, collection, query, where, getDocs, writeBatch } from 'firebase/firestore';
 
 /**
- * Move product(s) to trash (soft delete)
+ * Move product(s) to trash (soft delete) - OPTIMIZED with batch operations
  * @param firestore - Firestore instance
  * @param productIds - Single product ID or array of product IDs to move to trash
  * @returns true if successful, false otherwise
@@ -13,12 +13,32 @@ export async function moveToTrash(
   try {
     const ids = Array.isArray(productIds) ? productIds : [productIds];
     
+    if (ids.length === 0) return true;
+
+    let batch = writeBatch(firestore);
+    let batchCount = 0;
+    const BATCH_LIMIT = 500;
+
     for (const productId of ids) {
       const productRef = doc(firestore, 'products', productId);
-      await updateDoc(productRef, {
+      batch.update(productRef, {
         deletedAt: new Date(),
         isDeleted: true,
       });
+
+      batchCount++;
+
+      // Commit batch when reaching limit and create new one
+      if (batchCount === BATCH_LIMIT) {
+        await batch.commit();
+        batch = writeBatch(firestore);
+        batchCount = 0;
+      }
+    }
+
+    // Commit remaining batch
+    if (batchCount > 0) {
+      await batch.commit();
     }
     
     return true;
@@ -29,7 +49,7 @@ export async function moveToTrash(
 }
 
 /**
- * Restore product(s) from trash
+ * Restore product(s) from trash - OPTIMIZED with batch operations
  * @param firestore - Firestore instance
  * @param productIds - Single product ID or array of product IDs to restore
  * @returns true if successful, false otherwise
@@ -41,12 +61,32 @@ export async function restoreFromTrash(
   try {
     const ids = Array.isArray(productIds) ? productIds : [productIds];
     
+    if (ids.length === 0) return true;
+
+    let batch = writeBatch(firestore);
+    let batchCount = 0;
+    const BATCH_LIMIT = 500;
+
     for (const productId of ids) {
       const productRef = doc(firestore, 'products', productId);
-      await updateDoc(productRef, {
+      batch.update(productRef, {
         deletedAt: null,
         isDeleted: false,
       });
+
+      batchCount++;
+
+      // Commit batch when reaching limit and create new one
+      if (batchCount === BATCH_LIMIT) {
+        await batch.commit();
+        batch = writeBatch(firestore);
+        batchCount = 0;
+      }
+    }
+
+    // Commit remaining batch
+    if (batchCount > 0) {
+      await batch.commit();
     }
     
     return true;
@@ -57,7 +97,7 @@ export async function restoreFromTrash(
 }
 
 /**
- * Permanently delete product(s)
+ * Permanently delete product(s) - OPTIMIZED with batch operations
  * @param firestore - Firestore instance
  * @param productIds - Single product ID or array of product IDs to permanently delete
  * @returns true if successful, false otherwise
@@ -69,9 +109,29 @@ export async function permanentlyDelete(
   try {
     const ids = Array.isArray(productIds) ? productIds : [productIds];
     
+    if (ids.length === 0) return true;
+
+    let batch = writeBatch(firestore);
+    let batchCount = 0;
+    const BATCH_LIMIT = 500;
+
     for (const productId of ids) {
       const productRef = doc(firestore, 'products', productId);
-      await deleteDoc(productRef);
+      batch.delete(productRef);
+
+      batchCount++;
+
+      // Commit batch when reaching limit and create new one
+      if (batchCount === BATCH_LIMIT) {
+        await batch.commit();
+        batch = writeBatch(firestore);
+        batchCount = 0;
+      }
+    }
+
+    // Commit remaining batch
+    if (batchCount > 0) {
+      await batch.commit();
     }
     
     return true;
