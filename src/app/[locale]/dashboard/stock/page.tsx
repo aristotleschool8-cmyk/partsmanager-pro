@@ -76,9 +76,6 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
     try {
       setIsLoading(true);
       
-      // Ensure all products have the isDeleted field (one-time migration)
-      await ensureAllProductsHaveDeletedField(firestore);
-      
       const productsRef = collection(firestore, 'products');
       const q = query(productsRef, where('isDeleted', '==', false), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
