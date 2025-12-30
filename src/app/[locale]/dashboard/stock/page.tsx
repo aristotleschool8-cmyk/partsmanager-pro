@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 import { AddProductDialog } from "@/components/dashboard/add-product-dialog";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
-import { bulkDeleteViaAPI } from "@/lib/api-bulk-operations";
+import { markProductAsDeleted } from "@/lib/indexeddb";
 import { useToast } from "@/hooks/use-toast";
 import { getProductsByUser, getStorageSize, initDB } from "@/lib/indexeddb";
 import { useOffline } from "@/hooks/use-offline";
@@ -111,22 +111,27 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       // STEP 2: Sync with Firebase in background (async, doesn't block UI)
       try {
         const productsRef = collection(firestore, 'products');
-        const q = query(productsRef, where('deleted', '!=', true), where('userId', '==', user.uid));
+        // Query only by userId to avoid needing composite indexes
+        // We'll filter deleted products in JavaScript
+        const q = query(productsRef, where('userId', '==', user.uid));
         const querySnapshot = await getDocs(q);
         
         const freshProducts: Product[] = [];
         querySnapshot.forEach((doc) => {
-          freshProducts.push({
-            id: doc.id,
-            name: doc.data().name || '',
-            sku: doc.data().reference || '',
-            reference: doc.data().reference || '',
-            brand: doc.data().brand || '',
-            stock: doc.data().stock || 0,
-            quantity: doc.data().stock || 0,
-            purchasePrice: doc.data().purchasePrice || 0,
-            price: doc.data().price || 0,
-          });
+          // Filter out deleted products
+          if (doc.data().deleted !== true) {
+            freshProducts.push({
+              id: doc.id,
+              name: doc.data().name || '',
+              sku: doc.data().reference || '',
+              reference: doc.data().reference || '',
+              brand: doc.data().brand || '',
+              stock: doc.data().stock || 0,
+              quantity: doc.data().stock || 0,
+              purchasePrice: doc.data().purchasePrice || 0,
+              price: doc.data().price || 0,
+            });
+          }
         });
         
         // Only update if we got fresh data from Firebase
@@ -179,11 +184,13 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
     setIsDeleting(true);
     setDeleteProgress(0);
     try {
-      // Call API endpoint for single delete
-      await bulkDeleteViaAPI(user, [productId], 'products', (progress: number) => {
-        setDeleteProgress(progress);
-      });
+      // Mark product as deleted in hybrid system (local + queued for Firebase)
+      await markProductAsDeleted(productId, user.uid);
+      
+      // Remove from local display immediately
       setProducts(products.filter(p => p.id !== productId));
+      setDeleteProgress(100);
+      
       toast({
         title: d.deletedSuccessTitle || 'Success',
         description: d.deletedSuccessMessageSingle || 'Product moved to trash',
@@ -234,10 +241,16 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
     setIsDeleting(true);
     setDeleteProgress(0);
     try {
-      // Call API endpoint for bulk delete (server-side batching)
-      await bulkDeleteViaAPI(user, Array.from(selectedProducts), 'products', (progress: number) => {
-        setDeleteProgress(progress);
-      });
+      // Mark each product as deleted in hybrid system (local + queued for Firebase)
+      const productIds = Array.from(selectedProducts);
+      const totalProducts = productIds.length;
+      let processedCount = 0;
+
+      for (const productId of productIds) {
+        await markProductAsDeleted(productId, user.uid);
+        processedCount++;
+        setDeleteProgress(Math.round((processedCount / totalProducts) * 100));
+      }
 
       // Remove deleted items from local state
       setProducts(products.filter(p => !selectedProducts.has(p.id)));
