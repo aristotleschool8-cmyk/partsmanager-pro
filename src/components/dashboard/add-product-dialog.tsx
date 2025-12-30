@@ -26,8 +26,7 @@ import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { useToast } from '@/hooks/use-toast';
-import { importProductsViaAPI } from '@/lib/api-bulk-operations';
-import { hybridImportProducts } from '@/lib/hybrid-import';
+import { hybridImportProducts, queuedImportProducts } from '@/lib/hybrid-import';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 

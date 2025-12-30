@@ -1,11 +1,10 @@
 /**
- * Hybrid import service - saves to IndexedDB first, then syncs to Firebase
+ * Hybrid import service - saves to IndexedDB first, then queues for Firebase sync
  * Provides instant feedback to user while syncing in background
  */
 
 import { User } from 'firebase/auth';
 import { saveProductsBatch, addToSyncQueue, initDB } from './indexeddb';
-import { importProductsViaAPI } from './api-bulk-operations';
 
 interface ImportResult {
   success: boolean;
@@ -61,27 +60,42 @@ export async function hybridImportProducts(
     // Tell user it's saved locally
     onLocalProgress?.(100, `✅ Saved ${localSaved} products locally!`);
 
-    // STEP 2: Sync to Firebase in background (async, doesn't block UI)
-    onFirebaseProgress?.(0, 'Syncing to cloud...');
+    // STEP 2: Queue products for Firebase sync in background (no API call)
+    // This avoids quota issues by using the sync queue with 50ms delays
+    onFirebaseProgress?.(0, 'Queuing for cloud sync...');
 
     let firebaseSynced = 0;
     let firebaseError: string | undefined;
 
     try {
-      const result = await importProductsViaAPI(user, products, (progress: number) => {
-        onFirebaseProgress?.(progress, `Syncing to cloud... ${Math.round(progress)}%`);
-      });
-
-      if (result.success) {
-        firebaseSynced = result.processed;
-        console.log(`✅ Synced ${firebaseSynced} products to Firebase`);
-      } else {
-        firebaseError = result.error || result.message;
-        console.warn(`⚠️ Firebase sync incomplete: ${firebaseError}`);
+      // Queue all products for background sync instead of calling API
+      for (let i = 0; i < productsWithIds.length; i++) {
+        const product = productsWithIds[i];
+        await addToSyncQueue(
+          'products',
+          product.id,
+          'create',
+          {
+            name: product.name,
+            reference: product.reference,
+            brand: product.brand || null,
+            stock: product.stock || 0,
+            purchasePrice: product.purchasePrice || 0,
+            price: product.price || 0,
+            isDeleted: false,
+          },
+          user.uid
+        );
+        firebaseSynced++;
+        
+        const progressPercent = Math.round((firebaseSynced / productsWithIds.length) * 100);
+        onFirebaseProgress?.(progressPercent, `Queued ${firebaseSynced}/${productsWithIds.length} for cloud sync`);
       }
-    } catch (firebaseErr) {
-      firebaseError = firebaseErr instanceof Error ? firebaseErr.message : 'Unknown error';
-      console.warn(`⚠️ Firebase sync failed: ${firebaseError} (but data saved locally)`);
+
+      console.log(`✅ Queued ${firebaseSynced} products for Firebase sync`);
+    } catch (syncQueueErr) {
+      firebaseError = syncQueueErr instanceof Error ? syncQueueErr.message : 'Unknown error';
+      console.warn(`⚠️ Failed to queue products: ${firebaseError}`);
     }
 
     onFirebaseProgress?.(100, 'Sync complete');
