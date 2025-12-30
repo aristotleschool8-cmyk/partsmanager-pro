@@ -321,17 +321,19 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
       setImportProgress(10);
 
       // Convert rows to API format
-      const productsToImport = validRows.map((row: any) => {
-        const purchasePrice = Number(row.purchasePrice) || 0;
+      const productsToImport = validRows.map((row: any, index: number) => {
+        // purchasePrice is already numeric from parsedRows
+        const purchasePrice = parseFloat(row.purchasePrice) || 0;
         const price = purchasePrice > 0 ? purchasePrice * 1.25 : 0;
         
         // Log first 3 rows for debugging
-        if (validRows.indexOf(row) < 3) {
-          console.log(`[Import Debug] Row ${validRows.indexOf(row)}:`, {
+        if (index < 3) {
+          console.log(`[Import Debug] Row ${index}:`, {
             name: row.designation,
-            purchasePrice: row.purchasePrice,
+            purchasePriceRaw: row.purchasePrice,
             purchasePriceNumber: purchasePrice,
             price,
+            fullRow: row,
           });
         }
         
