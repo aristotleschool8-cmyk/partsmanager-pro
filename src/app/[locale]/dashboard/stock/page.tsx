@@ -43,6 +43,8 @@ import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 import { bulkDeleteViaAPI } from "@/lib/api-bulk-operations";
 import { useToast } from "@/hooks/use-toast";
+import { getProductsByUser, getStorageSize, initDB } from "@/lib/indexeddb";
+import { useOffline } from "@/hooks/use-offline";
 
 interface Product {
   id: string;
@@ -76,28 +78,66 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
     try {
       setIsLoading(true);
       
-      const productsRef = collection(firestore, 'products');
-      const q = query(productsRef, where('isDeleted', '==', false), where('userId', '==', user.uid));
-      const querySnapshot = await getDocs(q);
+      // Initialize IndexedDB
+      await initDB();
       
-      const fetchedProducts: Product[] = [];
-      querySnapshot.forEach((doc) => {
-        fetchedProducts.push({
-          id: doc.id,
-          name: doc.data().name || '',
-          sku: doc.data().reference || '',
-          reference: doc.data().reference || '',
-          brand: doc.data().brand || '',
-          stock: doc.data().stock || 0,
-          quantity: doc.data().stock || 0,
-          purchasePrice: doc.data().purchasePrice || 0,
-          price: doc.data().price || 0,
-        });
-      });
-
+      // STEP 1: Try to load from IndexedDB first (instant)
+      let fetchedProducts: Product[] = [];
+      try {
+        const cachedProducts = await getProductsByUser(user.uid);
+        if (cachedProducts && cachedProducts.length > 0) {
+          fetchedProducts = cachedProducts.map((doc: any) => ({
+            id: doc.id,
+            name: doc.name || '',
+            sku: doc.reference || '',
+            reference: doc.reference || '',
+            brand: doc.brand || '',
+            stock: doc.stock || 0,
+            quantity: doc.stock || 0,
+            purchasePrice: doc.purchasePrice || 0,
+            price: doc.price || 0,
+          }));
+          console.log(`✅ Loaded ${fetchedProducts.length} products from IndexedDB`);
+        }
+      } catch (localErr) {
+        console.warn('Failed to load from IndexedDB:', localErr);
+      }
+      
+      // Display cached products immediately
       setProducts(fetchedProducts);
-      setDisplayedProducts(fetchedProducts.slice(0, 50)); // Show first 50
+      setDisplayedProducts(fetchedProducts.slice(0, 50));
       setDisplayLimit(50);
+      
+      // STEP 2: Sync with Firebase in background (async, doesn't block UI)
+      try {
+        const productsRef = collection(firestore, 'products');
+        const q = query(productsRef, where('isDeleted', '==', false), where('userId', '==', user.uid));
+        const querySnapshot = await getDocs(q);
+        
+        const freshProducts: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          freshProducts.push({
+            id: doc.id,
+            name: doc.data().name || '',
+            sku: doc.data().reference || '',
+            reference: doc.data().reference || '',
+            brand: doc.data().brand || '',
+            stock: doc.data().stock || 0,
+            quantity: doc.data().stock || 0,
+            purchasePrice: doc.data().purchasePrice || 0,
+            price: doc.data().price || 0,
+          });
+        });
+        
+        // Update with fresh data from Firebase
+        setProducts(freshProducts);
+        setDisplayedProducts(freshProducts.slice(0, 50));
+        setDisplayLimit(50);
+        console.log(`✅ Updated from Firebase with ${freshProducts.length} products`);
+      } catch (firebaseErr) {
+        console.warn('Failed to fetch from Firebase (using cached data):', firebaseErr);
+        // Data remains from IndexedDB
+      }
     } catch (error) {
       console.error('Error fetching products:', error);
     } finally {

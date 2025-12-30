@@ -27,6 +27,7 @@ import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { useToast } from '@/hooks/use-toast';
 import { importProductsViaAPI } from '@/lib/api-bulk-operations';
+import { hybridImportProducts } from '@/lib/hybrid-import';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -83,6 +84,10 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
   const [importStatus, setImportStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
   const [importMessage, setImportMessage] = useState('');
   const [importProgress, setImportProgress] = useState(0);
+  const [localProgress, setLocalProgress] = useState(0);
+  const [localMessage, setLocalMessage] = useState('');
+  const [firebaseProgress, setFirebaseProgress] = useState(0);
+  const [firebaseMessage, setFirebaseMessage] = useState('');
   const [formData, setFormData] = useState({
     designation: '',
     reference: '',
@@ -342,24 +347,35 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
       });
 
       try {
-        // Call API endpoint for bulk import (server-side batching)
-        setImportMessage(`Importing ${validRows.length} products...`);
-        const result = await importProductsViaAPI(user, productsToImport, (progress: number) => {
-          const displayProgress = 10 + Math.round((progress / 100) * 85); // 10-95%
-          setImportProgress(displayProgress);
-          if (progress > 0 && progress < 100) {
-            setImportMessage(`Importing ${validRows.length} products... (${Math.round(progress)}%)`);
+        // Use hybrid import: local storage first, Firebase sync in background
+        setLocalMessage('Saving to local storage...');
+        setFirebaseMessage('Ready to sync...');
+        
+        const result = await hybridImportProducts(
+          user,
+          productsToImport,
+          (progress, message) => {
+            setLocalProgress(progress);
+            setLocalMessage(message);
+            const combined = Math.round((progress * 0.5) / 100) * 100; // Local is 50% of progress
+            setImportProgress(combined);
+          },
+          (progress, message) => {
+            setFirebaseProgress(progress);
+            setFirebaseMessage(message);
+            const combined = 50 + Math.round((progress * 0.5) / 100) * 100; // Firebase is 50% of progress
+            setImportProgress(combined);
           }
-        });
+        );
 
-        successCount = result.processed;
-        const totalProcessed = successCount;
-        const message = `Successfully imported ${totalProcessed} products${errorCount > 0 ? `, ${errorCount} errors` : ''}${result.updated ? ` (${result.updated} updated)` : ''}`;
-        setImportStatus(errorCount === 0 ? 'success' : 'error');
+        successCount = result.localSaved;
+        const message = result.message;
+        
+        setImportStatus(result.error ? 'error' : 'success');
         setImportMessage(message);
         setImportProgress(100);
 
-        if (errorCount === 0) {
+        if (!result.error) {
           toast({
             title: 'Success',
             description: message,
@@ -369,15 +385,19 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
             onProductAdded();
           }
         } else {
+          // Partial success - data is saved locally, sync failed
           toast({
-            title: 'Partial Import',
+            title: 'Partial Success',
             description: message,
             variant: 'destructive',
           });
-          console.log('Import errors:', errors);
+          setOpen(false);
+          if (onProductAdded) {
+            onProductAdded();
+          }
         }
       } catch (error: any) {
-        console.error('Import API error:', error);
+        console.error('Import error:', error);
         setImportStatus('error');
         const errorMessage = error.message || 'Failed to import products';
         setImportMessage(errorMessage);
@@ -678,9 +698,52 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
               )}
               
               {importStatus === 'processing' && (
-                <div className="flex items-center justify-center space-x-2 py-8">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  <span>{importMessage}</span>
+                <div className="space-y-4 py-8">
+                  {/* Local Storage Progress */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Local Storage</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{localProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${localProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{localMessage}</p>
+                  </div>
+
+                  {/* Firebase Sync Progress */}
+                  {firebaseProgress > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Firebase Sync</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">{firebaseProgress}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                        <div
+                          className="bg-green-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${firebaseProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">{firebaseMessage}</p>
+                    </div>
+                  )}
+
+                  {/* Overall Progress */}
+                  <div className="space-y-2 pt-2 border-t dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Overall Progress</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">{importProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                      <div
+                        className="bg-purple-600 h-2.5 rounded-full transition-all duration-300"
+                        style={{ width: `${importProgress}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               )}
 
