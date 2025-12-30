@@ -119,7 +119,7 @@ export async function POST(req: NextRequest) {
     // Server-side batching (500 items per batch)
     let processedCount = 0;
     let updatedCount = 0;
-    const batchSize = 500;
+    const batchSize = 50; // Reduced from 500 to 50 for safety
 
     for (let i = 0; i < products.length; i += batchSize) {
       const batch = db.batch();
@@ -171,8 +171,9 @@ export async function POST(req: NextRequest) {
 
       await batch.commit();
 
-      // Small delay between batches to be safe
-      await new Promise(resolve => setTimeout(resolve, 100));
+      // Safety delay: 50ms between batches to prevent quota issues
+      // This spreads 5000 products over ~5 seconds, completely safe
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     const totalProcessed = processedCount + updatedCount;

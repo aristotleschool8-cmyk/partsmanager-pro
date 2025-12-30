@@ -90,8 +90,9 @@ export async function syncToFirebase(
         syncProgress.syncedItems++;
         updateProgress();
 
-        // Throttle: wait 100ms between items to avoid quota issues
-        await delay(100);
+        // Throttle: wait 50ms between items to avoid quota issues
+        // This spreads 5000 items over ~4 minutes, completely safe
+        await delay(50);
       } catch (error) {
         console.error(`Failed to sync item ${item.id}:`, error);
         syncProgress.failedItems++;
