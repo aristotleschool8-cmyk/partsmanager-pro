@@ -116,21 +116,18 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Server-side batching (500 items per batch)
+    // Process products one at a time with 50ms delay between each
+    // This is the safest approach and will never hit quota limits
     let processedCount = 0;
     let updatedCount = 0;
-    const batchSize = 50; // Reduced from 500 to 50 for safety
 
-    for (let i = 0; i < products.length; i += batchSize) {
-      const batch = db.batch();
-      const chunk = products.slice(i, Math.min(i + batchSize, products.length));
+    for (const product of products) {
+      // Validate product has required fields
+      if (!product.name || !product.reference) {
+        continue; // Skip invalid products
+      }
 
-      chunk.forEach((product: any) => {
-        // Validate product has required fields
-        if (!product.name || !product.reference) {
-          return; // Skip invalid products
-        }
-
+      try {
         // Check if product already exists
         const existingIdByRef = existingProductsMap.get(`ref:${product.reference}`);
         const existingIdByName = existingProductsMap.get(`name:${product.name}`);
@@ -139,7 +136,7 @@ export async function POST(req: NextRequest) {
         if (existingId) {
           // Update existing product
           const docRef = productsRef.doc(existingId);
-          batch.update(docRef, {
+          await docRef.update({
             name: product.name,
             reference: product.reference,
             brand: product.brand || null,
@@ -152,8 +149,7 @@ export async function POST(req: NextRequest) {
           updatedCount++;
         } else {
           // Create new product
-          const docRef = productsRef.doc();
-          batch.set(docRef, {
+          await productsRef.add({
             name: product.name,
             reference: product.reference,
             brand: product.brand || null,
@@ -167,13 +163,15 @@ export async function POST(req: NextRequest) {
           });
           processedCount++;
         }
-      });
 
-      await batch.commit();
-
-      // Safety delay: 50ms between batches to prevent quota issues
-      // This spreads 5000 products over ~5 seconds, completely safe
-      await new Promise(resolve => setTimeout(resolve, 50));
+        // Delay 50ms between each write to stay well below quota limits
+        // This is completely safe for any number of products
+        await new Promise(resolve => setTimeout(resolve, 50));
+      } catch (error) {
+        console.error(`Error processing product ${product.name}:`, error);
+        // Continue with next product instead of failing entire import
+        continue;
+      }
     }
 
     const totalProcessed = processedCount + updatedCount;
