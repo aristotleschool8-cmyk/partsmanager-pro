@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { bulkRestoreViaAPI, bulkDeleteViaAPI } from "@/lib/api-bulk-operations";
+import { getDeletedProducts, restoreProduct, permanentlyDeleteProduct } from "@/lib/indexeddb";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TrashPage({
@@ -52,36 +52,34 @@ export default function TrashPage({
     loadDictionary();
   }, [locale]);
 
-  // Fetch deleted products from Firestore
+  // Fetch deleted products from IndexedDB (local cache)
   useEffect(() => {
-    if (!firestore || !user?.uid) return;
+    if (!user?.uid) return;
 
     const fetchDeletedItems = async () => {
       try {
         setIsLoading(true);
-        const productsRef = collection(firestore, 'products');
-        const deletedSnap = await getDocs(
-          query(productsRef, where('isDeleted', '==', true), where('userId', '==', user.uid))
-        );
-
-        const items = deletedSnap.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name,
-          reference: doc.data().reference,
-          sku: doc.data().sku,
-          image: doc.data().image,
-          deletedAt: doc.data().deletedAt,
+        // Get deleted products from IndexedDB
+        const deletedProducts = await getDeletedProducts(user.uid);
+        
+        const items = deletedProducts.map(product => ({
+          id: product.id,
+          name: product.name,
+          reference: product.reference,
+          sku: product.sku,
+          image: product.image,
+          deletedAt: product.deletedAt,
         }));
         setDeletedItems(items);
       } catch (error) {
         console.error('Error fetching deleted items:', error);
       } finally {
-        setIsLoading(false);
+        setIsLoading(true);
       }
     };
 
     fetchDeletedItems();
-  }, [firestore, user?.uid]);
+  }, [user?.uid]);
 
   const handleRestore = async (productId: string) => {
     if (!user) return;
@@ -89,11 +87,15 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Call API endpoint for single restore
-      await bulkRestoreViaAPI(user, [productId], 'products', (progress: number) => {
-        setActionProgress(progress);
-      });
+      // Restore to IndexedDB immediately (local update)
+      await restoreProduct(productId, user.uid);
+      
+      // Update UI immediately - remove from deleted items
       setDeletedItems(deletedItems.filter(item => item.id !== productId));
+      
+      // Show progress completion
+      setActionProgress(100);
+      
       toast({
         title: dictionary?.table?.success || 'Success',
         description: dictionary?.trash?.restoreSuccess || 'Product restored successfully',
@@ -121,11 +123,15 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Call API endpoint for single permanent delete
-      await bulkDeleteViaAPI(user, [productId], 'products', (progress: number) => {
-        setActionProgress(progress);
-      });
+      // Permanently delete from IndexedDB immediately (local update)
+      await permanentlyDeleteProduct(productId, user.uid);
+      
+      // Update UI immediately - remove from deleted items
       setDeletedItems(deletedItems.filter(item => item.id !== productId));
+      
+      // Show progress completion
+      setActionProgress(100);
+      
       toast({
         title: dictionary?.table?.success || 'Success',
         description: dictionary?.trash?.deleteSuccess || 'Product permanently deleted',
@@ -169,12 +175,21 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Call API endpoint for batch restore
-      await bulkRestoreViaAPI(user, Array.from(selectedItems), 'products', (progress: number) => {
-        setActionProgress(progress);
-      });
+      const items = Array.from(selectedItems);
+      const totalItems = items.length;
+      let processedCount = 0;
+
+      // Process each item and update progress
+      for (const productId of items) {
+        await restoreProduct(productId, user.uid);
+        processedCount++;
+        setActionProgress(Math.round((processedCount / totalItems) * 100));
+      }
+
+      // Update UI immediately
       setDeletedItems(deletedItems.filter(item => !selectedItems.has(item.id)));
       setSelectedItems(new Set());
+      
       toast({
         title: dictionary?.table?.success || 'Success',
         description: dictionary?.trash?.batchRestoreSuccess?.replace('{count}', String(selectedItems.size)) || `${selectedItems.size} item(s) restored successfully`,
@@ -205,12 +220,21 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Call API endpoint for batch permanent delete
-      await bulkDeleteViaAPI(user, Array.from(selectedItems), 'products', (progress: number) => {
-        setActionProgress(progress);
-      });
+      const items = Array.from(selectedItems);
+      const totalItems = items.length;
+      let processedCount = 0;
+
+      // Process each item and update progress
+      for (const productId of items) {
+        await permanentlyDeleteProduct(productId, user.uid);
+        processedCount++;
+        setActionProgress(Math.round((processedCount / totalItems) * 100));
+      }
+
+      // Update UI immediately
       setDeletedItems(deletedItems.filter(item => !selectedItems.has(item.id)));
       setSelectedItems(new Set());
+      
       toast({
         title: dictionary?.table?.success || 'Success',
         description: dictionary?.trash?.batchDeleteSuccess?.replace('{count}', String(selectedItems.size)) || `${selectedItems.size} item(s) permanently deleted`,

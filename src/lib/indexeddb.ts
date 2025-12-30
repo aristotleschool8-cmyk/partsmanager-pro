@@ -534,3 +534,216 @@ async function getCountInStore(storeName: string): Promise<number> {
     request.onsuccess = () => resolve(request.result);
   });
 }
+
+/**
+ * Restore product from trash by updating local IndexedDB and queuing for Firebase sync
+ */
+export async function restoreProductFromTrash(
+  productId: string,
+  userId: string
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(STORES.PRODUCTS, 'readwrite');
+  const store = tx.objectStore(STORES.PRODUCTS);
+
+  return new Promise((resolve, reject) => {
+    const request = store.get(productId);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const product = request.result;
+      if (!product) {
+        reject(new Error('Product not found'));
+        return;
+      }
+
+      // Update the product to mark as restored (deleted=false)
+      const updatedProduct = { ...product, deleted: false, userId };
+      const updateRequest = store.put(updatedProduct);
+
+      updateRequest.onerror = () => reject(updateRequest.error);
+      updateRequest.onsuccess = async () => {
+        // Queue the update for Firebase sync
+        try {
+          await addToSyncQueue(
+            userId,
+            'products',
+            productId,
+            'update',
+            updatedProduct
+          );
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+    };
+  });
+}
+
+/**
+ * Permanently delete product by removing from IndexedDB and queuing deletion for Firebase
+ */
+export async function permanentlyDeleteProduct(
+  productId: string,
+  userId: string
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([STORES.PRODUCTS, STORES.SYNC_QUEUE], 'readwrite');
+  const productsStore = tx.objectStore(STORES.PRODUCTS);
+  const syncStore = tx.objectStore(STORES.SYNC_QUEUE);
+
+  return new Promise((resolve, reject) => {
+    // Delete from products store
+    const deleteRequest = productsStore.delete(productId);
+
+    deleteRequest.onerror = () => reject(deleteRequest.error);
+    deleteRequest.onsuccess = () => {
+      // Queue the delete for Firebase sync
+      const syncItem: SyncMetadata = {
+        id: crypto.randomUUID(),
+        collectionName: 'products',
+        docId: productId,
+        action: 'delete',
+        data: { id: productId },
+        timestamp: Date.now(),
+        synced: false,
+        attempts: 0,
+        userId,
+      };
+
+      const syncRequest = syncStore.add(syncItem);
+
+      syncRequest.onerror = () => reject(syncRequest.error);
+      syncRequest.onsuccess = () => resolve();
+    };
+  });
+}
+
+/**
+ * Mark product as deleted (move to trash) - stores deletion flag locally and queues to sync
+ */
+export async function markProductAsDeleted(productId: string, userId: string): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([STORES.PRODUCTS, STORES.SYNC_QUEUE], 'readwrite');
+  const productStore = tx.objectStore(STORES.PRODUCTS);
+  const syncStore = tx.objectStore(STORES.SYNC_QUEUE);
+
+  return new Promise((resolve, reject) => {
+    // First, get the product
+    const getRequest = productStore.get(productId);
+
+    getRequest.onerror = () => reject(getRequest.error);
+    getRequest.onsuccess = () => {
+      const product = getRequest.result;
+      if (!product) {
+        reject(new Error('Product not found'));
+        return;
+      }
+
+      // Mark as deleted locally
+      product.deleted = true;
+      product.deletedAt = new Date().toISOString();
+      
+      const updateRequest = productStore.put(product);
+      updateRequest.onerror = () => reject(updateRequest.error);
+      updateRequest.onsuccess = () => {
+        // Queue the deletion for sync
+        const syncItem: SyncMetadata = {
+          id: `${productId}-delete-${Date.now()}`,
+          collectionName: STORES.PRODUCTS,
+          docId: productId,
+          action: 'delete',
+          data: { deleted: true, deletedAt: product.deletedAt },
+          timestamp: Date.now(),
+          synced: false,
+          attempts: 0,
+          userId,
+        };
+
+        const syncRequest = syncStore.add(syncItem);
+        syncRequest.onerror = () => reject(syncRequest.error);
+        syncRequest.onsuccess = () => resolve();
+      };
+    };
+  });
+}
+
+/**
+ * Restore product from trash - clears deletion flag locally and queues update to sync
+ */
+export async function restoreProduct(productId: string, userId: string): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction([STORES.PRODUCTS, STORES.SYNC_QUEUE], 'readwrite');
+  const productStore = tx.objectStore(STORES.PRODUCTS);
+  const syncStore = tx.objectStore(STORES.SYNC_QUEUE);
+
+  return new Promise((resolve, reject) => {
+    // First, get the product
+    const getRequest = productStore.get(productId);
+
+    getRequest.onerror = () => reject(getRequest.error);
+    getRequest.onsuccess = () => {
+      const product = getRequest.result;
+      if (!product) {
+        reject(new Error('Product not found'));
+        return;
+      }
+
+      // Remove deletion flag
+      product.deleted = false;
+      delete product.deletedAt;
+      
+      const updateRequest = productStore.put(product);
+      updateRequest.onerror = () => reject(updateRequest.error);
+      updateRequest.onsuccess = () => {
+        // Queue the restoration update for sync
+        const syncItem: SyncMetadata = {
+          id: `${productId}-restore-${Date.now()}`,
+          collectionName: STORES.PRODUCTS,
+          docId: productId,
+          action: 'update',
+          data: { deleted: false },
+          timestamp: Date.now(),
+          synced: false,
+          attempts: 0,
+          userId,
+        };
+
+        const syncRequest = syncStore.add(syncItem);
+        syncRequest.onerror = () => reject(syncRequest.error);
+        syncRequest.onsuccess = () => resolve();
+      };
+    };
+  });
+}
+
+/**
+ * Get all deleted products for a user
+ */
+export async function getDeletedProducts(userId: string): Promise<any[]> {
+  const db = await getDB();
+  const tx = db.transaction(STORES.PRODUCTS, 'readonly');
+  const store = tx.objectStore(STORES.PRODUCTS);
+  const index = store.index('userId');
+
+  return new Promise((resolve, reject) => {
+    const items: any[] = [];
+    const request = index.openCursor();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = (event: any) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const product = cursor.value;
+        // Only return products marked as deleted
+        if (product.userId === userId && product.deleted === true) {
+          items.push(product);
+        }
+        cursor.continue();
+      } else {
+        resolve(items);
+      }
+    };
+  });
+}
