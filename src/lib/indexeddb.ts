@@ -40,81 +40,125 @@ export async function initDB(): Promise<IDBDatabase> {
  */
 async function getDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
+    console.log('[IndexedDB] getDB() called');
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     
-    request.onerror = () => reject(request.error);
+    request.onerror = () => {
+      console.error('[IndexedDB] Database open error:', request.error);
+      reject(request.error);
+    };
+    
     request.onsuccess = () => {
+      console.log('[IndexedDB] Database opened successfully');
       const db = request.result;
+      
       // Verify all stores exist
+      console.log('[IndexedDB] Checking stores exist:', Array.from(db.objectStoreNames));
       let allStoresExist = true;
       for (const storeName of Object.values(STORES)) {
         if (!db.objectStoreNames.contains(storeName)) {
+          console.warn('[IndexedDB] Missing store:', storeName);
           allStoresExist = false;
           break;
         }
       }
       
       if (allStoresExist) {
+        console.log('[IndexedDB] All stores exist, returning database');
         resolve(db);
       } else {
-        // If stores don't exist, we need to reinitialize
+        console.warn('[IndexedDB] Some stores missing, need to upgrade');
         db.close();
-        initDB().then(resolve).catch(reject);
+        // Increment version to trigger upgrade
+        const retryRequest = indexedDB.open(DB_NAME, DB_VERSION + 1);
+        
+        retryRequest.onerror = () => {
+          console.error('[IndexedDB] Retry failed:', retryRequest.error);
+          reject(retryRequest.error);
+        };
+        
+        retryRequest.onsuccess = () => {
+          console.log('[IndexedDB] Retry succeeded');
+          resolve(retryRequest.result);
+        };
+        
+        retryRequest.onupgradeneeded = (event) => {
+          console.log('[IndexedDB] onupgradeneeded triggered during retry');
+          initializeStores((event.target as IDBOpenDBRequest).result);
+        };
       }
     };
     
     // Upgrade handler
     request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-
-      // Products store
-      if (!db.objectStoreNames.contains(STORES.PRODUCTS)) {
-        const productStore = db.createObjectStore(STORES.PRODUCTS, { keyPath: 'id' });
-        productStore.createIndex('userId', 'userId', { unique: false });
-        productStore.createIndex('createdAt', 'createdAt', { unique: false });
-      }
-
-      // Customers store
-      if (!db.objectStoreNames.contains(STORES.CUSTOMERS)) {
-        const customerStore = db.createObjectStore(STORES.CUSTOMERS, { keyPath: 'id' });
-        customerStore.createIndex('userId', 'userId', { unique: false });
-        customerStore.createIndex('createdAt', 'createdAt', { unique: false });
-      }
-
-      // Suppliers store
-      if (!db.objectStoreNames.contains(STORES.SUPPLIERS)) {
-        const supplierStore = db.createObjectStore(STORES.SUPPLIERS, { keyPath: 'id' });
-        supplierStore.createIndex('userId', 'userId', { unique: false });
-      }
-
-      // Invoices store
-      if (!db.objectStoreNames.contains(STORES.INVOICES)) {
-        const invoiceStore = db.createObjectStore(STORES.INVOICES, { keyPath: 'id' });
-        invoiceStore.createIndex('userId', 'userId', { unique: false });
-        invoiceStore.createIndex('invoiceDate', 'invoiceDate', { unique: false });
-      }
-
-      // Sync queue (for offline changes)
-      if (!db.objectStoreNames.contains(STORES.SYNC_QUEUE)) {
-        const syncStore = db.createObjectStore(STORES.SYNC_QUEUE, { keyPath: 'id', autoIncrement: true });
-        syncStore.createIndex('userId', 'userId', { unique: false });
-        syncStore.createIndex('synced', 'synced', { unique: false });
-        syncStore.createIndex('timestamp', 'timestamp', { unique: false });
-      }
-
-      // Metadata store (last sync times, etc)
-      if (!db.objectStoreNames.contains(STORES.METADATA)) {
-        db.createObjectStore(STORES.METADATA, { keyPath: 'key' });
-      }
+      console.log('[IndexedDB] onupgradeneeded triggered');
+      initializeStores((event.target as IDBOpenDBRequest).result);
     };
   });
+}
+
+/**
+ * Initialize all stores (extracted to avoid duplication)
+ */
+function initializeStores(db: IDBDatabase) {
+  console.log('[IndexedDB] Initializing stores');
+
+  // Products store
+  if (!db.objectStoreNames.contains(STORES.PRODUCTS)) {
+    console.log('[IndexedDB] Creating products store');
+    const productStore = db.createObjectStore(STORES.PRODUCTS, { keyPath: 'id' });
+    productStore.createIndex('userId', 'userId', { unique: false });
+    productStore.createIndex('createdAt', 'createdAt', { unique: false });
+  }
+
+  // Customers store
+  if (!db.objectStoreNames.contains(STORES.CUSTOMERS)) {
+    console.log('[IndexedDB] Creating customers store');
+    const customerStore = db.createObjectStore(STORES.CUSTOMERS, { keyPath: 'id' });
+    customerStore.createIndex('userId', 'userId', { unique: false });
+    customerStore.createIndex('createdAt', 'createdAt', { unique: false });
+  }
+
+  // Suppliers store
+  if (!db.objectStoreNames.contains(STORES.SUPPLIERS)) {
+    console.log('[IndexedDB] Creating suppliers store');
+    const supplierStore = db.createObjectStore(STORES.SUPPLIERS, { keyPath: 'id' });
+    supplierStore.createIndex('userId', 'userId', { unique: false });
+  }
+
+  // Invoices store
+  if (!db.objectStoreNames.contains(STORES.INVOICES)) {
+    console.log('[IndexedDB] Creating invoices store');
+    const invoiceStore = db.createObjectStore(STORES.INVOICES, { keyPath: 'id' });
+    invoiceStore.createIndex('userId', 'userId', { unique: false });
+    invoiceStore.createIndex('invoiceDate', 'invoiceDate', { unique: false });
+  }
+
+  // Sync queue (for offline changes)
+  if (!db.objectStoreNames.contains(STORES.SYNC_QUEUE)) {
+    console.log('[IndexedDB] Creating syncQueue store');
+    const syncStore = db.createObjectStore(STORES.SYNC_QUEUE, { keyPath: 'id', autoIncrement: true });
+    syncStore.createIndex('userId', 'userId', { unique: false });
+    syncStore.createIndex('synced', 'synced', { unique: false });
+    syncStore.createIndex('timestamp', 'timestamp', { unique: false });
+  }
+
+  // Metadata store (last sync times, etc)
+  if (!db.objectStoreNames.contains(STORES.METADATA)) {
+    console.log('[IndexedDB] Creating metadata store');
+    db.createObjectStore(STORES.METADATA, { keyPath: 'key' });
+  }
+  
+  console.log('[IndexedDB] All stores initialized');
 }
 
 /**
  * Save a single product to IndexedDB
  */
 export async function saveProduct(product: any, userId: string): Promise<void> {
+  console.log('[IndexedDB] saveProduct called for product:', product.id, 'user:', userId);
   const db = await getDB();
+  console.log('[IndexedDB] Got database for saveProduct');
   const tx = db.transaction(STORES.PRODUCTS, 'readwrite');
   const store = tx.objectStore(STORES.PRODUCTS);
 
@@ -127,8 +171,24 @@ export async function saveProduct(product: any, userId: string): Promise<void> {
 
   return new Promise((resolve, reject) => {
     const request = store.put(productWithMeta);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      console.error('[IndexedDB] Error saving product:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      console.log('[IndexedDB] Product saved successfully:', product.id);
+      
+      // Wait for transaction to complete
+      tx.oncomplete = () => {
+        console.log('[IndexedDB] saveProduct transaction complete');
+        resolve();
+      };
+      
+      tx.onerror = () => {
+        console.error('[IndexedDB] saveProduct transaction error:', tx.error);
+        reject(tx.error);
+      };
+    };
   });
 }
 
@@ -136,14 +196,16 @@ export async function saveProduct(product: any, userId: string): Promise<void> {
  * Save multiple products in batch (for imports)
  */
 export async function saveProductsBatch(products: any[], userId: string): Promise<number> {
+  console.log('[IndexedDB] saveProductsBatch called with', products.length, 'products');
   const db = await getDB();
+  console.log('[IndexedDB] Got database for batch');
   const tx = db.transaction(STORES.PRODUCTS, 'readwrite');
   const store = tx.objectStore(STORES.PRODUCTS);
 
   let saved = 0;
 
   return new Promise((resolve, reject) => {
-    products.forEach((product) => {
+    products.forEach((product, idx) => {
       const productWithMeta = {
         ...product,
         userId,
@@ -154,14 +216,21 @@ export async function saveProductsBatch(products: any[], userId: string): Promis
       const request = store.put(productWithMeta);
       request.onsuccess = () => {
         saved++;
+        console.log('[IndexedDB] Saved product', idx + 1, '/', products.length, 'ID:', product.id);
       };
       request.onerror = () => {
-        console.error('Error saving product:', request.error);
+        console.error('[IndexedDB] Error saving product:', product.id, request.error);
       };
     });
 
-    tx.oncomplete = () => resolve(saved);
-    tx.onerror = () => reject(tx.error);
+    tx.oncomplete = () => {
+      console.log('[IndexedDB] Batch save transaction complete, saved', saved, 'products');
+      resolve(saved);
+    };
+    tx.onerror = () => {
+      console.error('[IndexedDB] Batch save transaction error:', tx.error);
+      reject(tx.error);
+    };
   });
 }
 
@@ -394,7 +463,9 @@ export async function addToSyncQueue(
   data: any,
   userId: string
 ): Promise<number> {
+  console.log('[IndexedDB] addToSyncQueue called:', collectionName, '/', docId, 'action:', action);
   const db = await getDB();
+  console.log('[IndexedDB] Got database for addToSyncQueue');
   const tx = db.transaction(STORES.SYNC_QUEUE, 'readwrite');
   const store = tx.objectStore(STORES.SYNC_QUEUE);
 
@@ -412,8 +483,24 @@ export async function addToSyncQueue(
 
   return new Promise((resolve, reject) => {
     const request = store.add(queueItem);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result as number);
+    request.onerror = () => {
+      console.error('[IndexedDB] Error adding to queue:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      console.log('[IndexedDB] Item added to queue:', queueItem.id);
+      
+      // Wait for transaction
+      tx.oncomplete = () => {
+        console.log('[IndexedDB] addToSyncQueue transaction complete');
+        resolve(request.result as number);
+      };
+      
+      tx.onerror = () => {
+        console.error('[IndexedDB] addToSyncQueue transaction error:', tx.error);
+        reject(tx.error);
+      };
+    };
   });
 }
 
