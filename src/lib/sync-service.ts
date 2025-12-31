@@ -85,14 +85,31 @@ export async function syncToFirebase(
   syncProgress.failedItems = 0;
   let startTime = Date.now();
   const MAX_SYNC_TIME = 5 * 60 * 1000; // 5 minute timeout
+  let syncTimeout: NodeJS.Timeout | null = null;
 
   try {
+    // Set a hard timeout to reset sync state if it hangs
+    syncTimeout = setTimeout(() => {
+      console.error('[Sync] CRITICAL: Sync timeout exceeded 5 minutes, force resetting');
+      syncProgress.inProgress = false;
+      syncProgress.lastError = 'Sync timeout - operation took too long';
+      updateProgress();
+    }, MAX_SYNC_TIME);
+
     console.log(`[Sync] Starting sync for user ${userId}`);
     
     let items: SyncItem[] = [];
     try {
       console.log('[Sync] Calling getUnsyncedItems...');
-      items = await getUnsyncedItems(userId);
+      const getItemsPromise = getUnsyncedItems(userId);
+      // Add a 30-second timeout for getUnsyncedItems
+      const itemsTimeout = new Promise<SyncItem[]>((resolve) => {
+        setTimeout(() => {
+          console.error('[Sync] getUnsyncedItems timeout, resolving with empty array');
+          resolve([]);
+        }, 30000);
+      });
+      items = await Promise.race([getItemsPromise, itemsTimeout]);
       console.log(`[Sync] getUnsyncedItems returned ${items.length} items`);
     } catch (err) {
       console.error('[Sync] Error getting unsynced items:', err);
@@ -122,15 +139,39 @@ export async function syncToFirebase(
 
       try {
         console.log(`[Sync] Processing item ${i + 1}/${items.length}: ${item.collectionName}/${item.docId}`);
-        await syncItem(firestore, item, userId);
+        
+        // Add timeout for individual syncItem operations
+        const syncItemPromise = syncItem(firestore, item, userId);
+        const syncTimeout = new Promise<void>((_, reject) => {
+          setTimeout(() => reject(new Error('syncItem timeout after 30 seconds')), 30000);
+        });
+        
+        try {
+          await Promise.race([syncItemPromise, syncTimeout]);
+        } catch (timeoutError) {
+          console.error(`[Sync] Item ${item.id} sync timed out:`, timeoutError);
+          syncProgress.failedItems++;
+          updateProgress();
+          continue;
+        }
+        
         console.log(`[Sync] Successfully synced item ${item.id}`);
         syncProgress.syncedItems++;
         
         // Delete the synced item from queue
         try {
           console.log(`[Sync] Deleting synced item ${item.id} from queue`);
-          await deleteSyncQueueItem(item.id);
-          console.log(`[Sync] Deleted item ${item.id} from queue`);
+          const deletePromise = deleteSyncQueueItem(item.id);
+          const deleteTimeout = new Promise<void>((_, reject) => {
+            setTimeout(() => reject(new Error('deleteSyncQueueItem timeout after 10 seconds')), 10000);
+          });
+          
+          try {
+            await Promise.race([deletePromise, deleteTimeout]);
+            console.log(`[Sync] Deleted item ${item.id} from queue`);
+          } catch (deleteTimeoutErr) {
+            console.warn(`[Sync] Delete timeout for ${item.id}, continuing anyway:`, deleteTimeoutErr);
+          }
         } catch (delErr) {
           console.warn(`[Sync] Failed to delete synced item ${item.id}:`, delErr);
           // Don't fail the whole sync if delete fails
@@ -164,6 +205,10 @@ export async function syncToFirebase(
     console.error('[Sync] Unexpected sync error:', error);
     syncProgress.lastError = error instanceof Error ? error.message : 'Unknown error';
   } finally {
+    // Clear the timeout to prevent memory leaks
+    if (syncTimeout) {
+      clearTimeout(syncTimeout);
+    }
     console.log('[Sync] Setting inProgress to false in finally block');
     syncProgress.inProgress = false;
     updateProgress();
