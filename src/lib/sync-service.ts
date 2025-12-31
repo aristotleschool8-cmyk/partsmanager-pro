@@ -49,6 +49,18 @@ export function onSyncProgress(callback: (progress: SyncProgress) => void) {
 }
 
 /**
+ * Force reset sync state (emergency recovery)
+ */
+export function resetSyncState(): void {
+  console.warn('[Sync] Force resetting sync state');
+  syncProgress.inProgress = false;
+  syncProgress.syncedItems = 0;
+  syncProgress.failedItems = 0;
+  syncProgress.totalItems = 0;
+  syncProgress.lastError = undefined;
+  updateProgress();
+}
+/**
  * Get current sync progress
  */
 export function getSyncProgress(): SyncProgress {
@@ -62,57 +74,88 @@ export async function syncToFirebase(
   firestore: Firestore,
   userId: string
 ): Promise<{ success: number; failed: number }> {
+  // Prevent concurrent syncs
   if (syncProgress.inProgress) {
-    console.log('Sync already in progress');
+    console.log('Sync already in progress, skipping');
     return { success: 0, failed: 0 };
   }
 
   syncProgress.inProgress = true;
   syncProgress.syncedItems = 0;
   syncProgress.failedItems = 0;
+  let startTime = Date.now();
+  const MAX_SYNC_TIME = 5 * 60 * 1000; // 5 minute timeout
 
   try {
-    const items = await getUnsyncedItems(userId);
-    syncProgress.totalItems = items.length;
+    console.log(`[Sync] Starting sync for user ${userId}`);
+    
+    let items: SyncItem[] = [];
+    try {
+      items = await getUnsyncedItems(userId);
+    } catch (err) {
+      console.error('[Sync] Error getting unsynced items:', err);
+      syncProgress.lastError = 'Failed to retrieve sync queue';
+      return { success: 0, failed: 0 };
+    }
 
-    console.log(`Starting sync of ${items.length} items for user ${userId}`);
+    syncProgress.totalItems = items.length;
+    console.log(`[Sync] Found ${items.length} items to sync`);
 
     if (items.length === 0) {
+      console.log('[Sync] No items to sync, clearing inProgress');
       syncProgress.inProgress = false;
       updateProgress();
       return { success: 0, failed: 0 };
     }
 
-    // Process items with throttling to avoid overwhelming Firebase
+    // Process items with throttling
     for (const item of items) {
+      // Safety: check for timeout
+      if (Date.now() - startTime > MAX_SYNC_TIME) {
+        console.warn('[Sync] Sync timeout reached, stopping');
+        break;
+      }
+
       try {
+        console.log(`[Sync] Syncing item ${syncProgress.syncedItems + 1}/${items.length}`);
         await syncItem(firestore, item, userId);
         syncProgress.syncedItems++;
         
         // Delete the synced item from queue
-        await deleteSyncQueueItem(item.id);
+        try {
+          await deleteSyncQueueItem(item.id);
+        } catch (delErr) {
+          console.warn(`[Sync] Failed to delete synced item ${item.id}:`, delErr);
+          // Don't fail the whole sync if delete fails
+        }
+        
         updateProgress();
 
-        // Throttle: wait 50ms between items to avoid quota issues
-        // This spreads 5000 items over ~4 minutes, completely safe
+        // Throttle: wait 50ms between items
         await delay(50);
       } catch (error) {
-        console.error(`Failed to sync item ${item.id}:`, error);
+        console.error(`[Sync] Failed to sync item ${item.id}:`, error);
         syncProgress.failedItems++;
         updateProgress();
         
         // For quota errors, stop trying for now
         const errorMessage = error instanceof Error ? error.message : '';
         if (errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
-          console.warn('Firebase quota exceeded, pausing all syncs');
+          console.warn('[Sync] Firebase quota exceeded, stopping sync');
           break;
         }
+        
+        // For other errors, continue but log them
+        console.warn(`[Sync] Continuing despite error with ${item.id}`);
       }
     }
+    
+    console.log(`[Sync] Sync complete: ${syncProgress.syncedItems} synced, ${syncProgress.failedItems} failed`);
   } catch (error) {
-    console.error('Sync error:', error);
+    console.error('[Sync] Unexpected sync error:', error);
     syncProgress.lastError = error instanceof Error ? error.message : 'Unknown error';
   } finally {
+    console.log('[Sync] Setting inProgress to false');
     syncProgress.inProgress = false;
     updateProgress();
   }
