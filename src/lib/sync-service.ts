@@ -76,7 +76,7 @@ export async function syncToFirebase(
 ): Promise<{ success: number; failed: number }> {
   // Prevent concurrent syncs
   if (syncProgress.inProgress) {
-    console.log('Sync already in progress, skipping');
+    console.log('[Sync] Sync already in progress, skipping');
     return { success: 0, failed: 0 };
   }
 
@@ -91,7 +91,9 @@ export async function syncToFirebase(
     
     let items: SyncItem[] = [];
     try {
+      console.log('[Sync] Calling getUnsyncedItems...');
       items = await getUnsyncedItems(userId);
+      console.log(`[Sync] getUnsyncedItems returned ${items.length} items`);
     } catch (err) {
       console.error('[Sync] Error getting unsynced items:', err);
       syncProgress.lastError = 'Failed to retrieve sync queue';
@@ -109,7 +111,9 @@ export async function syncToFirebase(
     }
 
     // Process items with throttling
-    for (const item of items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
       // Safety: check for timeout
       if (Date.now() - startTime > MAX_SYNC_TIME) {
         console.warn('[Sync] Sync timeout reached, stopping');
@@ -117,13 +121,16 @@ export async function syncToFirebase(
       }
 
       try {
-        console.log(`[Sync] Syncing item ${syncProgress.syncedItems + 1}/${items.length}`);
+        console.log(`[Sync] Processing item ${i + 1}/${items.length}: ${item.collectionName}/${item.docId}`);
         await syncItem(firestore, item, userId);
+        console.log(`[Sync] Successfully synced item ${item.id}`);
         syncProgress.syncedItems++;
         
         // Delete the synced item from queue
         try {
+          console.log(`[Sync] Deleting synced item ${item.id} from queue`);
           await deleteSyncQueueItem(item.id);
+          console.log(`[Sync] Deleted item ${item.id} from queue`);
         } catch (delErr) {
           console.warn(`[Sync] Failed to delete synced item ${item.id}:`, delErr);
           // Don't fail the whole sync if delete fails
@@ -132,7 +139,9 @@ export async function syncToFirebase(
         updateProgress();
 
         // Throttle: wait 50ms between items
+        console.log('[Sync] Waiting 50ms before next item...');
         await delay(50);
+        console.log('[Sync] Resuming sync after delay');
       } catch (error) {
         console.error(`[Sync] Failed to sync item ${item.id}:`, error);
         syncProgress.failedItems++;
@@ -155,9 +164,10 @@ export async function syncToFirebase(
     console.error('[Sync] Unexpected sync error:', error);
     syncProgress.lastError = error instanceof Error ? error.message : 'Unknown error';
   } finally {
-    console.log('[Sync] Setting inProgress to false');
+    console.log('[Sync] Setting inProgress to false in finally block');
     syncProgress.inProgress = false;
     updateProgress();
+    console.log('[Sync] Sync finished, inProgress is now', syncProgress.inProgress);
   }
 
   return {

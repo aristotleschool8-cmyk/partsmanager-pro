@@ -431,8 +431,29 @@ export async function getUnsyncedItems(userId: string): Promise<SyncMetadata[]> 
     // Then filter in JavaScript for synced === false and matching userId
     const request = index.openCursor();
     const items: SyncMetadata[] = [];
+    let cursorComplete = false;
     
-    request.onerror = () => reject(request.error);
+    // Handle transaction errors
+    tx.onerror = () => {
+      console.error('[IndexedDB] Transaction error in getUnsyncedItems:', tx.error);
+      if (!cursorComplete) {
+        reject(tx.error);
+      }
+    };
+    
+    tx.oncomplete = () => {
+      console.log('[IndexedDB] Transaction complete, returning', items.length, 'items');
+      // Only resolve if cursor already completed
+      if (cursorComplete) {
+        resolve(items);
+      }
+    };
+    
+    request.onerror = () => {
+      console.error('[IndexedDB] Cursor error in getUnsyncedItems:', request.error);
+      reject(request.error);
+    };
+    
     request.onsuccess = (event: any) => {
       const cursor = event.target.result;
       if (cursor) {
@@ -444,7 +465,9 @@ export async function getUnsyncedItems(userId: string): Promise<SyncMetadata[]> 
         cursor.continue();
       } else {
         // Done iterating through all items
-        resolve(items);
+        console.log('[IndexedDB] Cursor iteration complete, collected', items.length, 'items');
+        cursorComplete = true;
+        // Don't resolve yet - wait for tx.oncomplete
       }
     };
   });
@@ -489,8 +512,22 @@ export async function deleteSyncQueueItem(id: string): Promise<void> {
 
   return new Promise((resolve, reject) => {
     const request = store.delete(id);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    request.onerror = () => {
+      console.error('[IndexedDB] Error deleting sync queue item:', request.error);
+      reject(request.error);
+    };
+    request.onsuccess = () => {
+      console.log('[IndexedDB] Item deleted from queue, waiting for transaction...');
+      // Wait for transaction to complete
+      tx.oncomplete = () => {
+        console.log('[IndexedDB] Transaction complete for delete queue item');
+        resolve();
+      };
+      tx.onerror = () => {
+        console.error('[IndexedDB] Transaction error:', tx.error);
+        reject(tx.error);
+      };
+    };
   });
 }
 
