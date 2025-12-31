@@ -16,7 +16,8 @@ interface SyncMetadata {
 }
 
 const DB_NAME = 'StockManagerDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented to match existing database version
+
 
 const STORES = {
   PRODUCTS: 'products',
