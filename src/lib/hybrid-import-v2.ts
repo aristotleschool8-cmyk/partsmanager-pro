@@ -8,6 +8,7 @@ import { User } from 'firebase/auth';
 import { queueCommit } from './commit-queue';
 import { saveProduct, initDB } from './indexeddb';
 import { onUserActivity } from './pull-service';
+import { triggerImmediateSync } from './sync-worker';
 
 export interface ImportResult {
   total: number;
@@ -87,6 +88,10 @@ export async function hybridImportProducts(
 
     console.log('[HybridImport] STEP 2 Complete: Queued', result.queued, 'products for sync');
 
+    // Trigger immediate sync
+    await triggerImmediateSync();
+    console.log('[HybridImport] Triggered immediate sync');
+
     // Trigger pull service interval reset (user just did activity)
     onUserActivity();
 
@@ -125,6 +130,10 @@ export async function hybridUpdateProduct(
     await queueCommit('update', 'products', productId, updates, user.uid);
     console.log('[HybridImport] Product queued for sync:', productId);
 
+    // Trigger immediate sync
+    await triggerImmediateSync();
+    console.log('[HybridImport] Triggered immediate sync');
+
     // Trigger activity
     onUserActivity();
   } catch (err) {
@@ -158,6 +167,10 @@ export async function hybridDeleteProduct(
     // Queue delete commit for Firebase
     await queueCommit('delete', 'products', productId, { deleted: true }, user.uid);
     console.log('[HybridImport] Product queued for deletion sync:', productId);
+
+    // Trigger immediate sync
+    await triggerImmediateSync();
+    console.log('[HybridImport] Triggered immediate sync');
 
     onUserActivity();
   } catch (err) {
@@ -195,6 +208,10 @@ export async function hybridRestoreProduct(
     // Otherwise queue a new restore commit
     await queueCommit('restore', 'products', productId, restoredProduct, user.uid);
     console.log('[HybridImport] Product queued for restore sync:', productId);
+
+    // Trigger immediate sync
+    await triggerImmediateSync();
+    console.log('[HybridImport] Triggered immediate sync');
 
     onUserActivity();
   } catch (err) {

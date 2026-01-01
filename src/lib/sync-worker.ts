@@ -98,6 +98,19 @@ function getFirebaseContext(): { firestore: Firestore | null; userId: string | n
 }
 
 /**
+ * Trigger an immediate sync (called when a commit is queued)
+ */
+export async function triggerImmediateSync(): Promise<void> {
+  const { firestore, userId } = getFirebaseContext();
+  if (!firestore || !userId) {
+    console.log('[SyncWorker] Firebase context not initialized, skipping immediate sync');
+    return;
+  }
+  console.log('[SyncWorker] Triggering immediate sync...');
+  return processPendingCommits(firestore, userId);
+}
+
+/**
  * Process pending commits using stored context
  */
 async function processPendingCommitsFromContext(): Promise<void> {
