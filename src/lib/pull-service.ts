@@ -113,22 +113,26 @@ async function pullFirebaseChanges(firestore: Firestore, userId: string): Promis
     const lastPull = pullState.lastPullTime;
     const now = Date.now();
 
-    // Query products updated after last pull
+    // Query products for this user (only userId filter - no compound index needed)
+    // Filter by updatedAt in code to avoid needing a composite index
     const productsRef = collection(firestore, 'products');
     const q = query(
       productsRef,
-      where('userId', '==', userId),
-      where('updatedAt', '>', lastPull || 0)
+      where('userId', '==', userId)
     );
 
     const snapshot = await getDocs(q);
     const updates: any[] = [];
 
     snapshot.forEach((doc) => {
-      updates.push({
-        id: doc.id,
-        ...doc.data(),
-      });
+      const data = doc.data();
+      // Filter by updatedAt in code (avoid composite index requirement)
+      if (!data.updatedAt || data.updatedAt > (lastPull || 0)) {
+        updates.push({
+          id: doc.id,
+          ...data,
+        });
+      }
     });
 
     console.log('[Pull] Found', updates.length, 'updated products');
