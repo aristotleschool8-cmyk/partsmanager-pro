@@ -31,6 +31,19 @@ let syncState: SyncWorkerState = {
 let syncIntervalId: NodeJS.Timeout | null = null;
 let syncProgressCallback: ((state: SyncWorkerState) => void) | null = null;
 
+// Store Firebase context
+let firebaseContext: { firestore: Firestore | null; userId: string | null } = {
+  firestore: null,
+  userId: null,
+};
+
+/**
+ * Set Firebase context (called from layout-client)
+ */
+export function setFirebaseContext(firestore: Firestore, userId: string): void {
+  firebaseContext = { firestore, userId };
+}
+
 /**
  * Register callback for sync state updates
  */
@@ -40,8 +53,9 @@ export function onSyncStateChange(callback: (state: SyncWorkerState) => void): v
 
 /**
  * Start sync worker (runs periodically)
+ * Note: Firestore and userId are obtained from global Firebase context when needed
  */
-export function startSyncWorker(firestore: Firestore, userId: string, intervalMs: number = 30000): () => void {
+export function startSyncWorker(intervalMs: number = 30000): () => void {
   if (syncState.isRunning) {
     console.log('[SyncWorker] Already running');
     return () => stopSyncWorker();
@@ -50,15 +64,12 @@ export function startSyncWorker(firestore: Firestore, userId: string, intervalMs
   console.log('[SyncWorker] Starting sync worker');
   syncState.isRunning = true;
 
-  // Initial sync
-  processPendingCommits(firestore, userId);
-
   // Schedule periodic syncs
   const scheduleSync = () => {
     if (syncIntervalId) clearTimeout(syncIntervalId);
 
     syncIntervalId = setTimeout(() => {
-      processPendingCommits(firestore, userId).then(() => {
+      processPendingCommitsFromContext().then(() => {
         scheduleSync();
       });
     }, intervalMs);
@@ -77,6 +88,25 @@ export function stopSyncWorker(): void {
   if (syncIntervalId) clearTimeout(syncIntervalId);
   syncState.isRunning = false;
   syncIntervalId = null;
+}
+
+/**
+ * Get Firestore and user from stored context
+ */
+function getFirebaseContext(): { firestore: Firestore | null; userId: string | null } {
+  return firebaseContext;
+}
+
+/**
+ * Process pending commits using stored context
+ */
+async function processPendingCommitsFromContext(): Promise<void> {
+  const { firestore, userId } = getFirebaseContext();
+  if (!firestore || !userId) {
+    console.log('[SyncWorker] Firebase context not initialized yet');
+    return;
+  }
+  return processPendingCommits(firestore, userId);
 }
 
 /**
