@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/table";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { getDeletedProducts, restoreProduct, permanentlyDeleteProduct } from "@/lib/indexeddb";
+import { getDeletedProducts, permanentlyDeleteProduct } from "@/lib/indexeddb";
+import { hybridRestoreProduct } from "@/lib/hybrid-import-v2";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TrashPage({
@@ -87,8 +88,11 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Restore to IndexedDB immediately (local update)
-      await restoreProduct(productId, user.uid);
+      // Restore product using new hybrid system (local + queued for Firebase)
+      const product = deletedItems.find(p => p.id === productId);
+      if (product) {
+        await hybridRestoreProduct(user, productId, product);
+      }
       
       // Update UI immediately - remove from deleted items
       setDeletedItems(deletedItems.filter(item => item.id !== productId));

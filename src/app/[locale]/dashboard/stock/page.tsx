@@ -41,7 +41,7 @@ import { cn } from "@/lib/utils";
 import { AddProductDialog } from "@/components/dashboard/add-product-dialog";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
-import { markProductAsDeleted } from "@/lib/indexeddb";
+import { hybridDeleteProduct } from "@/lib/hybrid-import-v2";
 import { useToast } from "@/hooks/use-toast";
 import { getProductsByUser, getStorageSize, initDB, saveProduct } from "@/lib/indexeddb";
 import { useOffline } from "@/hooks/use-offline";
@@ -197,8 +197,8 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
     setIsDeleting(true);
     setDeleteProgress(0);
     try {
-      // Mark product as deleted in hybrid system (local + queued for Firebase)
-      await markProductAsDeleted(productId, user.uid);
+      // Delete product using new hybrid system (local + queued for Firebase)
+      await hybridDeleteProduct(user, productId);
       
       // Remove from local display immediately
       setProducts(products.filter(p => p.id !== productId));
