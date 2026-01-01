@@ -4,8 +4,8 @@ import React, { useEffect } from 'react';
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseProvider, initializeFirebase } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { startSyncWorker, stopSyncWorker, setFirebaseContext } from '@/lib/sync-worker';
-import { startPullService, stopPullService, onUserActivity } from '@/lib/pull-service';
+import { startSyncWorker, stopSyncWorker, setFirebaseContext as setSyncContext } from '@/lib/sync-worker';
+import { startPullService, stopPullService, onUserActivity, setFirebaseContextPull } from '@/lib/pull-service';
 
 const { firebaseApp, firestore, auth } = initializeFirebase();
 
@@ -43,8 +43,9 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
       if (user && firestore) {
         console.log('User authenticated, starting Git-like sync services...');
         
-        // Set Firebase context for sync worker
-        setFirebaseContext(firestore, user.uid);
+        // Set Firebase context for both sync and pull services
+        setSyncContext(firestore, user.uid);
+        setFirebaseContextPull(firestore, user.uid);
         
         // Start FIFO push worker (every 30 seconds, checks queue and syncs to Firebase)
         const cleanupSync = startSyncWorker(30000);

@@ -28,10 +28,23 @@ let pullState: PullState = {
 
 let pullIntervalId: NodeJS.Timeout | null = null;
 
+// Store Firebase context
+let firebaseContext: { firestore: Firestore | null; userId: string | null } = {
+  firestore: null,
+  userId: null,
+};
+
 /**
- * Start adaptive pull service
+ * Set Firebase context (called from layout-client)
  */
-export function startPullService(firestore: Firestore, userId: string): () => void {
+export function setFirebaseContextPull(firestore: Firestore, userId: string): void {
+  firebaseContext = { firestore, userId };
+}
+
+/**
+ * Start adaptive pull service (no parameters - uses stored context)
+ */
+export function startPullService(): () => void {
   if (pullState.isRunning) {
     console.log('[Pull] Service already running');
     return () => stopPullService();
@@ -40,15 +53,12 @@ export function startPullService(firestore: Firestore, userId: string): () => vo
   console.log('[Pull] Starting adaptive pull service');
   pullState.isRunning = true;
 
-  // Initial pull
-  pullFirebaseChanges(firestore, userId);
-
   // Schedule periodic pulls
   const schedulePull = () => {
     if (pullIntervalId) clearTimeout(pullIntervalId);
 
     pullIntervalId = setTimeout(() => {
-      pullFirebaseChanges(firestore, userId).then(() => {
+      pullFirebaseChangesFromContext().then(() => {
         schedulePull(); // Schedule next pull
       });
     }, pullState.intervalMs);
@@ -79,6 +89,18 @@ export function onUserActivity(): void {
   console.log('[Pull] User activity detected, resetting poll interval to', pullState.minInterval);
   pullState.intervalMs = pullState.minInterval;
   pullState.noChangeCount = 0;
+}
+
+/**
+ * Pull Firebase changes using stored context
+ */
+async function pullFirebaseChangesFromContext(): Promise<void> {
+  const { firestore, userId } = firebaseContext;
+  if (!firestore || !userId) {
+    console.log('[Pull] Firebase context not initialized yet');
+    return;
+  }
+  return pullFirebaseChanges(firestore, userId);
 }
 
 /**
