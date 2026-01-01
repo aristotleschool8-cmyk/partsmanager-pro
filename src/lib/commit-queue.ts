@@ -110,25 +110,36 @@ export async function getUnpushedCommits(userId: string): Promise<CommitObject[]
   const db = await getCommitDB();
   const tx = db.transaction(COMMIT_STORE, 'readonly');
   const store = tx.objectStore(COMMIT_STORE);
-  const index = store.index('synced');
 
   return new Promise((resolve, reject) => {
-    const getAllRequest = index.getAll(false);
+    const allCommits: CommitObject[] = [];
+    const request = store.getAll();
 
-    getAllRequest.onerror = () => {
-      console.error('[CommitQueue] Error getting unpushed commits:', getAllRequest.error);
-      reject(getAllRequest.error);
+    request.onerror = () => {
+      console.error('[CommitQueue] Error getting unpushed commits:', request.error);
+      reject(request.error);
     };
 
-    getAllRequest.onsuccess = () => {
-      const commits = getAllRequest.result as CommitObject[];
-      // Filter by user and sort by timestamp (FIFO)
-      const userCommits = commits
-        .filter((c) => c.userId === userId)
-        .sort((a, b) => a.timestamp - b.timestamp);
+    request.onsuccess = () => {
+      try {
+        const commits = request.result as CommitObject[];
+        
+        // Filter: synced === false, userId matches, and sort by timestamp (FIFO)
+        const userCommits = commits
+          .filter((c) => c.synced === false && c.userId === userId)
+          .sort((a, b) => a.timestamp - b.timestamp);
 
-      console.log('[CommitQueue] Found', userCommits.length, 'unpushed commits for user', userId);
-      resolve(userCommits);
+        console.log('[CommitQueue] Found', userCommits.length, 'unpushed commits for user', userId);
+        resolve(userCommits);
+      } catch (err) {
+        console.error('[CommitQueue] Error processing commits:', err);
+        reject(err);
+      }
+    };
+
+    tx.onerror = () => {
+      console.error('[CommitQueue] Transaction error:', tx.error);
+      reject(tx.error);
     };
   });
 }
