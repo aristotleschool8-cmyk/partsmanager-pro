@@ -88,9 +88,11 @@ export async function hybridImportProducts(
 
     console.log('[HybridImport] STEP 2 Complete: Queued', result.queued, 'products for sync');
 
-    // Trigger immediate sync
-    await triggerImmediateSync();
-    console.log('[HybridImport] Triggered immediate sync');
+    // Trigger immediate sync in background (fire-and-forget, don't block user)
+    triggerImmediateSync().catch(err => {
+      console.error('[HybridImport] Background sync error:', err);
+    });
+    console.log('[HybridImport] Triggered background sync');
 
     // Trigger pull service interval reset (user just did activity)
     onUserActivity();
@@ -130,9 +132,11 @@ export async function hybridUpdateProduct(
     await queueCommit('update', 'products', productId, updates, user.uid);
     console.log('[HybridImport] Product queued for sync:', productId);
 
-    // Trigger immediate sync
-    await triggerImmediateSync();
-    console.log('[HybridImport] Triggered immediate sync');
+    // Trigger immediate sync in background (fire-and-forget, don't block user)
+    triggerImmediateSync().catch(err => {
+      console.error('[HybridImport] Background sync error:', err);
+    });
+    console.log('[HybridImport] Triggered background sync');
 
     // Trigger activity
     onUserActivity();
@@ -168,9 +172,11 @@ export async function hybridDeleteProduct(
     await queueCommit('delete', 'products', productId, { isDeleted: true }, user.uid);
     console.log('[HybridImport] Product queued for deletion sync:', productId);
 
-    // Trigger immediate sync
-    await triggerImmediateSync();
-    console.log('[HybridImport] Triggered immediate sync');
+    // Trigger immediate sync in background (fire-and-forget, don't block user)
+    triggerImmediateSync().catch(err => {
+      console.error('[HybridImport] Background sync error:', err);
+    });
+    console.log('[HybridImport] Triggered background sync');
 
     onUserActivity();
   } catch (err) {
@@ -209,9 +215,11 @@ export async function hybridRestoreProduct(
     await queueCommit('restore', 'products', productId, restoredProduct, user.uid);
     console.log('[HybridImport] Product queued for restore sync:', productId);
 
-    // Trigger immediate sync
-    await triggerImmediateSync();
-    console.log('[HybridImport] Triggered immediate sync');
+    // Trigger immediate sync in background (fire-and-forget, don't block user)
+    triggerImmediateSync().catch(err => {
+      console.error('[HybridImport] Background sync error:', err);
+    });
+    console.log('[HybridImport] Triggered background sync');
 
     onUserActivity();
   } catch (err) {
