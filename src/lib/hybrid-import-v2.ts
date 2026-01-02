@@ -202,7 +202,7 @@ export async function hybridRestoreProduct(
     const restoredProduct = {
       ...productData,
       id: productId,
-      deleted: false,
+      isDeleted: false,
       version: (productData.version || 0) + 1,
       updatedAt: Date.now(),
     };

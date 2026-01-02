@@ -119,7 +119,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
         const freshProducts: Product[] = [];
         querySnapshot.forEach((doc) => {
           // Filter out deleted products
-          if (doc.data().deleted !== true) {
+          if (doc.data().isDeleted !== true) {
             freshProducts.push({
               id: doc.id,
               name: doc.data().name || '',

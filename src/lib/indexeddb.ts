@@ -255,7 +255,7 @@ export async function getProductsByUser(userId: string): Promise<any[]> {
       if (cursor) {
         const product = cursor.value;
         // Only return non-deleted products for this user
-        if (product.userId === userId && product.deleted !== true) {
+        if (product.userId === userId && product.isDeleted !== true) {
           items.push(product);
         }
         cursor.continue();
@@ -666,8 +666,8 @@ export async function restoreProductFromTrash(
         return;
       }
 
-      // Update the product to mark as restored (deleted=false)
-      const updatedProduct = { ...product, deleted: false, userId };
+      // Update the product to mark as restored (isDeleted=false)
+      const updatedProduct = { ...product, isDeleted: false, userId };
       const updateRequest = store.put(updatedProduct);
 
       updateRequest.onerror = () => reject(updateRequest.error);
@@ -793,7 +793,7 @@ export async function getDeletedProducts(userId: string): Promise<any[]> {
       if (cursor) {
         const product = cursor.value;
         // Only return products marked as deleted
-        if (product.userId === userId && product.deleted === true) {
+        if (product.userId === userId && product.isDeleted === true) {
           items.push(product);
         }
         cursor.continue();
