@@ -24,8 +24,8 @@ import {
 } from "@/components/ui/table";
 import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { getDeletedProducts, permanentlyDeleteProduct } from "@/lib/indexeddb";
-import { hybridRestoreProduct } from "@/lib/hybrid-import-v2";
+import { getDeletedProducts } from "@/lib/indexeddb";
+import { hybridRestoreProduct, hybridPermanentlyDeleteProduct } from "@/lib/hybrid-import-v2";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TrashPage({
@@ -127,8 +127,8 @@ export default function TrashPage({
     setIsActioning(true);
     setActionProgress(0);
     try {
-      // Permanently delete from IndexedDB immediately (local update)
-      await permanentlyDeleteProduct(productId, user.uid);
+      // Permanently delete using hybrid system (queue for Firebase, local update)
+      await hybridPermanentlyDeleteProduct(user, productId);
       
       // Update UI immediately - remove from deleted items
       setDeletedItems(deletedItems.filter(item => item.id !== productId));
@@ -233,7 +233,7 @@ export default function TrashPage({
 
       // Process each item and update progress
       for (const productId of items) {
-        await permanentlyDeleteProduct(productId, user.uid);
+        await hybridPermanentlyDeleteProduct(user, productId);
         processedCount++;
         setActionProgress(Math.round((processedCount / totalItems) * 100));
       }

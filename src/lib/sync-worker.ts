@@ -258,6 +258,11 @@ async function syncCommit(firestore: Firestore, commit: CommitObject): Promise<v
         updatedAt: serverTimestamp(),
       });
       break;
+
+    case 'permanent-delete':
+      const permanentDeleteRef = doc(firestore, collectionName, docId);
+      await deleteDoc(permanentDeleteRef);
+      break;
   }
 }
 

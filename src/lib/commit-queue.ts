@@ -5,7 +5,7 @@
 
 export interface CommitObject {
   id: string;
-  type: 'create' | 'update' | 'delete' | 'restore';
+  type: 'create' | 'update' | 'delete' | 'restore' | 'permanent-delete';
   collectionName: string;
   docId: string;
   timestamp: number;

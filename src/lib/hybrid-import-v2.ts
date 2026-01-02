@@ -227,3 +227,33 @@ export async function hybridRestoreProduct(
     throw err;
   }
 }
+
+/**
+ * Permanently delete a product - Actually remove from Firebase (not soft delete)
+ * Used when user permanently deletes from trash
+ */
+export async function hybridPermanentlyDeleteProduct(
+  user: User | null,
+  productId: string
+): Promise<void> {
+  if (!user) throw new Error('User not authenticated');
+
+  try {
+    console.log('[HybridImport] Permanently deleting product:', productId);
+
+    // Queue permanent delete commit (different type than soft delete)
+    await queueCommit('permanent-delete', 'products', productId, {}, user.uid);
+    console.log('[HybridImport] Product queued for permanent deletion:', productId);
+
+    // Trigger immediate sync in background (fire-and-forget, don't block user)
+    triggerImmediateSync().catch(err => {
+      console.error('[HybridImport] Background sync error:', err);
+    });
+    console.log('[HybridImport] Triggered background sync');
+
+    onUserActivity();
+  } catch (err) {
+    console.error('[HybridImport] Failed to permanently delete product:', err);
+    throw err;
+  }
+}
