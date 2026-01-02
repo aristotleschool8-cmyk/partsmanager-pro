@@ -157,7 +157,7 @@ export async function hybridDeleteProduct(
     // Mark as deleted in IndexedDB immediately (hidden from user)
     const deletedProduct = {
       id: productId,
-      deleted: true,
+      isDeleted: true,
       updatedAt: Date.now(),
     };
 
@@ -165,7 +165,7 @@ export async function hybridDeleteProduct(
     console.log('[HybridImport] Product marked as deleted in IndexedDB:', productId);
 
     // Queue delete commit for Firebase
-    await queueCommit('delete', 'products', productId, { deleted: true }, user.uid);
+    await queueCommit('delete', 'products', productId, { isDeleted: true }, user.uid);
     console.log('[HybridImport] Product queued for deletion sync:', productId);
 
     // Trigger immediate sync

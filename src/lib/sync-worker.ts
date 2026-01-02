@@ -244,7 +244,7 @@ async function syncCommit(firestore: Firestore, commit: CommitObject): Promise<v
     case 'delete':
       const deleteRef = doc(firestore, collectionName, docId);
       await updateDoc(deleteRef, {
-        deleted: true,
+        isDeleted: true,
         version: (commit.version || 0) + 1,
         updatedAt: serverTimestamp(),
       });
@@ -253,7 +253,7 @@ async function syncCommit(firestore: Firestore, commit: CommitObject): Promise<v
     case 'restore':
       const restoreRef = doc(firestore, collectionName, docId);
       await updateDoc(restoreRef, {
-        deleted: false,
+        isDeleted: false,
         version: (commit.version || 0) + 1,
         updatedAt: serverTimestamp(),
       });

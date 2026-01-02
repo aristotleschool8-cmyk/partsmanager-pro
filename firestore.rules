@@ -239,7 +239,7 @@ service cloud.firestore {
      * 
      * Git-Like Sync Support:
      * - Products now include version and updatedAt fields for conflict resolution
-     * - Soft deletes: documents marked with deleted=true instead of being removed
+     * - Soft deletes: documents marked with isDeleted=true instead of being removed
      * - Last-write-wins: version and updatedAt fields track changes
      * - userId field is required and immutable
      * 
@@ -256,7 +256,7 @@ service cloud.firestore {
                        request.resource.data.userId == request.auth.uid &&
                        request.resource.data.version != null &&
                        request.resource.data.updatedAt != null;
-      // Allow soft delete (marked with deleted=true) or permanent delete
+      // Allow soft delete (marked with isDeleted=true) or permanent delete
       allow delete: if isEmailVerified() && resource.data.userId == request.auth.uid;
     }
 
