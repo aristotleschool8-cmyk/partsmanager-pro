@@ -53,19 +53,13 @@ export function RootLayoutClient({ children }: { children: React.ReactNode }) {
         // Start adaptive pull service (every 10-30 minutes, fetches Firebase changes)
         const cleanupPull = startPullService();
         
-        // Register activity listener to reset pull interval
-        const activityHandler = () => onUserActivity();
-        ['click', 'keypress', 'scroll'].forEach(event => {
-          document.addEventListener(event, activityHandler);
-        });
+        // Note: Activity listeners removed - poll interval only resets on data modifications (add, edit, delete)
+        // View-only activities (click, keypress, scroll) no longer trigger interval reset
         
         return () => {
           // Cleanup: stop all services
           stopSyncWorker();
           stopPullService();
-          ['click', 'keypress', 'scroll'].forEach(event => {
-            document.removeEventListener(event, activityHandler);
-          });
           cleanupSync();
           cleanupPull();
         };

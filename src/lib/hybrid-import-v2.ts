@@ -94,8 +94,8 @@ export async function hybridImportProducts(
     });
     console.log('[HybridImport] Triggered background sync');
 
-    // Trigger pull service interval reset (user just did activity)
-    onUserActivity();
+    // Trigger pull service interval reset on data addition
+    onUserActivity('add');
 
     return result;
   } catch (error) {
@@ -138,8 +138,8 @@ export async function hybridUpdateProduct(
     });
     console.log('[HybridImport] Triggered background sync');
 
-    // Trigger activity
-    onUserActivity();
+    // Trigger pull service interval reset on data modification
+    onUserActivity('edit');
   } catch (err) {
     console.error('[HybridImport] Failed to update product:', err);
     throw err;
@@ -178,7 +178,7 @@ export async function hybridDeleteProduct(
     });
     console.log('[HybridImport] Triggered background sync');
 
-    onUserActivity();
+    onUserActivity('delete');
   } catch (err) {
     console.error('[HybridImport] Failed to delete product:', err);
     throw err;
@@ -221,7 +221,7 @@ export async function hybridRestoreProduct(
     });
     console.log('[HybridImport] Triggered background sync');
 
-    onUserActivity();
+    onUserActivity('edit');
   } catch (err) {
     console.error('[HybridImport] Failed to restore product:', err);
     throw err;
@@ -251,7 +251,7 @@ export async function hybridPermanentlyDeleteProduct(
     });
     console.log('[HybridImport] Triggered background sync');
 
-    onUserActivity();
+    onUserActivity('delete');
   } catch (err) {
     console.error('[HybridImport] Failed to permanently delete product:', err);
     throw err;

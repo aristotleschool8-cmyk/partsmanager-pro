@@ -83,12 +83,17 @@ export function stopPullService(): void {
 }
 
 /**
- * Reset to minimum interval on user activity
+ * Reset to minimum interval on data modifications (add, edit, or delete)
  */
-export function onUserActivity(): void {
-  console.log('[Pull] User activity detected, resetting poll interval to', pullState.minInterval);
-  pullState.intervalMs = pullState.minInterval;
-  pullState.noChangeCount = 0;
+export function onUserActivity(actionType?: 'add' | 'edit' | 'delete'): void {
+  // Only reset interval on data modification actions
+  if (actionType && ['add', 'edit', 'delete'].includes(actionType)) {
+    console.log(`[Pull] Data modification detected (${actionType}), resetting poll interval to`, pullState.minInterval);
+    pullState.intervalMs = pullState.minInterval;
+    pullState.noChangeCount = 0;
+  } else if (actionType) {
+    console.log(`[Pull] Activity detected (${actionType}), but not resetting interval (only add/edit/delete trigger reset)`);
+  }
 }
 
 /**
