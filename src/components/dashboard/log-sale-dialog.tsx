@@ -28,6 +28,7 @@ import {
   } from "@/components/ui/table";
 import { useFirebase } from '@/firebase/provider';
 import { collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 type Dictionary = Awaited<ReturnType<typeof getDictionary>>;
 
@@ -197,13 +198,14 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {d.logSale}
-        </Button>
-      </DialogTrigger>
+    <TrialButtonLock user={user}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {d.logSale}
+          </Button>
+        </DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[900px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{d.title}</DialogTitle>
@@ -365,5 +367,6 @@ export function LogSaleDialog({ dictionary, onSaleAdded }: { dictionary: Diction
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    </TrialButtonLock>
   );
 }

@@ -18,6 +18,7 @@ import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
 import { canExport } from '@/lib/trial-utils';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 type Dictionary = Awaited<ReturnType<typeof import('@/lib/dictionaries').getDictionary>>;
 
@@ -67,34 +68,36 @@ export function CreateInvoiceDialog({ locale, dictionary, onInvoiceCreated }: Cr
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {dictionary?.invoices?.addButton || 'Create Invoice'}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{dictionary?.invoices?.createDialogTitle || 'Create Invoice'}</DialogTitle>
-          <DialogDescription>
-            {dictionary?.invoices?.createDialogDescription || 'Create a new invoice with line items, VAT, and customer details.'}
-          </DialogDescription>
-        </DialogHeader>
-        <CreateInvoiceForm
-          ref={formRef}
-          locale={locale}
-          onSuccess={handleSuccess}
-        />
-        <DialogFooter className="mt-6 flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
-            {dictionary?.table?.cancel || 'Cancel'}
+    <TrialButtonLock user={user}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {dictionary?.invoices?.addButton || 'Create Invoice'}
           </Button>
-          <Button onClick={handleSubmit} type="button" disabled={isLoading}>
-            {dictionary?.invoices?.generateInvoiceButton || 'Generate Invoice'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{dictionary?.invoices?.createDialogTitle || 'Create Invoice'}</DialogTitle>
+            <DialogDescription>
+              {dictionary?.invoices?.createDialogDescription || 'Create a new invoice with line items, VAT, and customer details.'}
+            </DialogDescription>
+          </DialogHeader>
+          <CreateInvoiceForm
+            ref={formRef}
+            locale={locale}
+            onSuccess={handleSuccess}
+          />
+          <DialogFooter className="mt-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
+              {dictionary?.table?.cancel || 'Cancel'}
+            </Button>
+            <Button onClick={handleSubmit} type="button" disabled={isLoading}>
+              {dictionary?.invoices?.generateInvoiceButton || 'Generate Invoice'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </TrialButtonLock>
   );
 }

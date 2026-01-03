@@ -29,6 +29,7 @@ import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 const supplierSchema = z.object({
   name: z.string().min(1, 'Supplier name is required'),
@@ -150,13 +151,14 @@ export function AddSupplierDialog({ dictionary, onSupplierAdded }: AddSupplierDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {dictionary?.addSupplierDialog?.submit || 'Add Supplier'}
-        </Button>
-      </DialogTrigger>
+    <TrialButtonLock user={user}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {dictionary?.addSupplierDialog?.submit || 'Add Supplier'}
+          </Button>
+        </DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[500px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{dictionary?.addSupplierDialog?.title || 'Add New Supplier'}</DialogTitle>
@@ -310,5 +312,6 @@ export function AddSupplierDialog({ dictionary, onSupplierAdded }: AddSupplierDi
         </Form>
       </DialogContent>
     </Dialog>
+    </TrialButtonLock>
   );
 }

@@ -37,6 +37,7 @@ import { useFirebase } from '@/firebase/provider';
 import { updateUser, UserProfile } from '@/lib/user-management';
 import { collection, getDocs } from 'firebase/firestore';
 import type { AccessRightProfile } from '@/lib/access-rights';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 const editUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),

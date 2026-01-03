@@ -29,6 +29,7 @@ import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc, addDoc, collection } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 const customerSchema = z.object({
   name: z.string().min(1, 'Customer name is required'),
@@ -150,13 +151,14 @@ export function AddCustomerDialog({ onCustomerAdded, dictionary }: AddCustomerDi
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          {dictionary?.addCustomerDialog?.submit || 'Add Customer'}
-        </Button>
-      </DialogTrigger>
+    <TrialButtonLock user={user}>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            {dictionary?.addCustomerDialog?.submit || 'Add Customer'}
+          </Button>
+        </DialogTrigger>
       <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[500px] max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle>{dictionary?.addCustomerDialog?.title || 'Add New Customer'}</DialogTitle>
@@ -310,5 +312,6 @@ export function AddCustomerDialog({ onCustomerAdded, dictionary }: AddCustomerDi
         </Form>
       </DialogContent>
     </Dialog>
+    </TrialButtonLock>
   );
 }

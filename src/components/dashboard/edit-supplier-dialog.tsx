@@ -26,7 +26,8 @@ import { useState, useEffect } from 'react';
 import { useFirebase } from '@/firebase/provider';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { User as AppUser } from '@/lib/types';
-import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
+import { canWrite, getExportRestrictionMessage, isTrialExpired } from '@/lib/trial-utils';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 
 const supplierSchema = z.object({
   name: z.string().min(1, 'Supplier name is required'),
@@ -108,6 +109,13 @@ export function EditSupplierDialog({ dictionary, supplier, open, onOpenChange, o
 
     fetchUserDoc();
   }, [user, firestore]);
+
+  // Auto-close dialog if user becomes expired
+  useEffect(() => {
+    if (open && (user?.subscription === 'expired' || isTrialExpired(userDoc))) {
+      onOpenChange(false);
+    }
+  }, [user, userDoc, open, onOpenChange]);
 
   const onSubmit = async (data: SupplierFormData) => {
     // Check permissions

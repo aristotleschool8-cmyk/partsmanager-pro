@@ -28,6 +28,7 @@ import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { useToast } from '@/hooks/use-toast';
 import { hybridImportProducts } from '@/lib/hybrid-import-v2';
 import { getUserSettings } from '@/lib/settings-utils';
+import { TrialButtonLock } from '@/components/trial-button-lock';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -637,10 +638,12 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
   // Show message if user can't write
   if (!canWrite(userDoc)) {
     return (
-      <Button disabled title="Trial users cannot add products">
-        <PlusCircle className="mr-2" />
-        {dictionary.dashboard.addProduct}
-      </Button>
+      <TrialButtonLock user={user}>
+        <Button disabled title="Trial users cannot add products">
+          <PlusCircle className="mr-2" />
+          {dictionary.dashboard.addProduct}
+        </Button>
+      </TrialButtonLock>
     );
   }
 
@@ -653,11 +656,12 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
         message={localMessage}
         isCancelable={false}
       />
-      <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2" />
-          {dictionary.dashboard.addProduct}
+      <TrialButtonLock user={user}>
+        <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <PlusCircle className="mr-2" />
+            {dictionary.dashboard.addProduct}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -846,6 +850,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
         </Tabs>
       </DialogContent>
     </Dialog>
+      </TrialButtonLock>
     </>
   );
 }
