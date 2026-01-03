@@ -81,22 +81,35 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       // Initialize IndexedDB
       await initDB();
       
+      // STEP 0: First, clean up any deleted products from IndexedDB cache (before loading)
+      try {
+        const removed = await removeDeletedProductsFromCache(user.uid);
+        if (removed > 0) {
+          console.log(`[Stock] Removed ${removed} deleted products from IndexedDB cache before loading`);
+        }
+      } catch (cleanupErr) {
+        console.warn('[Stock] Failed to clean up deleted products:', cleanupErr);
+      }
+      
       // STEP 1: Try to load from IndexedDB first (instant)
       let fetchedProducts: Product[] = [];
       try {
         const cachedProducts = await getProductsByUser(user.uid);
         if (cachedProducts && cachedProducts.length > 0) {
-          fetchedProducts = cachedProducts.map((doc: any) => ({
-            id: doc.id,
-            name: doc.name || '',
-            sku: doc.reference || '',
-            reference: doc.reference || '',
-            brand: doc.brand || '',
-            stock: doc.stock || 0,
-            quantity: doc.stock || 0,
-            purchasePrice: doc.purchasePrice || 0,
-            price: doc.price || 0,
-          }));
+          // Filter out any that slipped through (safety check - should be unnecessary after cleanup)
+          fetchedProducts = cachedProducts
+            .filter((doc: any) => doc.isDeleted !== true)
+            .map((doc: any) => ({
+              id: doc.id,
+              name: doc.name || '',
+              sku: doc.reference || '',
+              reference: doc.reference || '',
+              brand: doc.brand || '',
+              stock: doc.stock || 0,
+              quantity: doc.stock || 0,
+              purchasePrice: doc.purchasePrice || 0,
+              price: doc.price || 0,
+            }));
           console.log(`✅ Loaded ${fetchedProducts.length} products from IndexedDB`);
         }
       } catch (localErr) {
@@ -110,12 +123,6 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       
       // STEP 2: Sync with Firebase in background (async, doesn't block UI)
       try {
-        // First, clean up any deleted products from IndexedDB cache
-        const removed = await removeDeletedProductsFromCache(user.uid);
-        if (removed > 0) {
-          console.log(`[Stock] Removed ${removed} deleted products from IndexedDB cache`);
-        }
-
         const productsRef = collection(firestore, 'products');
         // Query only by userId to avoid needing composite indexes
         // We'll filter deleted products in JavaScript
