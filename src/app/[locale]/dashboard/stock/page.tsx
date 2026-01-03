@@ -161,11 +161,32 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
           console.log('[Stock] Finished syncing products to IndexedDB');
         }
         
-        // Only update if we got fresh data from Firebase
-        // If freshProducts is empty, it might mean sync hasn't completed yet, so keep IndexedDB data
+        // Only update if we got fresh data from Firebase AND it has different products
+        // Merge strategy: Keep IndexedDB products, add/update with Firebase products (by ID)
         if (freshProducts.length > 0) {
-          setProducts(freshProducts);
-          setDisplayedProducts(freshProducts.slice(0, 50));
+          // Create a map of existing products by ID
+          const existingMap = new Map(products.map(p => [p.id, p]));
+          
+          // Update or add Firebase products
+          const mergedProducts: Product[] = [];
+          const seenIds = new Set<string>();
+          
+          // First, add fresh Firebase products
+          for (const fresh of freshProducts) {
+            mergedProducts.push(fresh);
+            seenIds.add(fresh.id);
+          }
+          
+          // Then, add any IndexedDB products that don't exist in Firebase yet (new uploads in progress)
+          for (const existing of products) {
+            if (!seenIds.has(existing.id)) {
+              mergedProducts.push(existing);
+            }
+          }
+          
+          console.log(`[Stock] Merged: ${freshProducts.length} from Firebase + ${mergedProducts.length - freshProducts.length} new local = ${mergedProducts.length} total`);
+          setProducts(mergedProducts);
+          setDisplayedProducts(mergedProducts.slice(0, 50));
           setDisplayLimit(50);
         }
         console.log(`✅ Updated from Firebase with ${freshProducts.length} products`);

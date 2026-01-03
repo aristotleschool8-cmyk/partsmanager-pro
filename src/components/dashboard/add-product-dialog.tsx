@@ -27,6 +27,7 @@ import { User as AppUser } from '@/lib/types';
 import { canWrite, getExportRestrictionMessage } from '@/lib/trial-utils';
 import { useToast } from '@/hooks/use-toast';
 import { hybridImportProducts } from '@/lib/hybrid-import-v2';
+import { getUserSettings } from '@/lib/settings-utils';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
@@ -104,6 +105,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
   const [firebaseProgress, setFirebaseProgress] = useState(0);
   const [firebaseMessage, setFirebaseMessage] = useState('');
   const [firebaseSyncComplete, setFirebaseSyncComplete] = useState(false);
+  const [profitMargin, setProfitMargin] = useState(25); // Default to 25%, will be updated from settings
   const [formData, setFormData] = useState({
     designation: '',
     reference: '',
@@ -112,23 +114,32 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
     purchasePrice: '0',
   });
 
-  // Fetch user document to check permissions
+  // Fetch user document and settings to check permissions and get profit margin
   useEffect(() => {
     if (!user || !firestore) return;
 
-    const fetchUserDoc = async () => {
+    const fetchUserDocAndSettings = async () => {
       try {
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDocSnap = await getDoc(userDocRef);
         if (userDocSnap.exists()) {
           setUserDoc(userDocSnap.data() as AppUser);
         }
+
+        // Fetch profit margin from settings
+        try {
+          const settings = await getUserSettings(firestore, user.uid);
+          setProfitMargin(settings.profitMargin || 25);
+        } catch (settingsErr) {
+          console.warn('Failed to fetch settings, using default profit margin:', settingsErr);
+          setProfitMargin(25);
+        }
       } catch (error) {
         console.error('Error fetching user document:', error);
       }
     };
 
-    fetchUserDoc();
+    fetchUserDocAndSettings();
   }, [user, firestore]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,7 +183,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
         brand: formData.brand,
         stock: parseInt(formData.quantity),
         purchasePrice: parseFloat(formData.purchasePrice),
-        price: parseFloat(formData.purchasePrice) * 1.25, // Default 25% markup
+        price: parseFloat(formData.purchasePrice) * (1 + profitMargin / 100), // Use dynamic profit margin from settings
         userId: user.uid, // ← Add userId for per-user isolation
         createdAt: new Date(),
         isDeleted: false,
@@ -358,7 +369,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
       const productsToImport = validRows.map((row: any, index: number) => {
         // purchasePrice is already numeric from parsedRows
         const purchasePrice = parseFloat(row.purchasePrice) || 0;
-        const price = purchasePrice > 0 ? purchasePrice * 1.25 : 0;
+        const price = purchasePrice > 0 ? purchasePrice * (1 + profitMargin / 100) : 0;
         
         // Log first 3 rows for debugging
         if (index < 3) {
@@ -367,6 +378,7 @@ export function AddProductDialog({ dictionary, onProductAdded }: { dictionary: D
             purchasePriceRaw: row.purchasePrice,
             purchasePriceNumber: purchasePrice,
             price,
+            profitMarginApplied: profitMargin,
             fullRow: row,
           });
         }
