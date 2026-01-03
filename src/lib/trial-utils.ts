@@ -16,7 +16,7 @@ export function isTrialExpired(user: User): boolean {
   }
 
   const trialEndDate = new Date(user.trialStartDate.toDate());
-  trialEndDate.setDate(trialEndDate.getDate() + 5); // Add 5 days
+  trialEndDate.setDate(trialEndDate.getDate() + 10); // Add 10 days
 
   return new Date() > trialEndDate;
 }
@@ -37,7 +37,7 @@ export function calculateTrialDaysRemaining(user: User): number | null {
 
   const trialStartDate = new Date(user.trialStartDate.toDate());
   const trialEndDate = new Date(trialStartDate);
-  trialEndDate.setDate(trialEndDate.getDate() + 5);
+  trialEndDate.setDate(trialEndDate.getDate() + 10);
 
   const now = new Date();
   if (now > trialEndDate) {
@@ -107,7 +107,7 @@ export function canWrite(user: User | null): boolean {
   }
 
   if (user.subscription === "trial") {
-    return false; // Trial users cannot write
+    return true; // Trial users CAN write (all data stored locally in IndexedDB only)
   }
 
   return false; // Default deny

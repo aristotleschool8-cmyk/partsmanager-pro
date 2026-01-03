@@ -11,6 +11,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  getDoc,
 } from 'firebase/firestore';
 import { getUnpushedCommits, markCommitSynced, incrementRetries, CommitObject } from './commit-queue';
 
@@ -126,6 +127,23 @@ async function processPendingCommitsFromContext(): Promise<void> {
  * Process all pending commits (one-by-one, FIFO)
  */
 async function processPendingCommits(firestore: Firestore, userId: string): Promise<void> {
+  // GUARD: Free/trial users only store data locally in IndexedDB (no Firebase sync)
+  try {
+    const userRef = doc(firestore, 'users', userId);
+    const userSnap = await getDoc(userRef);
+    
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      if (userData.subscription === 'trial') {
+        console.log('[SyncWorker] Trial user detected - skipping Firebase sync (data persists only in IndexedDB)');
+        return;
+      }
+    }
+  } catch (err) {
+    console.warn('[SyncWorker] Could not check user subscription:', err);
+    // Continue with sync on error (assume premium for safety)
+  }
+
   // Check if we hit quota error recently (within 24 hours)
   if (syncState.lastQuotaError) {
     const hoursSinceError = (Date.now() - syncState.lastQuotaError) / (1000 * 60 * 60);

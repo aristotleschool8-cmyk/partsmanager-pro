@@ -275,3 +275,55 @@ export function getSubscriptionConfig(subscription: 'trial' | 'premium') {
 export function getAllSubscriptionConfigs() {
   return SUBSCRIPTION_CONFIG;
 }
+/**
+ * Create trial countdown notification (free trial expiry warning + data loss warning)
+ * Called when user logs in or periodically to remind about remaining trial days
+ */
+export async function createTrialCountdownNotification(
+  firestore: Firestore,
+  userId: string,
+  daysRemaining: number
+): Promise<string | null> {
+  try {
+    const notificationsRef = collection(firestore, 'notifications');
+
+    let title = '';
+    let message = '';
+    let notificationType: 'info' | 'warning' | 'alert' = 'info';
+
+    if (daysRemaining > 3) {
+      title = `Free Trial: ${daysRemaining} days remaining`;
+      message = `Your free trial expires in ${daysRemaining} days. Upgrade to Premium to continue using all features. Note: Your data will be deleted 30 days after trial expiry if not upgraded.`;
+      notificationType = 'info';
+    } else if (daysRemaining > 0) {
+      title = `⚠️ Trial Ending Soon: ${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left`;
+      message = `Your free trial expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}. Upgrade now to Premium to keep your data safe. Your data will be deleted 30 days after trial expiry if not upgraded.`;
+      notificationType = 'warning';
+    } else {
+      title = '🔴 Free Trial Expired';
+      message = 'Your free trial has expired. Upgrade to Premium to unlock all features. Your data will be permanently deleted in 30 days if not upgraded.';
+      notificationType = 'alert';
+    }
+
+    const docRef = await addDoc(notificationsRef, {
+      userId,
+      title,
+      message,
+      type: notificationType,
+      read: false,
+      createdAt: Timestamp.now(),
+      action: {
+        label: 'Upgrade to Premium',
+        href: '/settings',
+      },
+      resourceType: 'trial',
+      resourceId: 'trial-countdown',
+      daysRemaining,
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating trial countdown notification:', error);
+    return null;
+  }
+}

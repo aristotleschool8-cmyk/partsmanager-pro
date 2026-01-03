@@ -226,6 +226,20 @@ export async function changeUserSubscription(
       expiryDate.setDate(expiryDate.getDate() + 365);
       updateData.premiumExpiryDate = Timestamp.fromDate(expiryDate);
       updateData.trialStartDate = null;
+      
+      // AUTO-SYNC: Trigger immediate sync for newly upgraded premium users
+      // This pushes all their IndexedDB data (accumulated during trial) to Firebase
+      console.log('[UserManagement] Premium upgrade detected for user:', userId);
+      console.log('[UserManagement] Triggering immediate sync to push IndexedDB data to Firebase...');
+      
+      try {
+        const { triggerImmediateSync } = await import('./sync-worker');
+        triggerImmediateSync().catch(err => {
+          console.warn('[UserManagement] Background sync failed (non-blocking):', err);
+        });
+      } catch (err) {
+        console.warn('[UserManagement] Could not trigger sync:', err);
+      }
     }
 
     await updateDoc(userRef, updateData);
