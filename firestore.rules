@@ -348,8 +348,9 @@ service cloud.firestore {
       // Users can read notifications sent to them (both user notifications and admin system notifications)
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
       
-      // Only admins can create notifications (for both users and other admins)
-      allow create: if isAdmin();
+      // Admins can create notifications for any user
+      // Users can create notifications for themselves (e.g., trial countdown on login)
+      allow create: if isAdmin() || (isSignedIn() && request.resource.data.userId == request.auth.uid);
       
       // Users and admins can update their own notifications (to mark as read)
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
