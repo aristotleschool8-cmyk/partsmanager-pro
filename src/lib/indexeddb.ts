@@ -239,6 +239,37 @@ export async function saveProductsBatch(products: any[], userId: string): Promis
 }
 
 /**
+ * Get all products for a user (INCLUDING deleted ones - raw data)
+ * This matches Firebase behavior where we fetch everything and filter in the component
+ */
+export async function getAllProductsByUserRaw(userId: string): Promise<any[]> {
+  const db = await getDB();
+  const tx = db.transaction(STORES.PRODUCTS, 'readonly');
+  const store = tx.objectStore(STORES.PRODUCTS);
+  const index = store.index('userId');
+
+  return new Promise((resolve, reject) => {
+    const items: any[] = [];
+    const request = index.openCursor();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = (event: any) => {
+      const cursor = event.target.result;
+      if (cursor) {
+        const product = cursor.value;
+        // Return ALL products for this user (including deleted ones)
+        if (product.userId === userId) {
+          items.push(product);
+        }
+        cursor.continue();
+      } else {
+        resolve(items);
+      }
+    };
+  });
+}
+
+/**
  * Get all products for a user (excluding deleted ones)
  */
 export async function getProductsByUser(userId: string): Promise<any[]> {

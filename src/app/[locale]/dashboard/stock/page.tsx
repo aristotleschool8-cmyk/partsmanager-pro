@@ -43,7 +43,7 @@ import { useFirebase } from "@/firebase/provider";
 import { collection, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 import { hybridDeleteProduct } from "@/lib/hybrid-import-v2";
 import { useToast } from "@/hooks/use-toast";
-import { getProductsByUser, getStorageSize, initDB, saveProduct, removeDeletedProductsFromCache } from "@/lib/indexeddb";
+import { getAllProductsByUserRaw, getStorageSize, initDB, saveProduct, removeDeletedProductsFromCache } from "@/lib/indexeddb";
 import { useOffline } from "@/hooks/use-offline";
 
 interface Product {
@@ -94,11 +94,12 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
       // STEP 1: Try to load from IndexedDB first (instant)
       let fetchedProducts: Product[] = [];
       try {
-        const cachedProducts = await getProductsByUser(user.uid);
-        if (cachedProducts && cachedProducts.length > 0) {
-          // Filter out any that slipped through (safety check - should be unnecessary after cleanup)
-          fetchedProducts = cachedProducts
-            .filter((doc: any) => doc.isDeleted !== true)
+        // Fetch ALL products (including deleted) - just like Firebase
+        const allCachedProducts = await getAllProductsByUserRaw(user.uid);
+        if (allCachedProducts && allCachedProducts.length > 0) {
+          // Apply the SAME filtering logic as Firebase does
+          fetchedProducts = allCachedProducts
+            .filter((doc: any) => doc.isDeleted !== true)  // Filter OUT deleted products
             .map((doc: any) => ({
               id: doc.id,
               name: doc.name || '',
@@ -110,7 +111,7 @@ export default function StockPage({ params }: { params: Promise<{ locale: Locale
               purchasePrice: doc.purchasePrice || 0,
               price: doc.price || 0,
             }));
-          console.log(`✅ Loaded ${fetchedProducts.length} products from IndexedDB`);
+          console.log(`✅ Loaded ${allCachedProducts.length} products from IndexedDB (${fetchedProducts.length} after filtering deleted)`);
         }
       } catch (localErr) {
         console.warn('Failed to load from IndexedDB:', localErr);
